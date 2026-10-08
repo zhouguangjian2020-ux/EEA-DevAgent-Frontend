@@ -1,0 +1,118 @@
+t7920@t7920:~$ apt-cache policy
+Package files:
+ 100 /var/lib/dpkg/status
+     release a=now
+ 600 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64  Packages
+     release o=NVIDIA,l=NVIDIA CUDA,c=
+     origin developer.download.nvidia.com
+ 600 file:/var/cuda-repo-ubuntu2204-12-6-local  Packages
+     release o=NVIDIA,l=NVIDIA CUDA,c=
+ 100 http://mirrors.aliyun.com/ubuntu jammy-backports/universe i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-backports,n=jammy,l=Ubuntu,c=universe,b=i386
+     origin mirrors.aliyun.com
+ 100 http://mirrors.aliyun.com/ubuntu jammy-backports/universe amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-backports,n=jammy,l=Ubuntu,c=universe,b=amd64
+     origin mirrors.aliyun.com
+ 100 http://mirrors.aliyun.com/ubuntu jammy-backports/main i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-backports,n=jammy,l=Ubuntu,c=main,b=i386
+     origin mirrors.aliyun.com
+ 100 http://mirrors.aliyun.com/ubuntu jammy-backports/main amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-backports,n=jammy,l=Ubuntu,c=main,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-proposed/multiverse i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-proposed,n=jammy,l=Ubuntu,c=multiverse,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-proposed/multiverse amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-proposed,n=jammy,l=Ubuntu,c=multiverse,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-proposed/universe i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-proposed,n=jammy,l=Ubuntu,c=universe,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-proposed/universe amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-proposed,n=jammy,l=Ubuntu,c=universe,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-proposed/restricted i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-proposed,n=jammy,l=Ubuntu,c=restricted,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-proposed/restricted amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-proposed,n=jammy,l=Ubuntu,c=restricted,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-proposed/main i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-proposed,n=jammy,l=Ubuntu,c=main,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-proposed/main amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-proposed,n=jammy,l=Ubuntu,c=main,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-updates/multiverse i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-updates,n=jammy,l=Ubuntu,c=multiverse,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-updates/multiverse amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-updates,n=jammy,l=Ubuntu,c=multiverse,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-updates/universe i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-updates,n=jammy,l=Ubuntu,c=universe,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-updates/universe amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-updates,n=jammy,l=Ubuntu,c=universe,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-updates/restricted i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-updates,n=jammy,l=Ubuntu,c=restricted,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-updates/restricted amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-updates,n=jammy,l=Ubuntu,c=restricted,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-updates/main i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-updates,n=jammy,l=Ubuntu,c=main,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-updates/main amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-updates,n=jammy,l=Ubuntu,c=main,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-security/multiverse i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-security,n=jammy,l=Ubuntu,c=multiverse,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-security/multiverse amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-security,n=jammy,l=Ubuntu,c=multiverse,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-security/universe i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-security,n=jammy,l=Ubuntu,c=universe,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-security/universe amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-security,n=jammy,l=Ubuntu,c=universe,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-security/restricted i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-security,n=jammy,l=Ubuntu,c=restricted,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-security/restricted amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-security,n=jammy,l=Ubuntu,c=restricted,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-security/main i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy-security,n=jammy,l=Ubuntu,c=main,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy-security/main amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy-security,n=jammy,l=Ubuntu,c=main,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy/multiverse i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy,n=jammy,l=Ubuntu,c=multiverse,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy/multiverse amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy,n=jammy,l=Ubuntu,c=multiverse,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy/universe i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy,n=jammy,l=Ubuntu,c=universe,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy/universe amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy,n=jammy,l=Ubuntu,c=universe,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy/restricted i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy,n=jammy,l=Ubuntu,c=restricted,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy/restricted amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy,n=jammy,l=Ubuntu,c=restricted,b=amd64
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy/main i386 Packages
+     release v=22.04,o=Ubuntu,a=jammy,n=jammy,l=Ubuntu,c=main,b=i386
+     origin mirrors.aliyun.com
+ 500 http://mirrors.aliyun.com/ubuntu jammy/main amd64 Packages
+     release v=22.04,o=Ubuntu,a=jammy,n=jammy,l=Ubuntu,c=main,b=amd64
+     origin mirrors.aliyun.com
+Pinned packages:

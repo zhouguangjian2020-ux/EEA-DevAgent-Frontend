@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "designBaselineDate": "2026-09-14",
+  "fileKey": "zJPTee4kYlALLVqOCp3Pai",
+  "page": {
+    "id": "359:1227",
+    "name": "EE / Object tabs & UC / 2026-09-14"
+  },
+  "canonicalSpec": "E:/Git projects/TS-frontend/docs/标签页与左侧导航交互规范.md",
+  "sourceTable": "C:/Users/zhouguangjian/Downloads/FDR用例表格结构说明.md#表7",
+  "main": "359:1229",
+  "entry": "378:1723",
+  "dark": "393:2849",
+  "fullTable": "377:1623",
+  "handoff": "405:3145",
+  "screens": [
+    {
+      "id": "378:1723",
+      "name": "TAB-00 / 工作空间点击打开UC",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "359:1229",
+      "name": "TAB-01 / UC-17 / Light",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "374:1361",
+      "name": "TAB-02 / UC-13 / Light",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "393:2849",
+      "name": "TAB-01D / UC-17 / Dark",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "377:1491",
+      "name": "TAB-03 / 浏览全部功能",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "391:2721",
+      "name": "TAB-03B / 需求工程功能列表",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "394:2981",
+      "name": "TAB-03C / 浏览产品工程",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "381:1854",
+      "name": "TAB-05 / 新建PRD-LKA",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "383:1935",
+      "name": "TAB-06 / PRD-AEB",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "384:2059",
+      "name": "TAB-05A / 创建LKA后返回UC-17",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "385:2195",
+      "name": "TAB-05B / 创建LKA后返回UC-13",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "386:2331",
+      "name": "TAB-07 / 未保存",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "390:2464",
+      "name": "TAB-09 / 已保存",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "390:2591",
+      "name": "TAB-10 / 保存并关闭后",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "overlays": [
+    "396:3102",
+    "396:3122",
+    "396:3135"
+  ],
+  "components": {
+    "objectTabs": "360:1246",
+    "tableCells": "361:1244",
+    "tableBasicRow": "362:1240",
+    "workspaceRows": "363:1248"
+  },
+  "theme": {
+    "collection": "VariableCollectionId:326:1229",
+    "light": "326:1",
+    "dark": "326:0"
+  },
+  "flows": [
+    "378:1723",
+    "359:1229",
+    "381:1854",
+    "386:2331",
+    "393:2849"
+  ],
+  "observedChecks": {
+    "mainScreenCount": 14,
+    "screenWidth": 1440,
+    "screenHeight": 900,
+    "nodeTargetConnections": 51,
+    "missingDestinations": 0,
+    "crossPageDestinations": 0,
+    "topLevelOverlaps": 0,
+    "horizontalTextOverflows": 0,
+    "staleFdrOrStageChatText": 0,
+    "ucScrollDirection": "VERTICAL",
+    "ucComposerVariant": "Typed",
+    "ucPrdExpansionVisible": false,
+    "tableFieldCount": 12,
+    "tableBranchCount": 4,
+    "tableExceptionCount": 5,
+    "scenarioVisualRows": 10,
+    "fieldOrder": [
+      "用例名称",
+      "用例描述",
+      "用例编号",
+      "参与者",
+      "前置条件",
+      "场景",
+      "后置条件",
+      "扩展用例",
+      "HMI 交互逻辑",
+      "法规需求",
+      "性能需求",
+      "非功能需求"
+    ],
+    "exceptionOrder": [
+      "车辆状态异常",
+      "机械故障",
+      "环境突变",
+      "用户误操作（滥用）",
+      "供电异常"
+    ],
+    "fullTableSize": [
+      848,
+      1322
+    ]
+  },
+  "browserClickThrough": {
+    "verified": false,
+    "reason": "Figma browser session is not logged in; MCP authorization and writes succeeded."
+  },
+  "baselineCodeChecks": {
+    "lint": {
+      "exitCode": 0,
+      "warnings": 2,
+      "errors": 0
+    },
+    "typecheck": {
+      "exitCode": 0
+    },
+    "test": {
+      "exitCode": 0,
+      "passed": 31,
+      "failed": 0
+    },
+    "build": {
+      "exitCode": 0
+    }
+  },
+  "frontendBusinessCodeChanged": false,
+  "limitations": [
+    "Navigation uses preset screen states, not an arbitrary multi-object state machine.",
+    "Creation/edit/save are visual demonstrations, not real AI or persistence.",
+    "Dark mode has a primary screen and theme navigation, not every state duplicated.",
+    "Ten-tab board includes horizontal scrolling; all-tabs popup is not wired.",
+    "UC send/review actions, remaining directory items and utility tabs are visual unless listed in the canonical spec.",
+    "Existing frontend baseline tests do not test the unimplemented object-tab behavior."
+  ]
+}

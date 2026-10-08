@@ -1,0 +1,67 @@
+{
+  "date": "2026-09-14",
+  "fileKey": "zJPTee4kYlALLVqOCp3Pai",
+  "pages": {
+    "design": "326:1227",
+    "assets": "326:1228"
+  },
+  "mainFrames": {
+    "default": "329:1305",
+    "output": "329:1333"
+  },
+  "section": "341:1524",
+  "componentSets": {
+    "buttons": "327:1272",
+    "sidebar": "329:1304",
+    "composer": "330:1310",
+    "compactComposer": "335:1300",
+    "defaultWorkspace": "338:1454",
+    "outputWorkspace": "337:1622"
+  },
+  "outputVariants": {
+    "pending": "334:1246",
+    "unselected": "337:1266",
+    "editing": "337:1328",
+    "editingFilled": "337:1382",
+    "accepted": "337:1436",
+    "confirmDiscard": "337:1498",
+    "ucNotice": "337:1560",
+    "discarded": "338:1465"
+  },
+  "prototypeVars": {
+    "prompt": "VariableID:326:1244",
+    "status": "VariableID:326:1245",
+    "hasDraft": "VariableID:337:1264",
+    "overview": "VariableID:337:1265"
+  },
+  "cleanupRemoved": [
+    "332:1245",
+    "332:1253",
+    "332:1256"
+  ],
+  "verified": [
+    "1440x900 main frames",
+    "screenshots",
+    "reaction target existence",
+    "pnpm lint",
+    "pnpm typecheck",
+    "pnpm build"
+  ],
+  "notVerified": [
+    "browser prototype end-to-end playback"
+  ],
+  "limitations": [
+    "preset input and AI output only",
+    "no backend changes",
+    "pending P-03 through P-07",
+    "single-PRD selection only"
+  ],
+  "screenshots": [
+    "prd-default-final.png",
+    "prd-output-final.png",
+    "prd-expanding-final.png",
+    "prd-accepted-final.png",
+    "prd-discard-confirm-final.png",
+    "prd-compact-expanded-final.png"
+  ]
+}

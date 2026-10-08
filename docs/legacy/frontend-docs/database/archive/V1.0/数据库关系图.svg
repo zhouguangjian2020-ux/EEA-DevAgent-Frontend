@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="1920" viewBox="0 0 2500 1920" role="img" aria-labelledby="title desc">
+<title id="title">天枢 EE 数据库核心关系图</title><desc id="desc">多项目，每项目唯一 PRD，多个 UC，UC 与 FR 多对多，FR 独立分配对象与多个子系统，通过不可变版本保存追溯来源。</desc>
+<rect x="0" y="0" width="2500" height="1920" rx="0" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="60" y="40" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="49" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">天枢 EE  /  数据库核心关系图</text>
+<text x="63" y="112" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PostgreSQL  +  关系表  +  不可变版本  +  类型 metadata</text>
+<rect x="2050" y="51" width="390" height="54" rx="27" fill="#E9EFF8" stroke="#E9EFF8" stroke-width="1"/>
+<text x="2074" y="63" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">V1.0  ·  设计评审稿 / 未实施</text>
+<text x="60" y="194" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="26" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">A   稳定身份：一个业务对象，一个独立标签</text>
+<rect x="60" y="245" width="330" height="180" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="60" y="245" width="6" height="180" rx="3" fill="#2662AD" stroke="#2662AD" stroke-width="1"/>
+<text x="82" y="262" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">项目</text>
+<text x="82" y="302" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">projects</text>
+<text x="82" y="341" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK  id</text>
+<text x="82" y="373" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">data_epoch：集合版本</text>
+<rect x="470" y="245" width="330" height="180" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="470" y="245" width="6" height="180" rx="3" fill="#2662AD" stroke="#2662AD" stroke-width="1"/>
+<text x="492" y="262" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">唯一 PRD</text>
+<text x="492" y="302" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">prds</text>
+<text x="492" y="341" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK / FK  artifact_id</text>
+<text x="492" y="373" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">UQ / FK  project_id</text>
+<rect x="880" y="245" width="330" height="180" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="880" y="245" width="6" height="180" rx="3" fill="#2662AD" stroke="#2662AD" stroke-width="1"/>
+<text x="902" y="262" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">用例 UC</text>
+<text x="902" y="302" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">use_cases</text>
+<text x="902" y="341" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK / FK  artifact_id</text>
+<text x="902" y="373" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  prd_id</text>
+<rect x="1290" y="245" width="330" height="180" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="1290" y="245" width="6" height="180" rx="3" fill="#2662AD" stroke="#2662AD" stroke-width="1"/>
+<text x="1312" y="262" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">功能需求 FR</text>
+<text x="1312" y="302" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">functional_requirements</text>
+<text x="1312" y="341" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK / FK  artifact_id</text>
+<text x="1312" y="373" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  project_id</text>
+<rect x="1700" y="245" width="330" height="180" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="1700" y="245" width="6" height="180" rx="3" fill="#2662AD" stroke="#2662AD" stroke-width="1"/>
+<text x="1722" y="262" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">独立 FR 分配对象</text>
+<text x="1722" y="302" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">fr_allocations</text>
+<text x="1722" y="341" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK / FK  artifact_id</text>
+<text x="1722" y="373" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">UQ  (project_id, fr_id)</text>
+<rect x="2110" y="245" width="330" height="180" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="2110" y="245" width="6" height="180" rx="3" fill="#2662AD" stroke="#2662AD" stroke-width="1"/>
+<text x="2132" y="262" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">项目子系统字典</text>
+<text x="2132" y="302" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">subsystems</text>
+<text x="2132" y="341" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK  id   /   FK  project_id</text>
+<text x="2132" y="373" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">code / name / enabled</text>
+<polyline points="390,335 470,335" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="470.0,335.0 459.2,340.2 459.2,329.8" fill="#2662AD"/>
+<rect x="397" y="296" width="38.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="403" y="299" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#2662AD" dominant-baseline="text-before-edge">1:1</text>
+<polyline points="800,335 880,335" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="880.0,335.0 869.2,340.2 869.2,329.8" fill="#2662AD"/>
+<rect x="807" y="296" width="42.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="813" y="299" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#2662AD" dominant-baseline="text-before-edge">1:N</text>
+<polyline points="1620,335 1700,335" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="1700.0,335.0 1689.2,340.2 1689.2,329.8" fill="#2662AD"/>
+<rect x="1627" y="296" width="57.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1633" y="299" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#2662AD" dominant-baseline="text-before-edge">1:0..1</text>
+<polyline points="1210,335 1290,335" fill="none" stroke="#587087" stroke-width="2" stroke-dasharray="8 6"/>
+<polygon points="1290.0,335.0 1279.2,340.2 1279.2,329.8" fill="#587087"/>
+<rect x="1221" y="296" width="49.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1227" y="299" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">M:N</text>
+<polyline points="2030,335 2110,335" fill="none" stroke="#587087" stroke-width="2" stroke-dasharray="8 6"/>
+<polygon points="2110.0,335.0 2099.2,340.2 2099.2,329.8" fill="#587087"/>
+<rect x="2041" y="296" width="49.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="2047" y="299" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">M:N</text>
+<text x="1220" y="369" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="16" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">见关联表</text>
+<text x="2040" y="369" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="16" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">见目标表</text>
+<polyline points="635,425 635,615" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="635.0,615.0 629.8,604.2 640.2,604.2" fill="#2662AD"/>
+<rect x="644" y="501" width="91.0" height="32" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="650" y="504" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="20" font-weight="400" fill="#2662AD" dominant-baseline="text-before-edge">1:N 版本</text>
+<polyline points="1045,425 1045,615" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="1045.0,615.0 1039.8,604.2 1050.2,604.2" fill="#2662AD"/>
+<rect x="1054" y="501" width="91.0" height="32" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1060" y="504" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="20" font-weight="400" fill="#2662AD" dominant-baseline="text-before-edge">1:N 版本</text>
+<polyline points="1455,425 1455,615" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="1455.0,615.0 1449.8,604.2 1460.2,604.2" fill="#2662AD"/>
+<rect x="1464" y="501" width="91.0" height="32" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1470" y="504" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="20" font-weight="400" fill="#2662AD" dominant-baseline="text-before-edge">1:N 版本</text>
+<polyline points="1865,425 1865,615" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="1865.0,615.0 1859.8,604.2 1870.2,604.2" fill="#2662AD"/>
+<rect x="1874" y="501" width="91.0" height="32" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1880" y="504" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="20" font-weight="400" fill="#2662AD" dominant-baseline="text-before-edge">1:N 版本</text>
+<polyline points="2275,425 2275,615" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="2275.0,615.0 2269.8,604.2 2280.2,604.2" fill="#2662AD"/>
+<rect x="2284" y="501" width="91.0" height="32" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="2290" y="504" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="20" font-weight="400" fill="#2662AD" dominant-baseline="text-before-edge">1:N 目标</text>
+<text x="60" y="540" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">B   内容版本与来源</text>
+<rect x="60" y="615" width="330" height="252" rx="14" fill="#EFF7F6" stroke="#CDE2DF" stroke-width="2"/>
+<text x="83" y="634" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">项目隔离边界</text>
+<text x="83" y="681" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">每个项目初始化一个 PRD</text>
+<text x="83" y="715" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">无内容时仅建立身份</text>
+<text x="83" y="749" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">业务关系携带 project_id</text>
+<text x="83" y="783" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">跨项目关联由约束拒绝</text>
+<text x="83" y="817" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">用户权限：project_members</text>
+<rect x="470" y="615" width="330" height="252" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="470" y="615" width="6" height="252" rx="3" fill="#7656AB" stroke="#7656AB" stroke-width="1"/>
+<text x="492" y="632" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#7656AB" dominant-baseline="text-before-edge">PRD 全文版本</text>
+<text x="492" y="672" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">prd_versions</text>
+<text x="492" y="711" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK / FK  revision_id</text>
+<text x="492" y="743" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  prd_id</text>
+<text x="492" y="775" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">markdown_body : text</text>
+<text x="492" y="807" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">保存整段 Markdown</text>
+<rect x="880" y="615" width="330" height="252" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="880" y="615" width="6" height="252" rx="3" fill="#7656AB" stroke="#7656AB" stroke-width="1"/>
+<text x="902" y="632" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#7656AB" dominant-baseline="text-before-edge">UC 内容版本</text>
+<text x="902" y="672" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">uc_versions</text>
+<text x="902" y="711" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK / FK  revision_id</text>
+<text x="902" y="743" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  uc_id, prd_revision_id</text>
+<text x="902" y="775" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">保留前端 12 项结构</text>
+<text x="902" y="807" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">场景拆出稳定子项 ID</text>
+<rect x="1290" y="615" width="330" height="252" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="1290" y="615" width="6" height="252" rx="3" fill="#7656AB" stroke="#7656AB" stroke-width="1"/>
+<text x="1312" y="632" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#7656AB" dominant-baseline="text-before-edge">FR 内容版本</text>
+<text x="1312" y="672" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">fr_versions</text>
+<text x="1312" y="711" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK / FK  revision_id</text>
+<text x="1312" y="743" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  fr_id</text>
+<text x="1312" y="775" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">description : text</text>
+<text x="1312" y="807" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">来源关系存于下方关联表</text>
+<rect x="1700" y="615" width="330" height="252" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="1700" y="615" width="6" height="252" rx="3" fill="#7656AB" stroke="#7656AB" stroke-width="1"/>
+<text x="1722" y="632" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#7656AB" dominant-baseline="text-before-edge">分配方案版本</text>
+<text x="1722" y="672" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">allocation_versions</text>
+<text x="1722" y="711" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK / FK  revision_id</text>
+<text x="1722" y="743" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  allocation_id</text>
+<text x="1722" y="775" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  fr_revision_id</text>
+<text x="1722" y="807" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">固定引用依据的 FR 版本</text>
+<rect x="2110" y="615" width="330" height="252" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="2110" y="615" width="6" height="252" rx="3" fill="#0C7A75" stroke="#0C7A75" stroke-width="1"/>
+<text x="2132" y="632" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#0C7A75" dominant-baseline="text-before-edge">多子系统分配目标</text>
+<text x="2132" y="672" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">allocation_targets</text>
+<text x="2132" y="711" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK  (分配版, 子系统 ID)</text>
+<text x="2132" y="743" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  allocation_revision_id</text>
+<text x="2132" y="775" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  subsystem_id</text>
+<text x="2132" y="807" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">subsystem_name_snapshot</text>
+<polyline points="800,743 880,743" fill="none" stroke="#7656AB" stroke-width="3" stroke-dasharray="8 6"/>
+<polygon points="880.0,743.0 869.2,748.2 869.2,737.8" fill="#7656AB"/>
+<rect x="804" y="702" width="66.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="810" y="705" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#7656AB" dominant-baseline="text-before-edge">源版本</text>
+<polyline points="1620,743 1700,743" fill="none" stroke="#7656AB" stroke-width="3" stroke-dasharray="8 6"/>
+<polygon points="1700.0,743.0 1689.2,748.2 1689.2,737.8" fill="#7656AB"/>
+<rect x="1624" y="702" width="66.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1630" y="705" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#7656AB" dominant-baseline="text-before-edge">源版本</text>
+<polyline points="2030,743 2110,743" fill="none" stroke="#0C7A75" stroke-width="3"/>
+<polygon points="2110.0,743.0 2099.2,748.2 2099.2,737.8" fill="#0C7A75"/>
+<rect x="2041" y="702" width="45.0" height="32" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="2047" y="705" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="20" font-weight="400" fill="#0C7A75" dominant-baseline="text-before-edge">1:N</text>
+<rect x="880" y="1000" width="330" height="215" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="880" y="1000" width="6" height="215" rx="3" fill="#0C7A75" stroke="#0C7A75" stroke-width="1"/>
+<text x="902" y="1017" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#0C7A75" dominant-baseline="text-before-edge">UC 场景子项</text>
+<text x="902" y="1057" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">uc_scenario_items</text>
+<text x="902" y="1096" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK  (uc_revision_id, item_id)</text>
+<text x="902" y="1128" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">kind / category / position</text>
+<text x="902" y="1160" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">body：四分支 + 五异常</text>
+<rect x="1290" y="1000" width="330" height="215" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="1290" y="1000" width="6" height="215" rx="3" fill="#0C7A75" stroke="#0C7A75" stroke-width="1"/>
+<text x="1312" y="1017" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#0C7A75" dominant-baseline="text-before-edge">UC / FR 来源关联</text>
+<text x="1312" y="1057" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">fr_uc_sources</text>
+<text x="1312" y="1096" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">PK  (fr_revision_id, uc_id)</text>
+<text x="1312" y="1128" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  fr_revision_id</text>
+<text x="1312" y="1160" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">FK  uc_revision_id</text>
+<polyline points="1045,867 1045,1000" fill="none" stroke="#0C7A75" stroke-width="3"/>
+<polygon points="1045.0,1000.0 1039.8,989.2 1050.2,989.2" fill="#0C7A75"/>
+<rect x="1054" y="910" width="142.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1060" y="913" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#0C7A75" dominant-baseline="text-before-edge">1:9 · schema v1</text>
+<polyline points="1455,867 1455,1000" fill="none" stroke="#0C7A75" stroke-width="3"/>
+<polygon points="1455.0,1000.0 1449.8,989.2 1460.2,989.2" fill="#0C7A75"/>
+<rect x="1465" y="911" width="45.0" height="32" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1471" y="914" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="20" font-weight="400" fill="#0C7A75" dominant-baseline="text-before-edge">1:N</text>
+<polyline points="1210,809 1250,809 1250,1109 1290,1109" fill="none" stroke="#0C7A75" stroke-width="3"/>
+<polygon points="1290.0,1109.0 1279.2,1114.2 1279.2,1103.8" fill="#0C7A75"/>
+<rect x="1221" y="957" width="42.0" height="30" rx="5" fill="#F5F7FB" stroke="#F5F7FB" stroke-width="1"/>
+<text x="1227" y="960" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" font-weight="400" fill="#0C7A75" dominant-baseline="text-before-edge">1:N</text>
+<rect x="60" y="1000" width="740" height="215" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<rect x="60" y="1000" width="6" height="215" rx="3" fill="#2662AD" stroke="#2662AD" stroke-width="1"/>
+<text x="82" y="1017" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">全景视图配置（不是正文副本）</text>
+<text x="82" y="1057" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">workspace_views</text>
+<text x="82" y="1096" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">UQ  (project_id, kind)   /   settings : JSONB</text>
+<text x="82" y="1128" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">UC 图、FR 表、分配表从对象及版本关系查询</text>
+<text x="82" y="1160" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">可存布局与筛选；业务内容只有一个真源</text>
+<rect x="1700" y="1000" width="740" height="215" rx="14" fill="#EFF7F6" stroke="#CDE2DF" stroke-width="2"/>
+<text x="1723" y="1019" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#0C7A75" dominant-baseline="text-before-edge">为什么分配独立，又不重复复制 FR 原文？</text>
+<text x="1723" y="1066" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">FR r2 更新后，旧分配 a1 仍引用 FR r1。</text>
+<text x="1723" y="1100" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">前三列读 FR r1，第四列读 a1 的目标集合。</text>
+<text x="1723" y="1134" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">先标记待复核；确认后新建 a2，不自动改写历史。</text>
+<text x="60" y="1270" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#172C47" dominant-baseline="text-before-edge">C   所有业务对象共享的基础层</text>
+<rect x="60" y="1325" width="740" height="330" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<text x="84" y="1347" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="28" font-weight="700" fill="#2662AD" dominant-baseline="text-before-edge">类型与容器 metadata</text>
+<text x="84" y="1400" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">artifact_types / artifact_type_versions</text>
+<text x="84" y="1437" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">字段定义 · schema 版本 · 编辑器与显示规则</text>
+<text x="84" y="1474" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">workspace_folders / folder_allowed_types</text>
+<text x="84" y="1511" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">UC 文件夹允许 UC；组合外键阻止放入 FR</text>
+<text x="84" y="1548" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">JSONB 保存声明式配置，不代替核心关系</text>
+<text x="84" y="1585" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">核心 ID、来源、权限不藏进任意 JSON</text>
+<rect x="880" y="1325" width="740" height="330" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<text x="904" y="1347" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="28" font-weight="700" fill="#7656AB" dominant-baseline="text-before-edge">公共身份、版本与审阅</text>
+<text x="904" y="1400" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">artifacts：身份 / 类型 / 目录 / 稳定编号</text>
+<text x="904" y="1437" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">head_revision_id / accepted_revision_id</text>
+<text x="904" y="1474" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">artifact_revisions：不可变版本头</text>
+<text x="904" y="1511" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">四类 typed 内容在提交时必须互斥且完整</text>
+<text x="904" y="1548" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">review_events：接受 / 拒绝的追加审计</text>
+<text x="904" y="1585" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">field_changes：字段变化索引，可由版本重建</text>
+<rect x="1700" y="1325" width="740" height="330" rx="14" fill="#FFFFFF" stroke="#D7DFEB" stroke-width="2"/>
+<text x="1724" y="1347" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="28" font-weight="700" fill="#0C7A75" dominant-baseline="text-before-edge">AI 生成、实时更新与追溯</text>
+<text x="1724" y="1400" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">ai_runs / ai_run_inputs / ai_run_outputs</text>
+<text x="1724" y="1437" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">冻结上游全集 ≠ 每个 FR 的实际来源子集</text>
+<text x="1724" y="1474" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">完整候选增量显示；通过校验后整批发布</text>
+<text x="1724" y="1511" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">project_events：同事务事件 + 断线续传</text>
+<text x="1724" y="1548" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">一期：版本依赖路径 + 字段差异</text>
+<text x="1724" y="1585" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#172C47" dominant-baseline="text-before-edge">二期：字段证据 / 影响评审 / 跨对象基线</text>
+<polyline points="64,1710 120,1710" fill="none" stroke="#2662AD" stroke-width="3"/>
+<polygon points="120.0,1710.0 109.2,1715.2 109.2,1704.8" fill="#2662AD"/>
+<text x="136" y="1695" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">实线：身份、版本或关联表的基数</text>
+<polyline points="720,1710 776,1710" fill="none" stroke="#7656AB" stroke-width="3" stroke-dasharray="8 6"/>
+<polygon points="776.0,1710.0 765.2,1715.2 765.2,1704.8" fill="#7656AB"/>
+<text x="792" y="1695" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">紫虚线：固定内容版本来源</text>
+<polyline points="1345,1710 1401,1710" fill="none" stroke="#587087" stroke-width="2" stroke-dasharray="8 6"/>
+<polygon points="1401.0,1710.0 1390.2,1715.2 1390.2,1704.8" fill="#587087"/>
+<text x="1417" y="1695" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="21" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">灰虚线：逻辑 M:N（由关联表落地）</text>
+<text x="63" y="1740" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">N 允许为 0；项目初始化后 PRD 必须恰好 1 个。每 FR 至多一个多目标分配对象为设计默认，待确认。</text>
+<rect x="60" y="1798" width="2380" height="66" rx="10" fill="#E9F3F1" stroke="#D2E5E0" stroke-width="1"/>
+<text x="84" y="1814" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="26" font-weight="700" fill="#0C7A75" dominant-baseline="text-before-edge">历史可重现，当前可编辑，来源可定位。全景不复制正文；版本变化只产生影响候选，不直接判定字段必须修改。</text>
+<text x="63" y="1884" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="19" font-weight="400" fill="#587087" dominant-baseline="text-before-edge">本图省略公共层重复的项目 / 类型组合外键；完整字段与约束请以《数据库设计与实施方案 V1.0》为准。</text>
+</svg>

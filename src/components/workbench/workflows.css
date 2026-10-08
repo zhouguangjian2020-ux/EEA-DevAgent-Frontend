@@ -1,0 +1,37 @@
+.workflow-panel{padding:16px;border-top:1px solid var(--ee-border);background:var(--ee-surface);color:var(--ee-text);min-width:0}.workflow-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.workflow-candidate{border:1px solid var(--ee-border);border-radius:var(--ee-radius-sm);padding:12px;margin:12px 0;min-width:0}.workflow-candidate label{display:block;margin:8px 0}.workflow-candidate textarea{width:100%;min-height:80px;background:var(--ee-canvas);color:var(--ee-text);border:1px solid var(--ee-border);padding:8px;border-radius:8px}.workflow-panel [role=alert],.live-chat [role=alert]{color:var(--ee-danger)}.live-chat pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font:inherit}.live-chat .conversation-output{overflow:auto;min-height:0;flex:1}.live-chat .conversation-message{margin:12px;padding:12px;border:1px solid var(--ee-border);border-radius:var(--ee-radius-sm)}.live-chat-toolbar{display:flex;align-items:center;gap:8px;padding:12px;flex-wrap:wrap}.live-chat-toolbar select{min-width:0;max-width:100%;flex:1;background:var(--ee-surface);color:var(--ee-text);border:1px solid var(--ee-border);padding:8px}.live-chat .workflow-candidate{margin:8px}.live-chat .composer-region{padding:12px}.live-chat [aria-busy=true]{opacity:.85}
+
+.live-project-conversation { min-height:0; }
+.conversation-thread-toolbar { display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--ee-border,#e2e5ed);flex-wrap:wrap; }
+.conversation-thread-toolbar label { display:flex;align-items:center;gap:8px;flex:1;min-width:0; }
+.conversation-thread-toolbar select { min-width:0;max-width:220px;flex:1; }
+.conversation-thread-toolbar select,.chat-mode-selector select { background:var(--ee-surface,#fff);color:inherit;border:1px solid var(--ee-border,#dce1e8);border-radius:6px;padding:6px; }
+.live-chat-turn { margin-bottom:20px; }
+.live-chat-turn p,.chat-modification-preview dd { white-space:pre-wrap;overflow-wrap:anywhere; }
+.live-chat-turn .user { background:var(--ee-surface-secondary,#f1f5fb);padding:10px;border-radius:8px; }
+.live-chat-turn .assistant { padding:10px 0; }
+.chat-modification-preview { border:1px solid var(--ee-border,#d5deeb);border-radius:8px;padding:12px;margin:12px 0;overflow-wrap:anywhere; }
+.chat-modification-preview header { display:flex;flex-direction:column;gap:4px; }
+.chat-modification-preview small { font-size:11px; }
+.chat-modification-preview dt { font-weight:600;margin-top:10px; }
+.chat-modification-preview dd { margin:4px 0; }
+.chat-modification-preview footer { display:flex;gap:8px;flex-wrap:wrap;margin-top:12px; }
+.chat-mode-selector { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
+.workflow-panel { max-height:65vh;overflow:auto;flex-shrink:0; }
+
+/* Private chat: toolbar / independently scrolling history / composer. */
+.project-conversation.live-project-conversation { display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0;min-height:0;overflow:hidden; }
+.project-conversation.live-project-conversation[hidden] { display:none; }
+.live-project-conversation > .conversation-thread-toolbar { grid-row:1;min-width:0;position:relative;flex-shrink:0; }
+.live-project-conversation > .conversation-output { grid-row:2;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain; }
+.live-project-conversation > .conversation-composer-area { grid-row:3;min-width:0;max-height:45vh;overflow:auto;position:relative; }
+.live-project-conversation .conversation-thread-toolbar label { flex:1 1 160px; }
+.live-project-conversation .conversation-thread-toolbar select { max-width:100%;min-width:0;width:100%; }
+.live-project-conversation .conversation-output pre { max-width:100%;overflow:auto; }
+.live-project-conversation .conversation-output table { display:block;max-width:100%;overflow:auto; }
+.live-project-conversation .conversation-message,.live-project-conversation .chat-modification-preview { min-width:0;overflow-wrap:anywhere; }
+
+/* System receipts share the history scroller, never overlap the fixed composer. */
+.conversation-task-card { border: 1px solid var(--border, #d8dce3); border-radius: 10px; padding: 12px; margin: 10px 0; min-width: 0; overflow-wrap: anywhere; background: var(--surface-subtle, #f5f7fa); }
+.conversation-task-card p { margin: 6px 0; }
+.conversation-task-card small { display: block; color: var(--text-secondary, #64748b); margin-bottom: 6px; }
+.conversation-task-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }

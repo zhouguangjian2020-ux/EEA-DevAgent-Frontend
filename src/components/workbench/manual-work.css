@@ -1,0 +1,38 @@
+.feature-overview { height: 100%; overflow: auto; background: var(--ee-surface); }
+.feature-details { margin: 24px; border: 1px solid var(--ee-border); border-radius: 12px; padding: 8px 24px; }
+.feature-details > div { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 20px; padding: 20px 0; }
+.feature-details dt, .manual-hint, .manual-field small, .uc-source-picker p, .uc-source-picker small { color: var(--ee-muted); }
+.feature-details dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.manual-create-form { display: grid; gap: 16px; max-height: 72vh; overflow: auto; }
+.manual-fields { border: 0; padding: 0; margin: 0; display: grid; gap: 16px; min-width: 0; }
+.manual-field { display: grid; gap: 8px; }
+.manual-field > span { display: flex; gap: 8px; align-items: baseline; }
+.manual-field input, .manual-field textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--ee-border); border-radius: 8px; padding: 10px 12px; background: var(--ee-surface); color: var(--ee-text); font: inherit; resize: vertical; }
+.manual-hint, .manual-field small, .uc-source-picker p { font-size: 12px; line-height: 1.7; }
+.manual-error, .source-stale { color: var(--ee-danger); }
+.uc-source-picker { border: 1px solid var(--ee-border); border-radius: 8px; padding: 12px; min-width: 0; max-height: 260px; overflow: auto; }
+.uc-source-picker label { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+.uc-source-picker small { display: block; font-size: 11px; }
+.manual-workbench-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 12px 24px; }
+.manual-toolbar-action { margin-left: auto; }
+.database-review { display: flex; flex: 0 0 auto; align-items: center; flex-wrap: wrap; gap: 8px; padding: 0; border: 0; }
+.database-review label { display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 11px; }
+.prd-markdown h1 { font-size: 28px; } .prd-markdown h2 { font-size: 22px; margin-top: 24px; }
+.prd-markdown { overflow-wrap: anywhere; line-height: 1.75; }
+.prd-markdown pre { white-space: pre-wrap; padding: 16px; background: var(--ee-canvas); border-radius: 8px; }
+.prd-markdown table { border-collapse: collapse; width: 100%; } .prd-markdown th, .prd-markdown td { border: 1px solid var(--ee-border); padding: 8px; text-align: left; }
+.prd-markdown blockquote { margin-left: 0; padding-left: 16px; border-left: 3px solid var(--ee-border); color: var(--ee-muted); }
+.markdown-edit-preview { margin-top: 16px; border: 1px solid var(--ee-border); padding: 16px; border-radius: 8px; }
+.prd-editor { min-height: 340px; }
+
+.feature-metadata { padding: 20px; border: 1px solid var(--ee-border); border-radius: 10px; margin: 20px 24px; }
+.metadata-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.metadata-heading h2 { font-size: 16px; font-weight: 600; }
+.metadata-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.metadata-code { color: var(--ee-muted); font-size: 13px; margin-bottom: 12px; }
+.metadata-description { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.feature-metadata .field-label { margin-bottom: 16px; }
+.feature-metadata .feature-details { margin: 0; padding: 0; border: 0; }
+
+.feature-metadata .project-field-hint { color: var(--ee-muted); font-size: 12px; line-height: 1.7; margin: 8px 0 16px; }

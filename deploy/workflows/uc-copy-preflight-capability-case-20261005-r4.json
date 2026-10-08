@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-05",
+  "evidence": "user provided company r3 execution output",
+  "company_r3": {
+    "identity": "passed",
+    "stage": "target.uc.create_permission",
+    "code": "workflow_forbidden",
+    "http_status": 403,
+    "copy_performed": false,
+    "confirmation_performed": false
+  },
+  "root_cause": "r3 confused permission code uc.create with capability UC.create; frozen manual creation calls business_access.authorize with payload.kind + .create",
+  "fix": "r4 uses unchanged business_access.authorize in read-only repeatable-read transaction; preserves writer enable/config gates",
+  "local_tests": {
+    "offline_count": 38,
+    "real_authorizer": true,
+    "database": "offline fixtures; no live DB used",
+    "frozen_source": "business_access/manual_work/workflow_sources byte-identical",
+    "metadata_guard": "byte-identical"
+  },
+  "files": {
+    "inspect_uc_copy_20261005_r4.py": "9b4fc23867729b9519b24e1d9c5d440b799f4487123f6f0324b4f045617522b9",
+    "run-uc-copy-preflight-20261005-r4.sh": "7462d8e7de618eae7a957221b85d6ae0ed3638727d172f1531914e8769ac1395",
+    "upload-and-inspect-uc-copy-20261005-r4.ps1": "6eb521a629a4d47dac8ff8105c9cf4b30722182541aee0fce85784386858e8e3",
+    "test_inspect_uc_copy_20261005_r4.py": "a2ae472c88fc213f121643066e5797af8cb45f6cdcd089def92ee9cea7734e8a"
+  },
+  "company_r4": "awaiting user execution, not proven",
+  "copy_status": "not implemented or performed; actual source IDs/versions unknown"
+}

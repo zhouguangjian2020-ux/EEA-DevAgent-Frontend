@@ -1,0 +1,89 @@
+{
+  "native_process_tests": 10,
+  "results": [
+    {
+      "host": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "script": "collect-uc-copy-r4-report-20261005.ps1",
+      "initial_codepage": 936,
+      "state": "blocked",
+      "expected_failure": true,
+      "result": "TEST_OK host=5.1.26100.9444 initial_codepage=936"
+    },
+    {
+      "host": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "script": "collect-uc-copy-r4-report-utf8-20261005.ps1",
+      "initial_codepage": 936,
+      "state": "blocked",
+      "expected_failure": false,
+      "result": "TEST_OK host=5.1.26100.9444 initial_codepage=936"
+    },
+    {
+      "host": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "script": "collect-uc-copy-r4-report-utf8-20261005.ps1",
+      "initial_codepage": 65001,
+      "state": "blocked",
+      "expected_failure": false,
+      "result": "TEST_OK host=5.1.26100.9444 initial_codepage=65001"
+    },
+    {
+      "host": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "script": "collect-uc-copy-r4-report-utf8-20261005.ps1",
+      "initial_codepage": 936,
+      "state": "ok",
+      "expected_failure": false,
+      "result": "TEST_OK host=5.1.26100.9444 initial_codepage=936"
+    },
+    {
+      "host": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "script": "collect-uc-copy-r4-report-utf8-20261005.ps1",
+      "initial_codepage": 936,
+      "state": "failed",
+      "expected_failure": true,
+      "result": "TEST_OK host=5.1.26100.9444 initial_codepage=936"
+    },
+    {
+      "host": "C:\\Users\\zhouguangjian\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+      "script": "collect-uc-copy-r4-report-20261005.ps1",
+      "initial_codepage": 936,
+      "state": "blocked",
+      "expected_failure": true,
+      "result": "TEST_OK host=7.6.5 initial_codepage=936"
+    },
+    {
+      "host": "C:\\Users\\zhouguangjian\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+      "script": "collect-uc-copy-r4-report-utf8-20261005.ps1",
+      "initial_codepage": 936,
+      "state": "blocked",
+      "expected_failure": false,
+      "result": "TEST_OK host=7.6.5 initial_codepage=936"
+    },
+    {
+      "host": "C:\\Users\\zhouguangjian\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+      "script": "collect-uc-copy-r4-report-utf8-20261005.ps1",
+      "initial_codepage": 65001,
+      "state": "blocked",
+      "expected_failure": false,
+      "result": "TEST_OK host=7.6.5 initial_codepage=65001"
+    },
+    {
+      "host": "C:\\Users\\zhouguangjian\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+      "script": "collect-uc-copy-r4-report-utf8-20261005.ps1",
+      "initial_codepage": 936,
+      "state": "ok",
+      "expected_failure": false,
+      "result": "TEST_OK host=7.6.5 initial_codepage=936"
+    },
+    {
+      "host": "C:\\Users\\zhouguangjian\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+      "script": "collect-uc-copy-r4-report-utf8-20261005.ps1",
+      "initial_codepage": 936,
+      "state": "failed",
+      "expected_failure": true,
+      "result": "TEST_OK host=7.6.5 initial_codepage=936"
+    }
+  ],
+  "network_used": false,
+  "database_used": false,
+  "ssh_used": false,
+  "fixed_sha256": "a86f331ece5f120b4e0995462bade3359f4d5008f0bb92f9051a558b9ca57fd3"
+}

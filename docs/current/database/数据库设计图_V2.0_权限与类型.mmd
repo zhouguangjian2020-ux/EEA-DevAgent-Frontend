@@ -1,0 +1,85 @@
+erDiagram
+    direction LR
+    projects {
+        uuid id PK
+        text code UK
+        uuid created_by FK
+    }
+    app_users {
+        uuid id PK
+        text external_subject UK
+    }
+    project_members {
+        uuid project_id PK,FK
+        uuid user_id PK,FK
+        uuid added_by FK
+    }
+    permission_definitions {
+        text code PK
+    }
+    access_roles {
+        uuid id PK
+        text code UK
+    }
+    role_permissions {
+        uuid role_id PK,FK
+        text permission_code PK,FK
+    }
+    access_bindings {
+        uuid id PK
+        uuid project_id FK
+        uuid user_id FK
+        uuid function_id FK
+        uuid artifact_id FK
+        uuid role_id FK
+        uuid created_by FK
+        uuid updated_by FK
+    }
+    security_audit_events {
+        uuid id PK
+        uuid project_id FK
+        uuid actor_id FK
+        uuid subject_user_id FK
+        uuid function_id FK
+        uuid artifact_id FK
+    }
+    artifact_types {
+        text code PK
+        text workspace_key UK
+    }
+    artifact_type_versions {
+        uuid id PK
+        text type_code FK
+        uuid created_by FK
+    }
+    artifacts {
+        uuid id PK,FK
+        uuid project_id FK
+        uuid function_id FK
+        text type_code FK
+        uuid head_revision_id FK
+        uuid accepted_revision_id FK
+        uuid created_by FK
+    }
+    artifact_revisions {
+        uuid id PK
+        uuid project_id FK
+        uuid function_id FK
+        uuid artifact_id FK
+        text type_code FK
+        uuid base_revision_id FK
+        uuid type_version_id FK
+        uuid ai_run_id FK
+        uuid created_by FK
+    }
+    projects ||--o{ project_members : "成员"
+    app_users ||--o{ project_members : "参与项目"
+    artifact_types ||--o{ artifacts : "对象类型"
+    artifact_types ||--o{ artifact_type_versions : "定义版本"
+    artifact_type_versions ||--o{ artifact_revisions : "解释内容"
+    artifacts ||--o{ artifact_revisions : "内容历史"
+    access_roles ||--o{ role_permissions : "角色能力"
+    permission_definitions ||--o{ role_permissions : "能力定义"
+    project_members ||--o{ access_bindings : "成员授权"
+    access_roles ||--o{ access_bindings : "授予角色"
+    projects |o--o{ security_audit_events : "项目审计"

@@ -1,0 +1,20 @@
+MODEL ATTRIBUTION
+
+Car Concept
+Creator: Eric Chadwick, Darmstadt Graphics Group GmbH (2024)
+Source: KhronosGroup/glTF-Sample-Assets, Models/CarConcept/glTF-Binary/CarConcept.glb
+Source page: https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License text: https://creativecommons.org/licenses/by/4.0/
+
+The downloaded GLB asset.copyright states:
+Copyright 2015, Khronos Group, Khronos logo. Copyright 2017, Khronos Group, 3D Commerce logo. Asset is CC BY 4.0 International, created by Eric Chadwick of Darmstadt Graphics Group GmbH, 2024.
+
+Changes made for this independent prototype:
+- Silver paint, tinted opaque glazing, neutral interior materials
+- Controlled headlight/taillight emissions and added underbody lighting
+- Hidden license plate and emblem nodes
+- Re-centered / scaled vehicle; reset wheel steering and animate wheel rotation
+- No affiliation with or endorsement by the asset creator or Khronos is implied.
+
+All car instances visible across page/theme states are the SAME loaded GLB and geometry.

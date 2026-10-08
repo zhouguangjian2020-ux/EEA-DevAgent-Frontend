@@ -1,0 +1,98 @@
+{
+  "id": "uc-copy-approved-20261005-r1",
+  "subject": "engineer01",
+  "source": {
+    "project_id": "10d4c8a0-ff3a-56c3-abf6-18dc3b531e62",
+    "project_name": "测试项目1",
+    "function_id": "29fe01ea-f727-58cf-a326-b75294ba4dbb",
+    "function_name": "行车记录仪DVR"
+  },
+  "target": {
+    "project_id": "bf8f4d08-d086-44bf-9cbe-f31abc67ee03",
+    "project_name": "新项目",
+    "function_id": "3bb1333a-1ebf-428c-831f-c26dcd66cfa3",
+    "function_name": "DVR"
+  },
+  "target_prd_artifact_id": "e1d2a68f-7fdb-4244-b362-c4ddd3486ddb",
+  "target_confirmed_prd_revision_id": "8995ab55-2970-45eb-a214-b572fdc1e4a8",
+  "target_prd_sha256": "0e19bbc613175ce34d289b418207986a81ae9231372e35879359d807030994e9",
+  "sources": [
+    {
+      "artifact_id": "6c214cdc-afaa-5f0f-905e-dad877601ee0",
+      "number": "UC-301-01-01",
+      "name": "查看行车记录仪实时影像",
+      "copied_version_policy": "current head visible in original workspace",
+      "head_revision_id": "f9539226-63b2-5d92-ac68-a7c5c8e4481f",
+      "accepted_revision_id": null,
+      "head_is_accepted": false,
+      "source_prd_revision_id": "70449ce3-cf7b-5ca8-b067-26a11e29ce74",
+      "source_prd_sha256": "3eed8bede93cc7a5f1cacaf816f95c500aa16b28f1b97380f77109ca54e14ae4",
+      "source_prd_matches_target": false,
+      "branch_count": 3,
+      "exception_count": 5,
+      "content_sha256": "e991c2bba2902d2a10ecbc99f3fd6469bf29c97092e114517a823235d0053986",
+      "mapped_content_sha256": "77b3fcd68fd55864d31cc2c68dd8c496addc3e28556e50041a2912fdd5b76ac4",
+      "manual_create_schema_valid": false,
+      "invalid_field_paths": [
+        "branches"
+      ],
+      "new_artifact_id": "59fa9c55-1691-4758-8c0a-c48eea56592d",
+      "request_id": "6573fb5b-427b-48d7-a5f0-fea7b0565852"
+    },
+    {
+      "artifact_id": "d8b255d4-0af4-5e96-ade0-4bafc97abbda",
+      "number": "UC-301-01-02",
+      "name": "退出实时影像",
+      "copied_version_policy": "current head visible in original workspace",
+      "head_revision_id": "10892737-e2d8-514a-9839-83bc34858713",
+      "accepted_revision_id": null,
+      "head_is_accepted": false,
+      "source_prd_revision_id": "70449ce3-cf7b-5ca8-b067-26a11e29ce74",
+      "source_prd_sha256": "3eed8bede93cc7a5f1cacaf816f95c500aa16b28f1b97380f77109ca54e14ae4",
+      "source_prd_matches_target": false,
+      "branch_count": 3,
+      "exception_count": 5,
+      "content_sha256": "422fdc3fab4a8fa9e4519e9767425a164c4431fb8dbe3c2a87fbfcfdba60dc93",
+      "mapped_content_sha256": "78663099c3a77c118c96e085bab0d73bc9ee5d1b43bc3ccd32bc7bcdfa5df6a3",
+      "manual_create_schema_valid": false,
+      "invalid_field_paths": [
+        "branches"
+      ],
+      "new_artifact_id": "0a1a9943-a2e5-4506-8718-aa1e9bd4861d",
+      "request_id": "32d75c28-baf0-4d91-b62f-e9e8ed91dc85"
+    },
+    {
+      "artifact_id": "482af1ea-e70b-5211-9217-93170b53038b",
+      "number": "UC-301-01-03",
+      "name": "上电自动开启循环录像",
+      "copied_version_policy": "current head visible in original workspace",
+      "head_revision_id": "58a4bbed-1187-59d9-a395-eab004c9d49b",
+      "accepted_revision_id": null,
+      "head_is_accepted": false,
+      "source_prd_revision_id": "70449ce3-cf7b-5ca8-b067-26a11e29ce74",
+      "source_prd_sha256": "3eed8bede93cc7a5f1cacaf816f95c500aa16b28f1b97380f77109ca54e14ae4",
+      "source_prd_matches_target": false,
+      "branch_count": 2,
+      "exception_count": 5,
+      "content_sha256": "05858e6942dbbecd7d0146fe54e9b525763c35df91dbfa9b6ce27a5e1ff5ffeb",
+      "mapped_content_sha256": "eadf80a65850c7c25516eb9c63adb509aff7b0256af075253ff1f76a0c4e3b2a",
+      "manual_create_schema_valid": false,
+      "invalid_field_paths": [
+        "branches"
+      ],
+      "new_artifact_id": "d5ca0b02-2e38-4854-be04-6b0a02b54646",
+      "request_id": "c234124c-3808-4b22-b8e4-dc30a98a1fa3"
+    }
+  ],
+  "approval": {
+    "pad_missing_branch_slots_with_empty_strings": true,
+    "map_to_different_target_prd": true,
+    "leave_unconfirmed": true
+  },
+  "source_files": {
+    "app/services/business_access.py": "12e011ebdf7bb304d5a52dfbfb24c034b93875313e676a526491ea33156f9452",
+    "app/services/manual_work.py": "f5b7e0d75d4b9beb3511fb33369715312a2dd04be4429bc46bc2dae366462128",
+    "app/services/workflow_sources.py": "da3993a105c8c17fc71066f4bcaff57190a46f045b311968d7b62df5b2b76e39",
+    "app/schemas/manual_work.py": "84ae189a0e37765203f58f1aaac60952fdc239cdce3d85124bc8892d51fb3d1e"
+  }
+}

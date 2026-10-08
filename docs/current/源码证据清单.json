@@ -1,0 +1,137 @@
+{
+  "date": "2026-09-20",
+  "kind": "read_only_local_source_snapshot",
+  "note": "Local source evidence only; not deployed-service verification. No private .env files are included.",
+  "files": [
+    {
+      "path": "E:\\Git projects\\TS-frontend\\package.json",
+      "bytes": 646,
+      "sha256": "E295E15DF96ACD082EB3A28A0BE8950FA92B9700DD31EE165912B44ADAAE1981"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\tsconfig.json",
+      "bytes": 670,
+      "sha256": "5C51DF4C59F4510D8C7DADF07A5C32132228826A3B331DA5E286207B4DF7EF9C"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\next.config.ts",
+      "bytes": 281,
+      "sha256": "380DF8DFAB46582C5B130724E25E96F45833C56627E2D6FCF773685379C8D206"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\.env.example",
+      "bytes": 272,
+      "sha256": "6B41DF821E6259D88E45EEC478872FED73D1D9266E427FD76C19DB67615878E7"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\app\\page.tsx",
+      "bytes": 9220,
+      "sha256": "33B615684D8151DDDE52C9DD1DCE1E006EEE5BF685DC9D3472C6A82DE9423901"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\app\\login\\page.tsx",
+      "bytes": 2320,
+      "sha256": "0488F3331650DE226191E1E7464BA05AC89760AD063171DF1BBD0A19B38F904C"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\app\\globals.css",
+      "bytes": 59521,
+      "sha256": "E9D07D03463BDB4A0EC9BEAC8D39B622319FEE0EEE0433B9344B6904550A0088"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\lib\\api\\client.ts",
+      "bytes": 1625,
+      "sha256": "1500F66CE90DE88FA1ED90772F48142EC10B99953B5B899CC0CB7C0404B19AA0"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\features\\workbench\\use-workbench-store.ts",
+      "bytes": 9166,
+      "sha256": "FCD64B9B985E4C13C56D808F8EBACC6CE4529860E7701C1BB1E111E941E5B1A0"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\features\\workbench\\model.ts",
+      "bytes": 17861,
+      "sha256": "B234E40E54C3A9C1DBF169639DACA0573F9FB6EE3D2AA2D154569C61E298A51D"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\features\\uc\\model.ts",
+      "bytes": 5371,
+      "sha256": "4E15C88D5C67851AE81A5E7227EFE3B51557EA0D2B186FC83721E5D81CDA671B"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\features\\fr\\model.ts",
+      "bytes": 4505,
+      "sha256": "913E5AC2D515B49EE95A3B354C3910EB2B94479C9591E2BE60BCB7021B568CEC"
+    },
+    {
+      "path": "E:\\Git projects\\TS-frontend\\src\\components\\panorama\\panorama.css",
+      "bytes": 9346,
+      "sha256": "F6E1A5E0DD28EDF337576AD36B899C4E320C79804573F8DCDAF56D0627C42361"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\main.py",
+      "bytes": 12303,
+      "sha256": "CE6F4C5902A580AC0EEF55CD169DDC303356F21BC86255ADD78B84797213EDEE"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\deps.py",
+      "bytes": 2059,
+      "sha256": "0723AA77344C98AAD4845D922ACD8D642B1E11F1098627F8C7379F1F10A34293"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\schemas.py",
+      "bytes": 10238,
+      "sha256": "0614DBE1454D5104A8CD9FB7E4D102C7FA5E7D19004FFFE6901597B538CA0B5E"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\routes\\capabilities.py",
+      "bytes": 1329,
+      "sha256": "F88F39896B46D0B2B53140DB138555DE953371A90AE16D5F6CFC6E1B3BB30722"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\routes\\invoke.py",
+      "bytes": 1461,
+      "sha256": "5619FAB96DFE7E9EAB880313F6B78DE80E15C5DB960441EEE0B3AC9EFB0133BF"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\routes\\tasks.py",
+      "bytes": 4098,
+      "sha256": "D1469EAAECF32DC95373F13182C9FB3942BC6BF8204C83BE5E9E8A70CD13AEEA"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\services\\agent_runner.py",
+      "bytes": 24315,
+      "sha256": "B212129F2CCC23FB53B0566F439C3CF350C2B95ADE553F67257B8EEB2A21FA34"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\services\\task_store.py",
+      "bytes": 13422,
+      "sha256": "D7748521C6ADF4BDD4C7FAF48A37F9B24C0F836AC827642A04FD4B2EA64FC545"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\services\\callbacks.py",
+      "bytes": 6151,
+      "sha256": "635A1160A0457EEBE8BCA77C902030BAF699274A64F08F4A2608A0DD81D1D2C9"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\agents\\configs\\scenes.yaml",
+      "bytes": 1398,
+      "sha256": "0032C28B9B6C07529A53D85EE3B9D8F64BA86C761915C6D9A6F877C1A65E4831"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\skills\\prompt_expand.yaml",
+      "bytes": 1310,
+      "sha256": "245EFB2B916BBC3A72FCDAED3981684D2471C869547DFC6D7886D03DC0C02790"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\skills\\feature_expand.yaml",
+      "bytes": 1825,
+      "sha256": "78D40D8B09798E95EC986B85354DC121D084E0D5FD56F10C4D34113EB71CE165"
+    },
+    {
+      "path": "E:\\Git projects\\Agent Project\\ai_service\\skills\\feature_definition.yaml",
+      "bytes": 4522,
+      "sha256": "0185F46E3284616F42E465D932F6B9E8EA6D993082E79DBFE154BDBAC4E5130F"
+    }
+  ]
+}

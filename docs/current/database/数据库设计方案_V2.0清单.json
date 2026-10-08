@@ -1,0 +1,4441 @@
+{
+  "version": "V2.0",
+  "date": "2026-09-21",
+  "status": "design_only_not_migrated",
+  "active_table_count": 32,
+  "m0_count": 29,
+  "m1_ai_count": 3,
+  "tables": [
+    {
+      "no": 1,
+      "name": "projects",
+      "group": "项目与归属",
+      "purpose": "项目是团队、数据与权限隔离的最高业务边界。",
+      "phase": "M0 CRUD",
+      "review": "保留；归档只保留archived_at；暂不维护项目事件/缓存epoch，权限每次重新读取。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "项目稳定标识"
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目业务编号，创建后稳定且不复用"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "项目名称"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "项目说明"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "非核心扩展信息"
+        },
+        {
+          "name": "lock_version",
+          "type": "bigint",
+          "nullable": "否",
+          "key": "—",
+          "default": "0",
+          "purpose": "项目属性并发控制令牌"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "创建人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "最后修改时间"
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamptz",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "归档时间"
+        }
+      ],
+      "constraints": [
+        "UQ(code)",
+        "归档项目不得新增/修改业务对象",
+        "archived_at为空=有效；非空=归档，避免维护两份状态。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "code"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 2,
+      "name": "business_functions",
+      "group": "项目与归属",
+      "purpose": "项目内的业务功能边界，例如 AEB、LKA、行车记录仪；每个功能拥有一个 PRD。",
+      "phase": "M0 CRUD",
+      "review": "保留；不因测试功能候选就创建PRD；业务成功保存后才出现在目录。输入全集变化采用短事务锁与版本集合比较，不依赖宽泛data_epoch。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "业务功能稳定标识"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "所属项目"
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能编号"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "功能名称"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "功能说明"
+        },
+        {
+          "name": "initial_prompt",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "首次创建功能时的原始一句话需求"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "非核心扩展信息"
+        },
+        {
+          "name": "lock_version",
+          "type": "bigint",
+          "nullable": "否",
+          "key": "—",
+          "default": "0",
+          "purpose": "功能属性并发控制令牌"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "创建人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "最后修改时间"
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamptz",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "归档时间"
+        }
+      ],
+      "constraints": [
+        "UQ(project_id,id)",
+        "UQ(project_id,code)",
+        "不能跨项目移动",
+        "archived_at为空=有效；非空=归档，避免维护两份状态。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "code"
+        ],
+        [
+          "project_id",
+          "id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id"
+          ],
+          "parent": "projects",
+          "references": [
+            "id"
+          ],
+          "label": "projects",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 3,
+      "name": "app_users",
+      "group": "项目与权限",
+      "purpose": "业务用户与现有认证系统主体的映射，不保存登录密码。",
+      "phase": "M0 CRUD",
+      "review": "保留；不重复建设账号密码表。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "业务用户稳定标识"
+        },
+        {
+          "name": "external_subject",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "外部认证主体标识"
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "显示名称"
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "邮箱或登录标识（如允许）"
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK active/disabled",
+          "default": "active",
+          "purpose": "用户状态"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "非敏感扩展信息"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "首次映射时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "映射更新时间"
+        }
+      ],
+      "constraints": [
+        "不保存password、token、cookie",
+        "disabled用户不能执行业务写入"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "external_subject"
+        ]
+      ],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "no": 4,
+      "name": "project_members",
+      "group": "项目与归属",
+      "purpose": "记录哪些用户属于项目；成员资格与角色授权分开。",
+      "phase": "M0 CRUD",
+      "review": "保留；不在这里增加 role 字段，避免与 access_bindings 形成第二套权限。",
+      "fields": [
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "成员用户"
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK active/disabled",
+          "default": "active",
+          "purpose": "成员状态"
+        },
+        {
+          "name": "added_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "添加人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "加入时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "状态更新时间"
+        }
+      ],
+      "constraints": [
+        "PK(project_id,user_id)",
+        "disabled成员不能访问项目"
+      ],
+      "relations": [],
+      "pk": [
+        "project_id",
+        "user_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id"
+          ],
+          "parent": "projects",
+          "references": [
+            "id"
+          ],
+          "label": "projects",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "user_id"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "added_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": [
+        "按用户列项目：(user_id,project_id)"
+      ]
+    },
+    {
+      "no": 5,
+      "name": "artifact_types",
+      "group": "类型 metadata",
+      "purpose": "注册系统允许的对象类型，并把固定工作区与类型关联。",
+      "phase": "M0 CRUD",
+      "review": "保留固定类型与workspace_key映射；API派生目录及allowedTypes，服务端拒绝错误类型/归属，不再建通用目录树。",
+      "fields": [
+        {
+          "name": "code",
+          "type": "text",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "类型编码：PRD/UC/FR/FR_ALLOCATION"
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "类型名称"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "类型说明"
+        },
+        {
+          "name": "workspace_key",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "固定工作区编码，API据此返回对象所在分类"
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "nullable": "否",
+          "key": "—",
+          "default": "true",
+          "purpose": "类型是否可用"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "注册时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "更新时间"
+        }
+      ],
+      "constraints": [
+        "UQ(workspace_key)",
+        "固定类型到工作区映射由受控迁移维护，不允许用户自行增加可执行类型"
+      ],
+      "relations": [],
+      "pk": [
+        "code"
+      ],
+      "unique": [
+        [
+          "workspace_key"
+        ]
+      ],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "no": 6,
+      "name": "artifact_type_versions",
+      "group": "类型 metadata",
+      "purpose": "保存类型字段和内容校验规则的轻量版本，保证旧对象仍可解释。",
+      "phase": "M0 CRUD",
+      "review": "保留轻量schema版本，这是业务版本的前置依赖，必须随首批建表；不做运行时自定义类型和UI-schema编辑平台。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "类型定义版本标识"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "对应对象类型"
+        },
+        {
+          "name": "version_no",
+          "type": "integer",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "schema 版本号"
+        },
+        {
+          "name": "content_schema",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "API内容校验规则"
+        },
+        {
+          "name": "field_catalog",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "字段键、展示名、类型和路径清单"
+        },
+        {
+          "name": "metadata_schema",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "实例metadata允许字段规则"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "定义发布人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        },
+        {
+          "name": "retired_at",
+          "type": "timestamptz",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "不再作为新内容默认规则的时间"
+        }
+      ],
+      "constraints": [
+        "UQ(type_code,version_no)",
+        "发布后正文不可UPDATE/DELETE",
+        "保留旧定义以读取历史",
+        "新对象默认使用未retired的最高version_no；修订旧对象默认沿用其schema，升级必须显式验证转换。retired仅禁止新选用，不影响旧版读取。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "type_code",
+          "version_no"
+        ],
+        [
+          "type_code",
+          "id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "type_code"
+          ],
+          "parent": "artifact_types",
+          "references": [
+            "code"
+          ],
+          "label": "artifact_types",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 7,
+      "name": "artifacts",
+      "group": "对象身份",
+      "purpose": "PRD、UC、FR、FR分配的统一稳定身份和当前/接受版本指针。",
+      "phase": "M0 CRUD",
+      "review": "保留；去掉 folder_id，工作区由 artifact_types.workspace_key 派生。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "对象稳定标识"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "所属项目"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "所属业务功能"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "对象类型"
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "稳定业务编号"
+        },
+        {
+          "name": "head_revision_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "当前工作版本"
+        },
+        {
+          "name": "accepted_revision_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "最近被接受版本"
+        },
+        {
+          "name": "lock_version",
+          "type": "bigint",
+          "nullable": "否",
+          "key": "—",
+          "default": "0",
+          "purpose": "对象并发控制令牌"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "对象级非核心扩展"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "创建人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "更新时间"
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamptz",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "归档时间"
+        }
+      ],
+      "constraints": [
+        "head/accepted必须引用同对象同类型版本",
+        "身份建立后不可跨项目/功能移动",
+        "PRD类型按(project_id,function_id)唯一"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id",
+          "type_code",
+          "code"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "id",
+          "type_code"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id"
+          ],
+          "parent": "business_functions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "business_functions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "type_code"
+          ],
+          "parent": "artifact_types",
+          "references": [
+            "code"
+          ],
+          "label": "artifact_types",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "id",
+            "head_revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "id"
+          ],
+          "label": "head_revision_id",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "id",
+            "accepted_revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "id"
+          ],
+          "label": "accepted_revision_id",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": [
+        "部分唯一：(project_id,function_id) WHERE type_code=PRD（归档不释放）",
+        "查询：(project_id,function_id,type_code) WHERE archived_at IS NULL"
+      ]
+    },
+    {
+      "no": 8,
+      "name": "artifact_revisions",
+      "group": "统一版本",
+      "purpose": "公共版本头；具体正文在 prd_versions、uc_versions、fr_versions、allocation_versions。",
+      "phase": "M0 CRUD",
+      "review": "保留公共版本头；删除暂未有消费者的content_hash；ai_run_id是M1增补字段，M0不建立悬空外键；与正文恰好一种类型1:1。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "版本稳定标识"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "所属对象"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "版本类型"
+        },
+        {
+          "name": "revision_no",
+          "type": "bigint",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "对象内递增版本号"
+        },
+        {
+          "name": "base_revision_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "本次版本基于哪一版"
+        },
+        {
+          "name": "type_version_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "采用的类型结构版本"
+        },
+        {
+          "name": "created_via",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK manual/ai/import/migration",
+          "default": "manual",
+          "purpose": "来源manual/import/migration；M1扩展ai，导入不伪造历史生成任务"
+        },
+        {
+          "name": "ai_run_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "M1才增加：AI来源任务；M0不建此列/FK，不接受created_via=ai"
+        },
+        {
+          "name": "change_summary",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "变更摘要"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "版本级扩展/导入证据：文件SHA-256、sheet/table/row、批次键、缺项；核心来源必须FK"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "创建人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        }
+      ],
+      "constraints": [
+        "UQ(project_id,function_id,artifact_id,id)",
+        "不可UPDATE/DELETE历史版本",
+        "版本头和对应正文/关系必须同一事务写齐",
+        "revision_no>0；base_revision_id只可引用同对象严格更小的revision_no，拒绝自引用和环。类型结构升级必须显式转换/校验，不自动改旧版type_version_id。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "artifact_id",
+          "revision_no"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "artifact_id",
+          "id"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "artifact_id",
+          "type_code",
+          "id"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "artifact_id",
+          "id",
+          "ai_run_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code"
+          ],
+          "parent": "artifacts",
+          "references": [
+            "project_id",
+            "function_id",
+            "id",
+            "type_code"
+          ],
+          "label": "artifacts",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "type_code",
+            "type_version_id"
+          ],
+          "parent": "artifact_type_versions",
+          "references": [
+            "type_code",
+            "id"
+          ],
+          "label": "artifact_type_versions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "base_revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "id"
+          ],
+          "label": "base",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "ai_run_id"
+          ],
+          "parent": "ai_runs",
+          "references": [
+            "project_id",
+            "function_id",
+            "id"
+          ],
+          "label": "ai_runs",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 9,
+      "name": "prds",
+      "group": "PRD身份",
+      "purpose": "表达一个业务功能唯一的 PRD 对象。",
+      "phase": "M0 CRUD",
+      "review": "保留；唯一性放在功能维度，不恢复旧的一项目一PRD。",
+      "fields": [
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "PRD对象ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；CHECK固定类型",
+          "default": "PRD",
+          "purpose": "固定类型鉴别列，供组合FK校验，不是另一个可编辑属性"
+        }
+      ],
+      "constraints": [
+        "UQ(project_id,function_id)",
+        "type_code必须为PRD",
+        "CHECK (type_code = 'PRD')；固定类型列不能仅依赖DEFAULT。"
+      ],
+      "relations": [],
+      "pk": [
+        "artifact_id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "artifact_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code"
+          ],
+          "parent": "artifacts",
+          "references": [
+            "project_id",
+            "function_id",
+            "id",
+            "type_code"
+          ],
+          "label": "typed identity",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id"
+          ],
+          "parent": "business_functions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "business_functions",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 10,
+      "name": "prd_versions",
+      "group": "PRD正文版本",
+      "purpose": "保存整份普通长文本或Markdown，不强制拆章节字段或先转换为结构化JSON。",
+      "phase": "M0 CRUD",
+      "review": "保留；Markdown全文是最小正确模型。",
+      "fields": [
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "版本头ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "prd_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "PRD对象"
+        },
+        {
+          "name": "markdown_body",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "完整正文，允许普通长文本或Markdown，保留原始换行"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；CHECK固定类型",
+          "default": "PRD",
+          "purpose": "固定类型鉴别列，供组合FK校验，不是另一个可编辑属性"
+        }
+      ],
+      "constraints": [
+        "一条revision只能对应一条PRD正文",
+        "revision类型必须为PRD",
+        "CHECK (type_code = 'PRD')；固定类型列不能仅依赖DEFAULT。",
+        "正文无需预先结构化，不以章节解析成功为保存前提；不得静默trim/重写原文。Word自动编号/表格转换需导入器单独核查。"
+      ],
+      "relations": [],
+      "pk": [
+        "revision_id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id",
+          "prd_id",
+          "revision_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "prd_id"
+          ],
+          "parent": "prds",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id"
+          ],
+          "label": "identity",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "prd_id",
+            "type_code",
+            "revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code",
+            "id"
+          ],
+          "label": "typed payload",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 11,
+      "name": "use_cases",
+      "group": "UC身份",
+      "purpose": "保存UC稳定身份及其所属PRD。",
+      "phase": "M0 CRUD",
+      "review": "保留；UC正文变化不改变对象ID。",
+      "fields": [
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "UC对象ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "prd_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "所属PRD"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；CHECK固定类型",
+          "default": "UC",
+          "purpose": "固定类型鉴别列，供组合FK校验，不是另一个可编辑属性"
+        }
+      ],
+      "constraints": [
+        "type_code必须为UC",
+        "prd_id与project_id/function_id一致",
+        "CHECK (type_code = 'UC')；固定类型列不能仅依赖DEFAULT。"
+      ],
+      "relations": [],
+      "pk": [
+        "artifact_id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id",
+          "artifact_id"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "artifact_id",
+          "prd_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code"
+          ],
+          "parent": "artifacts",
+          "references": [
+            "project_id",
+            "function_id",
+            "id",
+            "type_code"
+          ],
+          "label": "typed identity",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "prd_id"
+          ],
+          "parent": "prds",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id"
+          ],
+          "label": "prds",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 12,
+      "name": "uc_versions",
+      "group": "UC正文版本",
+      "purpose": "保存前端12个顶层字段，场景的主流程单列、分支和异常用子表。",
+      "phase": "M0 CRUD",
+      "review": "保留12顶层字段；编号从artifacts读取；增加prd_id约束UC身份的PRD与来源版本属于同一PRD。文本缺失/N/A/无不得互相伪造。",
+      "fields": [
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "版本头ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "uc_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "UC对象"
+        },
+        {
+          "name": "prd_revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "本版实际依据的PRD版本"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "用例名称"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "用例描述"
+        },
+        {
+          "name": "actors_text",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "参与者原文"
+        },
+        {
+          "name": "preconditions",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "前置条件"
+        },
+        {
+          "name": "main_flow",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "主事件流"
+        },
+        {
+          "name": "postconditions",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "后置条件"
+        },
+        {
+          "name": "extensions_text",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "扩展用例原文"
+        },
+        {
+          "name": "hmi_logic",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "HMI交互逻辑"
+        },
+        {
+          "name": "regulations",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "法规需求原文"
+        },
+        {
+          "name": "performance",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "性能需求原文"
+        },
+        {
+          "name": "nonfunctional",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "非功能需求原文"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；CHECK固定类型",
+          "default": "UC",
+          "purpose": "固定类型鉴别列，供组合FK校验，不是另一个可编辑属性"
+        },
+        {
+          "name": "prd_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "与use_cases所属PRD一致；与prd_revision_id组合防止引用其他PRD"
+        }
+      ],
+      "constraints": [
+        "prd_revision_id必须属于use_cases.prd_id",
+        "本稿不把法规/性能文字当已验证结论",
+        "CHECK (type_code = 'UC')；固定类型列不能仅依赖DEFAULT。"
+      ],
+      "relations": [],
+      "pk": [
+        "revision_id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id",
+          "uc_id",
+          "revision_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "uc_id"
+          ],
+          "parent": "use_cases",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id"
+          ],
+          "label": "identity",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "uc_id",
+            "type_code",
+            "revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code",
+            "id"
+          ],
+          "label": "typed payload",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "uc_id",
+            "prd_id"
+          ],
+          "parent": "use_cases",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "prd_id"
+          ],
+          "label": "use_cases",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "prd_id",
+            "prd_revision_id"
+          ],
+          "parent": "prd_versions",
+          "references": [
+            "project_id",
+            "function_id",
+            "prd_id",
+            "revision_id"
+          ],
+          "label": "PRD source",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 13,
+      "name": "uc_scenario_items",
+      "group": "UC场景子项",
+      "purpose": "保存某个UC版本的分支和五类异常，支持可变条数及稳定item_id。",
+      "phase": "M0 CRUD",
+      "review": "保留；真实样本缺少部分分支时不造N/A，适配层可显示空槽。",
+      "fields": [
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "uc_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "UC对象"
+        },
+        {
+          "name": "uc_revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "所属UC版本"
+        },
+        {
+          "name": "item_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "场景项稳定标识"
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）；CHECK branch/exception",
+          "default": "—",
+          "purpose": "分支或异常"
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "a1-a4或异常类别编码"
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "0",
+          "purpose": "版本内排序"
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "场景项原文"
+        }
+      ],
+      "constraints": [
+        "分支category为a1-a4",
+        "异常category为vehicle_state/mechanical/environmental/misuse/power",
+        "固定4/5的接受校验在服务层，不用行级CHECK假装完成",
+        "本表是父版本/任务的子项，不为每一行再建立独立内容版本。"
+      ],
+      "relations": [],
+      "pk": [
+        "uc_revision_id",
+        "item_id"
+      ],
+      "unique": [
+        [
+          "uc_revision_id",
+          "kind",
+          "category"
+        ],
+        [
+          "uc_revision_id",
+          "kind",
+          "position"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "uc_id",
+            "uc_revision_id"
+          ],
+          "parent": "uc_versions",
+          "references": [
+            "project_id",
+            "function_id",
+            "uc_id",
+            "revision_id"
+          ],
+          "label": "uc_versions",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 14,
+      "name": "functional_requirements",
+      "group": "FR身份",
+      "purpose": "保存FR稳定身份；FR不直接绑定单一UC。",
+      "phase": "M0 CRUD",
+      "review": "保留；多对多来源由 fr_uc_sources 表达。",
+      "fields": [
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "FR对象ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；CHECK固定类型",
+          "default": "FR",
+          "purpose": "固定类型鉴别列，供组合FK校验，不是另一个可编辑属性"
+        }
+      ],
+      "constraints": [
+        "type_code必须为FR",
+        "CHECK (type_code = 'FR')；固定类型列不能仅依赖DEFAULT。"
+      ],
+      "relations": [],
+      "pk": [
+        "artifact_id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id",
+          "artifact_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code"
+          ],
+          "parent": "artifacts",
+          "references": [
+            "project_id",
+            "function_id",
+            "id",
+            "type_code"
+          ],
+          "label": "typed identity",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 15,
+      "name": "fr_versions",
+      "group": "FR正文版本",
+      "purpose": "保存FR需求描述；编号从artifacts.code读取。",
+      "phase": "M0 CRUD",
+      "review": "保留；来源集合不塞进描述文本。",
+      "fields": [
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "版本头ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "fr_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "FR对象"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "需求描述"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；CHECK固定类型",
+          "default": "FR",
+          "purpose": "固定类型鉴别列，供组合FK校验，不是另一个可编辑属性"
+        }
+      ],
+      "constraints": [
+        "revision类型必须为FR",
+        "CHECK (type_code = 'FR')；固定类型列不能仅依赖DEFAULT。"
+      ],
+      "relations": [],
+      "pk": [
+        "revision_id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id",
+          "revision_id"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "fr_id",
+          "revision_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "fr_id"
+          ],
+          "parent": "functional_requirements",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id"
+          ],
+          "label": "identity",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "fr_id",
+            "type_code",
+            "revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code",
+            "id"
+          ],
+          "label": "typed payload",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 16,
+      "name": "fr_uc_sources",
+      "group": "FR-UC来源",
+      "purpose": "表达某个FR版本实际引用了哪些UC版本的多对多来源关系。",
+      "phase": "M0 CRUD",
+      "review": "保留精确到版本的多对多来源；作者/时间/来源方式继承FR版本头，不逐边重复保存；rationale记录导入关联而非虚构AI证据。",
+      "fields": [
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "fr_revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "FR版本"
+        },
+        {
+          "name": "uc_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "UC对象"
+        },
+        {
+          "name": "uc_revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "实际引用的UC版本"
+        },
+        {
+          "name": "rationale",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "关联理由或导入说明"
+        }
+      ],
+      "constraints": [
+        "PK(fr_revision_id,uc_id)",
+        "同一FR版本对同一UC只能引用一个版本",
+        "来源必须同项目同功能",
+        "本表是父版本/任务的子项，不为每一行再建立独立内容版本。"
+      ],
+      "relations": [],
+      "pk": [
+        "fr_revision_id",
+        "uc_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "fr_revision_id"
+          ],
+          "parent": "fr_versions",
+          "references": [
+            "project_id",
+            "function_id",
+            "revision_id"
+          ],
+          "label": "fr_versions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "uc_id",
+            "uc_revision_id"
+          ],
+          "parent": "uc_versions",
+          "references": [
+            "project_id",
+            "function_id",
+            "uc_id",
+            "revision_id"
+          ],
+          "label": "uc_versions",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": [
+        "反查影响：(project_id,function_id,uc_id,uc_revision_id)"
+      ]
+    },
+    {
+      "no": 17,
+      "name": "project_subsystem_designs",
+      "group": "子系统方案入口",
+      "purpose": "项目级子系统方案的稳定入口和当前生效版本指针。",
+      "phase": "M0 CRUD",
+      "review": "保留独立方案入口；默认单一current指针且受控保存生效，不设置未经确认的独立发布审批；此生命周期是简化实现默认，不冒充单独获批的产品规则。",
+      "fields": [
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "方案名称"
+        },
+        {
+          "name": "current_version_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "当前采用的方案版本"
+        },
+        {
+          "name": "lock_version",
+          "type": "bigint",
+          "nullable": "否",
+          "key": "—",
+          "default": "0",
+          "purpose": "方案入口并发控制令牌"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "非核心扩展"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "创建人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "最后修改人"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "更新时间"
+        }
+      ],
+      "constraints": [
+        "一项目一个入口",
+        "保存新方案版本后更新current_version_id",
+        "未来确需审批再增加published_version_id，不现在预留复杂字段",
+        "本期只允许以后在用户指定项目内受控预置；不开发方案划分/维护UI或AI自动划分功能。未预置不能回退到全平台Mock目录。"
+      ],
+      "relations": [],
+      "pk": [
+        "project_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id"
+          ],
+          "parent": "projects",
+          "references": [
+            "id"
+          ],
+          "label": "projects",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "current_version_id"
+          ],
+          "parent": "subsystem_design_versions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "current",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "updated_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 18,
+      "name": "subsystem_design_versions",
+      "group": "子系统方案版本",
+      "purpose": "保存项目某一套完整子系统划分的版本头；条目在 subsystem_version_items。",
+      "phase": "M0 CRUD",
+      "review": "保留不可变完整方案快照；不建工作/正式双头和发布署名。恢复旧版复制为新版；保存/选用有权限和CAS校验。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "方案版本"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "version_no",
+          "type": "integer",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "方案内版本号"
+        },
+        {
+          "name": "parent_version_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "从哪一版本复制/修改"
+        },
+        {
+          "name": "change_summary",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "本次方案变化说明"
+        },
+        {
+          "name": "created_via",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK manual/import/ai/copy",
+          "default": "manual",
+          "purpose": "来源"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "导入文件哈希等非核心信息"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "创建人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        }
+      ],
+      "constraints": [
+        "方案版本正文不可修改",
+        "恢复旧方案要复制成新版本，不回拨历史指针",
+        "完整条目集合与版本头同事务写入",
+        "version_no>0；parent_version_id必须同项目且version_no更小，禁止自引用和环。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "version_no"
+        ],
+        [
+          "project_id",
+          "id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id"
+          ],
+          "parent": "project_subsystem_designs",
+          "references": [
+            "project_id"
+          ],
+          "label": "project_subsystem_designs",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "parent_version_id"
+          ],
+          "parent": "subsystem_design_versions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "parent",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 19,
+      "name": "subsystems",
+      "group": "子系统身份",
+      "purpose": "项目内稳定的子系统身份；名称、职责随方案版本保存。",
+      "phase": "M0 CRUD",
+      "review": "保留稳定身份；是否可用于新分配由当前方案条目决定，不再另存archived_at造成身份停用与方案条目双重状态。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "子系统稳定身份"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目内子系统编号"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "创建人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        }
+      ],
+      "constraints": [
+        "UQ(project_id,code)",
+        "旧版本已引用身份不得物理删除",
+        "改名复用id，真正拆并创建新id",
+        "已被引用的身份与历史条目不物理删除；是否在当前方案及is_allocatable决定当前可选性。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "code"
+        ],
+        [
+          "project_id",
+          "id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id"
+          ],
+          "parent": "projects",
+          "references": [
+            "id"
+          ],
+          "label": "projects",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 20,
+      "name": "subsystem_version_items",
+      "group": "方案子系统条目",
+      "purpose": "保存某个方案版本中子系统的名称、职责、域分组及是否可分配。",
+      "phase": "M0 CRUD",
+      "review": "保留；这是方案快照正文，不是第三套独立子系统表。",
+      "fields": [
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "design_version_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "方案版本"
+        },
+        {
+          "name": "subsystem_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "稳定子系统身份"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "本版本名称"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "''",
+          "purpose": "本版说明；测试源缺失可为空文本并标记missing，不伪造正式职责"
+        },
+        {
+          "name": "responsibility_in",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "负责范围"
+        },
+        {
+          "name": "responsibility_out",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "不负责范围"
+        },
+        {
+          "name": "domain_group",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "域/系统分组"
+        },
+        {
+          "name": "is_allocatable",
+          "type": "boolean",
+          "nullable": "否",
+          "key": "—",
+          "default": "true",
+          "purpose": "本版本是否允许分配"
+        },
+        {
+          "name": "sort_order",
+          "type": "integer",
+          "nullable": "否",
+          "key": "—",
+          "default": "0",
+          "purpose": "展示顺序"
+        },
+        {
+          "name": "source_metadata",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "导入来源行等信息"
+        }
+      ],
+      "constraints": [
+        "PK(project_id,design_version_id,subsystem_id)",
+        "目标必须引用该方案版本的条目",
+        "同一方案版本不重复身份",
+        "Excel域/名称/描述分别映射domain_group/name/description；缺失稳定code由后续受控导入生成，职责边界不伪造。Agent与人工分配使用同一项目目录。"
+      ],
+      "relations": [],
+      "pk": [
+        "project_id",
+        "design_version_id",
+        "subsystem_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "design_version_id"
+          ],
+          "parent": "subsystem_design_versions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "subsystem_design_versions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "subsystem_id"
+          ],
+          "parent": "subsystems",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "subsystems",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 21,
+      "name": "fr_allocations",
+      "group": "FR分配身份",
+      "purpose": "把FR正文与分配决定分开，表示一个FR的分配工作对象。",
+      "phase": "M0 CRUD",
+      "review": "保留；满足用户要求，不因当前样本每条只有一个目标而合并回FR。",
+      "fields": [
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "分配对象ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "fr_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "被分配的FR"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；CHECK固定类型",
+          "default": "FR_ALLOCATION",
+          "purpose": "固定类型鉴别列，供组合FK校验，不是另一个可编辑属性"
+        }
+      ],
+      "constraints": [
+        "UQ(project_id,function_id,fr_id)",
+        "type_code必须为FR_ALLOCATION",
+        "CHECK (type_code = 'FR_ALLOCATION')；固定类型列不能仅依赖DEFAULT。"
+      ],
+      "relations": [],
+      "pk": [
+        "artifact_id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id",
+          "fr_id"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "artifact_id"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "artifact_id",
+          "fr_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code"
+          ],
+          "parent": "artifacts",
+          "references": [
+            "project_id",
+            "function_id",
+            "id",
+            "type_code"
+          ],
+          "label": "typed identity",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "fr_id"
+          ],
+          "parent": "functional_requirements",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id"
+          ],
+          "label": "functional_requirements",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 22,
+      "name": "allocation_versions",
+      "group": "分配版本",
+      "purpose": "保存某次分配依据的FR版本和子系统方案版本。",
+      "phase": "M0 CRUD",
+      "review": "保留；分配变更不创建FR正文版本。",
+      "fields": [
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "版本头ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "allocation_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "分配对象"
+        },
+        {
+          "name": "fr_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "FR对象"
+        },
+        {
+          "name": "fr_revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "本次分配依据的FR版本"
+        },
+        {
+          "name": "design_version_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "本次分配依据的方案版本"
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "分配说明"
+        },
+        {
+          "name": "type_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "FK组成列（见下）；CHECK固定类型",
+          "default": "FR_ALLOCATION",
+          "purpose": "固定类型鉴别列，供组合FK校验，不是另一个可编辑属性"
+        }
+      ],
+      "constraints": [
+        "revision类型必须为FR_ALLOCATION",
+        "FR和方案必须同项目同功能/项目",
+        "方案换版不自动改旧分配",
+        "CHECK (type_code = 'FR_ALLOCATION')；固定类型列不能仅依赖DEFAULT。"
+      ],
+      "relations": [],
+      "pk": [
+        "revision_id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "function_id",
+          "revision_id",
+          "design_version_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "allocation_id"
+          ],
+          "parent": "fr_allocations",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id"
+          ],
+          "label": "identity",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "allocation_id",
+            "type_code",
+            "revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "type_code",
+            "id"
+          ],
+          "label": "typed payload",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "allocation_id",
+            "fr_id"
+          ],
+          "parent": "fr_allocations",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "fr_id"
+          ],
+          "label": "fr_allocations",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "fr_id",
+            "fr_revision_id"
+          ],
+          "parent": "fr_versions",
+          "references": [
+            "project_id",
+            "function_id",
+            "fr_id",
+            "revision_id"
+          ],
+          "label": "fr_versions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "design_version_id"
+          ],
+          "parent": "subsystem_design_versions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "subsystem_design_versions",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": [
+        "按依据查分配：(project_id,function_id,fr_id,fr_revision_id)",
+        "按方案查旧分配：(project_id,design_version_id)"
+      ]
+    },
+    {
+      "no": 23,
+      "name": "allocation_targets",
+      "group": "分配目标",
+      "purpose": "保存某个分配版本选择的一个或多个子系统目标。",
+      "phase": "M0 CRUD",
+      "review": "保留；目标集合必须可版本化，名称从方案条目读取。",
+      "fields": [
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "allocation_revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "分配版本"
+        },
+        {
+          "name": "design_version_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "目标所属方案版本"
+        },
+        {
+          "name": "subsystem_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "目标子系统身份"
+        },
+        {
+          "name": "rationale",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "选择理由"
+        }
+      ],
+      "constraints": [
+        "PK(allocation_revision_id,subsystem_id)",
+        "design_version_id必须与allocation_versions一致",
+        "目标必须存在于该方案版本条目且is_allocatable=true",
+        "本表是父版本/任务的子项，不为每一行再建立独立内容版本。"
+      ],
+      "relations": [],
+      "pk": [
+        "allocation_revision_id",
+        "subsystem_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "allocation_revision_id",
+            "design_version_id"
+          ],
+          "parent": "allocation_versions",
+          "references": [
+            "project_id",
+            "function_id",
+            "revision_id",
+            "design_version_id"
+          ],
+          "label": "allocation_versions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "design_version_id",
+            "subsystem_id"
+          ],
+          "parent": "subsystem_version_items",
+          "references": [
+            "project_id",
+            "design_version_id",
+            "subsystem_id"
+          ],
+          "label": "subsystem_version_items",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": [
+        "按方案目标反查：(project_id,design_version_id,subsystem_id)"
+      ]
+    },
+    {
+      "no": 24,
+      "name": "permission_definitions",
+      "group": "权限底座",
+      "purpose": "注册后端能力点及其资源、动作和适用授权范围。",
+      "phase": "M0 CRUD",
+      "review": "保留能力注册；allowed_scopes为非空白名单数组，不用单值scope错误限制同一能力只能项目或对象授权。资源/动作固定注册，不建策略脚本。",
+      "fields": [
+        {
+          "name": "code",
+          "type": "text",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "能力编码，如 uc.read/uc.update"
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "能力名称"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "能力说明"
+        },
+        {
+          "name": "resource_kind",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK白名单",
+          "default": "—",
+          "purpose": "project/function/PRD/UC/FR/FR_ALLOCATION/subsystem_design/view；类型不是按钮DOM名"
+        },
+        {
+          "name": "action",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK白名单",
+          "default": "—",
+          "purpose": "enter/open/read/create/update/generate/expand/accept/archive/export/manage_access/import；新增动作需受控注册"
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "nullable": "否",
+          "key": "—",
+          "default": "true",
+          "purpose": "能力是否启用"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "注册时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "更新时间"
+        },
+        {
+          "name": "allowed_scopes",
+          "type": "text[]",
+          "nullable": "否",
+          "key": "CHECK非空且元素白名单",
+          "default": "—",
+          "purpose": "能力可在project/function/artifact哪些范围授予；同一uc.read可支持多个范围"
+        }
+      ],
+      "constraints": [
+        "code由受控迁移管理",
+        "enabled变化要清理权限缓存或实时重新读取"
+      ],
+      "relations": [],
+      "pk": [
+        "code"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "no": 25,
+      "name": "access_roles",
+      "group": "权限底座",
+      "purpose": "预置角色定义；一期不做角色不可变版本和批量绑定迁移。",
+      "phase": "M0 CRUD",
+      "review": "保留但删掉 version、allowed_scopes 等角色版本平台字段；角色变更必须受控并审计。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "角色ID"
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "角色编码"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "角色名称"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "角色说明"
+        },
+        {
+          "name": "is_system",
+          "type": "boolean",
+          "nullable": "否",
+          "key": "—",
+          "default": "true",
+          "purpose": "是否预置角色"
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "nullable": "否",
+          "key": "—",
+          "default": "true",
+          "purpose": "是否有效；禁用则所有绑定实时不再授予能力，历史绑定保留"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "更新时间"
+        }
+      ],
+      "constraints": [
+        "预置角色修改需迁移/审计",
+        "不允许普通用户自助提升角色"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "code"
+        ]
+      ],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "no": 26,
+      "name": "role_permissions",
+      "group": "权限底座",
+      "purpose": "表达角色包含哪些能力。",
+      "phase": "M0 CRUD",
+      "review": "保留；不增加 deny 脚本或复杂策略语言。",
+      "fields": [
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "角色"
+        },
+        {
+          "name": "permission_code",
+          "type": "text",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "能力"
+        }
+      ],
+      "constraints": [
+        "PK(role_id,permission_code)",
+        "未列出的能力默认拒绝"
+      ],
+      "relations": [],
+      "pk": [
+        "role_id",
+        "permission_code"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "role_id"
+          ],
+          "parent": "access_roles",
+          "references": [
+            "id"
+          ],
+          "label": "access_roles",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "permission_code"
+          ],
+          "parent": "permission_definitions",
+          "references": [
+            "code"
+          ],
+          "label": "permission_definitions",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 27,
+      "name": "access_bindings",
+      "group": "权限底座",
+      "purpose": "把角色绑定到用户在项目、功能或对象的授权范围。",
+      "phase": "M0 CRUD",
+      "review": "保留；用scope CHECK解决空值范围歧义。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "授权绑定ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "被授权用户"
+        },
+        {
+          "name": "scope_kind",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK project/function/artifact",
+          "default": "—",
+          "purpose": "授权范围"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "功能范围/对象范围"
+        },
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "对象范围"
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "角色"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "授权操作者"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "最后修改人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "更新时间"
+        }
+      ],
+      "constraints": [
+        "project→function_id/artifact_id均空",
+        "function→function_id非空/artifact_id为空",
+        "artifact→两者均非空",
+        "按范围建立部分唯一索引",
+        "M0只启用项目范围预置角色；function/artifact行结构已设计但在继承/覆盖策略确认前禁止创建，不自作主张改变权限语义。",
+        "同用户同范围仅一个角色：三个部分唯一索引，见本表键说明。",
+        "CHECK精确三形状：(project且function_id/artifact_id均NULL) OR (function且function_id非NULL/artifact_id为NULL) OR (artifact且两者均非NULL)。只写scope_kind IN(...)不够。",
+        "绑定角色必须有效；能力allowed_scopes要包含实际scope，空范围或未注册能力不授予。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "user_id"
+          ],
+          "parent": "project_members",
+          "references": [
+            "project_id",
+            "user_id"
+          ],
+          "label": "project_members",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "role_id"
+          ],
+          "parent": "access_roles",
+          "references": [
+            "id"
+          ],
+          "label": "access_roles",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id"
+          ],
+          "parent": "business_functions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "business_functions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id"
+          ],
+          "parent": "artifacts",
+          "references": [
+            "project_id",
+            "function_id",
+            "id"
+          ],
+          "label": "artifacts",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "updated_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": [
+        "部分唯一：(project_id,user_id) WHERE scope_kind=project",
+        "部分唯一：(project_id,function_id,user_id) WHERE scope_kind=function",
+        "部分唯一：(project_id,function_id,artifact_id,user_id) WHERE scope_kind=artifact"
+      ]
+    },
+    {
+      "no": 28,
+      "name": "security_audit_events",
+      "group": "权限底座",
+      "purpose": "记录成员、授权、撤权及敏感操作审计。",
+      "phase": "M0 CRUD",
+      "review": "保留；不把完整需求正文或密钥写进审计。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "审计事件ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目范围；全局事件可为空"
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "经认证的操作者；未认证失败事件可为空，不能伪造用户UUID"
+        },
+        {
+          "name": "subject_user_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "被操作用户"
+        },
+        {
+          "name": "event_type",
+          "type": "text",
+          "nullable": "否",
+          "key": "—",
+          "default": "—",
+          "purpose": "事件类型"
+        },
+        {
+          "name": "scope_kind",
+          "type": "text",
+          "nullable": "是",
+          "key": "CHECK project/function/artifact",
+          "default": "—",
+          "purpose": "经验证的事件范围；全局事件可为空"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "功能范围"
+        },
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "对象范围"
+        },
+        {
+          "name": "before_state",
+          "type": "jsonb",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "变更前摘要"
+        },
+        {
+          "name": "after_state",
+          "type": "jsonb",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "变更后摘要"
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "操作原因"
+        },
+        {
+          "name": "request_id",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "请求追踪标识"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "发生时间"
+        }
+      ],
+      "constraints": [
+        "append-only",
+        "不记录密码、cookie、token和完整正文",
+        "scope与function/artifact一致",
+        "仅解析成功的真实ID写FK；越权请求伪造的ID仅放裁剪后的诊断摘要，不创建悬空FK。",
+        "成功授权变更与审计同事务，失败审计独立提交；全局角色变更project_id为空。",
+        "全局事件scope_kind/project_id/function_id/artifact_id均NULL；项目事件仅project非空；功能事件project/function非空；对象事件project/function/artifact均非空。未知ID只写安全摘要。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id"
+          ],
+          "parent": "projects",
+          "references": [
+            "id"
+          ],
+          "label": "projects",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id"
+          ],
+          "parent": "business_functions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "business_functions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id"
+          ],
+          "parent": "artifacts",
+          "references": [
+            "project_id",
+            "function_id",
+            "id"
+          ],
+          "label": "artifacts",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "actor_id"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "subject_user_id"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": [
+        "项目审计：(project_id,created_at,id)"
+      ]
+    },
+    {
+      "no": 29,
+      "name": "ai_runs",
+      "group": "AI任务",
+      "purpose": "记录生成/扩写任务状态、输入基线、幂等键和候选来源。",
+      "phase": "M1 AI",
+      "review": "保留持久任务及输入/输出；幂等键改为项目+发起人+请求键，避免function_id可空导致唯一性失效；保留waiting_human/ready和外部ID映射，不做worker租约自动接管。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "业务任务ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "项目范围"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "生成目标功能；普通扩写可为空"
+        },
+        {
+          "name": "stage",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK PRD/UC/FR/FR_ALLOCATION/PROMPT_EXPAND",
+          "default": "—",
+          "purpose": "任务阶段"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK状态白名单",
+          "default": "—",
+          "purpose": "queued/running/waiting_human/ready/succeeded/failed/cancelled/conflict；人工等待不当作成功或失败"
+        },
+        {
+          "name": "operation",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK generate/revise/analyze/expand",
+          "default": "—",
+          "purpose": "操作类型"
+        },
+        {
+          "name": "target_artifact_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "修改目标；新建任务可为空"
+        },
+        {
+          "name": "prompt_text",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "本次实际提示词"
+        },
+        {
+          "name": "prompt_template_version",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "提示词模板版本"
+        },
+        {
+          "name": "model_id",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "模型标识"
+        },
+        {
+          "name": "parameters",
+          "type": "jsonb",
+          "nullable": "否",
+          "key": "—",
+          "default": "{}",
+          "purpose": "非敏感参数"
+        },
+        {
+          "name": "subsystem_design_version_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "分配任务固定的方案版本"
+        },
+        {
+          "name": "input_set_hash",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "排序后的输入版本集合摘要"
+        },
+        {
+          "name": "idempotency_key",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "调用者生成的请求幂等键；功能可空仍能去重；相同键不同请求拒绝"
+        },
+        {
+          "name": "retry_of_run_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "重试的原任务"
+        },
+        {
+          "name": "progress",
+          "type": "numeric(5,4)",
+          "nullable": "是",
+          "key": "CHECK 0..1",
+          "default": "—",
+          "purpose": "进度"
+        },
+        {
+          "name": "error_code",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "机器可读错误码"
+        },
+        {
+          "name": "error_detail",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "可读错误信息"
+        },
+        {
+          "name": "requested_by",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "发起人"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "创建时间"
+        },
+        {
+          "name": "started_at",
+          "type": "timestamptz",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "开始时间"
+        },
+        {
+          "name": "finished_at",
+          "type": "timestamptz",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "结束时间"
+        },
+        {
+          "name": "agent_task_id",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "外部Agent任务标识，不等于业务run_id"
+        },
+        {
+          "name": "agent_thread_id",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "外部项目会话标识，仅记录关联，不替代聊天表"
+        },
+        {
+          "name": "result_text",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "PROMPT_EXPAND等非业务对象结果；不复制PRD/UC/FR正式正文"
+        }
+      ],
+      "constraints": [
+        "生成任务function_id/target等由stage服务层校验",
+        "单实例失败可由用户重试，不承诺自动接管",
+        "AI不直接决定正式接受和权限",
+        "PRD/UC/FR/FR_ALLOCATION生成的function_id非空；PROMPT_EXPAND可无功能。修改目标必须同项目同功能。普通问答不在本版任务stage里，不伪造目标。",
+        "分配任务scheme非空，其他stage为空；request相同键不同内容409。",
+        "输入字段创建后冻结；状态/进度/外部ID与结果允许受控更新。取消后不得迟到提交；任务事务锁+status CAS防重复完成。",
+        "M1必须实现waiting_human→running续接/取消的明确契约；在未实现前不启用对应Agent场景。",
+        "DB CHECK：stage为四类业务生成时function_id IS NOT NULL；target_artifact_id非空时function_id IS NOT NULL；仅FR_ALLOCATION允许且必须有subsystem_design_version_id。",
+        "阶段/操作白名单配对：PROMPT_EXPAND对应expand；其他stage为generate/revise/analyze。",
+        "retry_of_run_id必须与当前任务project/function/stage匹配；新请求仍重新鉴权；幂等冲突比较原请求参数，不仅比较key。",
+        "FR分配只读取当前项目固定方案版本的可分配条目，包含ID/名称/描述/域/已提供职责；Agent仅返回目录内目标，不得新增或改写目录。后端校验越界/跨项目/混版本及FR输入变化，方案换版的旧结果按冲突处理，不静默落入新方案。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "project_id",
+          "requested_by",
+          "idempotency_key"
+        ],
+        [
+          "project_id",
+          "id"
+        ],
+        [
+          "project_id",
+          "function_id",
+          "id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id"
+          ],
+          "parent": "projects",
+          "references": [
+            "id"
+          ],
+          "label": "projects",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id"
+          ],
+          "parent": "business_functions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "business_functions",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "target_artifact_id"
+          ],
+          "parent": "artifacts",
+          "references": [
+            "project_id",
+            "function_id",
+            "id"
+          ],
+          "label": "artifacts",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "project_id",
+            "subsystem_design_version_id"
+          ],
+          "parent": "subsystem_design_versions",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "subsystem_design_versions",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "project_id",
+            "retry_of_run_id"
+          ],
+          "parent": "ai_runs",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "ai_runs",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "requested_by"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M1 AI"
+        }
+      ],
+      "indexes": [
+        "任务查询：(project_id,requested_by,created_at)",
+        "同功能同stage活跃任务部分唯一：(project_id,function_id,stage) WHERE function_id IS NOT NULL AND stage<>PROMPT_EXPAND AND status IN (queued,running,waiting_human,ready)"
+      ]
+    },
+    {
+      "no": 30,
+      "name": "ai_run_inputs",
+      "group": "AI任务",
+      "purpose": "冻结任务读取的完整对象版本集合，区分primary/context。",
+      "phase": "M1 AI",
+      "review": "保留；它与逐FR实际来源不是一回事。",
+      "fields": [
+        {
+          "name": "run_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "任务"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "输入对象本身的功能归属；即使任务无功能，artifact也始终属于一个功能"
+        },
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）",
+          "default": "—",
+          "purpose": "输入对象"
+        },
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "输入版本"
+        },
+        {
+          "name": "input_role",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK primary/context/target_base",
+          "default": "—",
+          "purpose": "上游主输入、额外上下文或修改目标基版；一对象一冻结版本"
+        },
+        {
+          "name": "input_order",
+          "type": "integer",
+          "nullable": "否",
+          "key": "—",
+          "default": "0",
+          "purpose": "发送给模型的稳定顺序"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "记录时间"
+        }
+      ],
+      "constraints": [
+        "PK(run_id,artifact_id)",
+        "版本必须属于对象、项目和功能",
+        "首次PRD生成可以没有artifact primary输入，由prompt_text提供",
+        "业务阶段输入默认同任务功能；跨功能上下文/来源暂不启用。复用对象不能通过双角色混入不同版本。",
+        "重新生成的目标旧版本也在执行前冻结为target_base/primary，模型不得自行指定base_revision。",
+        "本表是父版本/任务的子项，不为每一行再建立独立内容版本。"
+      ],
+      "relations": [],
+      "pk": [
+        "run_id",
+        "artifact_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "run_id"
+          ],
+          "parent": "ai_runs",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "ai_runs",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "id"
+          ],
+          "label": "artifact_revisions",
+          "phase": "M1 AI"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 31,
+      "name": "ai_run_outputs",
+      "group": "AI任务",
+      "purpose": "登记每个AI任务产生的候选版本及其状态。",
+      "phase": "M1 AI",
+      "review": "保留；没有可靠事件表时仍可通过任务状态查询候选结果。",
+      "fields": [
+        {
+          "name": "run_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列；FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "任务"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "产物对象所属功能；PROMPT_EXPAND不写此表"
+        },
+        {
+          "name": "output_key",
+          "type": "text",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "任务内稳定产物键"
+        },
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "产物对象"
+        },
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "候选版本"
+        },
+        {
+          "name": "base_revision_id",
+          "type": "uuid",
+          "nullable": "是",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "生成开始时基准版本"
+        },
+        {
+          "name": "operation",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK create/revise",
+          "default": "—",
+          "purpose": "创建或修改"
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK staged/published/rejected",
+          "default": "—",
+          "purpose": "候选状态"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "登记时间"
+        }
+      ],
+      "constraints": [
+        "候选版本先staged，正式发布需再次校验基准和权限",
+        "不使用project_events也不丢失最终任务状态",
+        "对应版本头ai_run_id必须等于run_id，输出operation=create时base为空、revise时base非空且来自冻结输入。",
+        "新对象身份可以为候选预留，但无published head时不出现在正式列表；正式新PRD身份唯一性不得被失败候选长期占用。",
+        "本表是父版本/任务的子项，不为每一行再建立独立内容版本。"
+      ],
+      "relations": [],
+      "pk": [
+        "run_id",
+        "output_key"
+      ],
+      "unique": [
+        [
+          "run_id",
+          "artifact_id"
+        ],
+        [
+          "revision_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "run_id"
+          ],
+          "parent": "ai_runs",
+          "references": [
+            "project_id",
+            "id"
+          ],
+          "label": "ai_runs",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "revision_id",
+            "run_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "id",
+            "ai_run_id"
+          ],
+          "label": "artifact_revisions",
+          "phase": "M1 AI"
+        },
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "base_revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "id"
+          ],
+          "label": "artifact_revisions",
+          "phase": "M1 AI"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "no": 32,
+      "name": "review_events",
+      "group": "审阅与接受",
+      "purpose": "记录谁对哪一个对象版本做了接受、拒绝或撤回决定。",
+      "phase": "M0 CRUD",
+      "review": "保留保存/接受区别；追加event_no和request_key解决同时间/重试顺序歧义，不按无序UUID判断最后决定；不建第二份正文。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "PK组成列",
+          "default": "—",
+          "purpose": "审阅事件ID"
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "项目归属"
+        },
+        {
+          "name": "function_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "功能归属"
+        },
+        {
+          "name": "artifact_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）；UQ组成列（见下）",
+          "default": "—",
+          "purpose": "对象"
+        },
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "被审版本"
+        },
+        {
+          "name": "decision",
+          "type": "text",
+          "nullable": "否",
+          "key": "CHECK accept/reject/withdraw",
+          "default": "—",
+          "purpose": "审阅决定"
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "nullable": "否",
+          "key": "FK组成列（见下）",
+          "default": "—",
+          "purpose": "决定人"
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "nullable": "是",
+          "key": "—",
+          "default": "—",
+          "purpose": "原因"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": "否",
+          "key": "—",
+          "default": "now()",
+          "purpose": "发生时间"
+        },
+        {
+          "name": "event_no",
+          "type": "bigint",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "持有对象行锁时递增，明确接受/拒绝事件顺序，不用时间戳猜顺序"
+        },
+        {
+          "name": "request_key",
+          "type": "text",
+          "nullable": "否",
+          "key": "UQ组成列（见下）",
+          "default": "—",
+          "purpose": "审阅动作幂等键，相同请求重试不重复接受"
+        }
+      ],
+      "constraints": [
+        "append-only",
+        "接受事务同时更新artifacts.accepted_revision_id",
+        "普通关闭标签不写事件",
+        "首次接受要求被审版本仍为head，并做完整性/权限校验；已接受对象改版、withdraw被下游使用版本的策略未确认，M0禁止。",
+        "取消未接受草稿可更新head指针但保留候选及事件；恢复已生效旧正文必须创建新版本。"
+      ],
+      "relations": [],
+      "pk": [
+        "id"
+      ],
+      "unique": [
+        [
+          "artifact_id",
+          "event_no"
+        ],
+        [
+          "artifact_id",
+          "request_key"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "revision_id"
+          ],
+          "parent": "artifact_revisions",
+          "references": [
+            "project_id",
+            "function_id",
+            "artifact_id",
+            "id"
+          ],
+          "label": "artifact_revisions",
+          "phase": "M0 CRUD"
+        },
+        {
+          "columns": [
+            "actor_id"
+          ],
+          "parent": "app_users",
+          "references": [
+            "id"
+          ],
+          "label": "app_users",
+          "phase": "M0 CRUD"
+        }
+      ],
+      "indexes": []
+    }
+  ],
+  "removed_from_active": [
+    "field_changes",
+    "project_events",
+    "workspace_views",
+    "workspace_folders",
+    "folder_allowed_types"
+  ],
+  "deferred": [
+    "trace_field_links",
+    "impact_analyses",
+    "impact_items",
+    "baselines",
+    "baseline_items"
+  ]
+}

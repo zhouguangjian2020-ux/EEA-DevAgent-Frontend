@@ -1,0 +1,49 @@
+{
+  "checked_at": "2026-09-30T08:48:46.937054+08:00",
+  "request_file": "E:\\Git projects\\TS-frontend\\docs\\current\\requests\\uc-panorama-20260930\\from-prd-create-uc.dvr-preview.request.json",
+  "scene": "FROM_PRD_CREATE_UC",
+  "source_file": "E:\\Git projects\\TS-frontend\\artifacts\\prd-stream-ui-20260929\\live-output.md",
+  "source_status": "unconfirmed_preview",
+  "source_normalized_characters": 11049,
+  "source_normalized_sha256": "ddb26e76b1d66afd7e966359a9071d386f9a429b776eb0cd831ad75951fb8d8e",
+  "source_file_sha256": "55f9cebdfe5ef17c0f8ff02dea3b21a1b3a30ee17b96b4d8d1246fad88a5c590",
+  "message_characters": 12009,
+  "reference_data_compact_utf8_bytes": 26356,
+  "request_file_utf8_bytes": 55034,
+  "checks": {
+    "valid_json_utf8": true,
+    "full_source_in_message_and_reference": true,
+    "source_copies_equal": true,
+    "project_name_from_source_not_hardcoded_general": true,
+    "no_fixed_branch_or_exception_count": true,
+    "no_output_schema": true,
+    "no_invented_persisted_revision_id": true,
+    "declared_top_level_keys_and_types_match_snapshot": true,
+    "reference_data_within_local_bridge_50_kib_limit": true,
+    "read_only_local_AgentRequest_model_validation": true
+  },
+  "contract_evidence": {
+    "path": "E:\\Git projects\\TS-frontend\\artifacts\\feature-definition-10-tests-20260922-203330\\agent-openapi.json",
+    "snapshot_date": "2026-09-22",
+    "scope": "AgentRequest top-level field names/types only; not a current deployed per-scene contract"
+  },
+  "online_check": {
+    "url": "http://192.168.64.3:8300/openapi.json",
+    "date": "2026-09-30",
+    "result": "ConnectTimeout",
+    "post_generation_called": false
+  },
+  "not_verified": [
+    "Current service reachability and API-key validity",
+    "Current FROM_PRD_CREATE_UC registration and skill inputs",
+    "Actual Agent execution/output shape",
+    "Compatibility with existing TS structured.use_cases fixed-4/5 parser",
+    "Persisted confirmed PRD source eligibility"
+  ],
+  "local_model_evidence": {
+    "path": "E:\\Git projects\\Agent Project\\ai_service\\api\\schemas.py",
+    "sha256": "0614dbe1454d5104a8cd9fb7e4d102c7fa5e7d19004fffe6901597b538ca0b5e",
+    "scope": "Read-only AgentRequest class validation; local model is not proof of deployed scene registration or input requirements",
+    "modified": false
+  }
+}

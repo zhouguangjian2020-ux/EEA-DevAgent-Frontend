@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-04",
+  "scope": "Existing UC template authentication only; no FR endpoint implementation",
+  "runtime_application_source_changed": false,
+  "test_file": "E:/Git projects/TS-backend/tests/test_agent_template_auth_boundary.py",
+  "test_file_sha256": "9bfdb8d9fdc9f202c12516f7da97c14dd0f56040eea41202760b0b265b8c9587",
+  "targeted_tests": {
+    "files": [
+      "tests/test_agent_template_auth_boundary.py",
+      "tests/test_uc_handoff_tools.py",
+      "tests/test_uc_interfaces.py"
+    ],
+    "selection": "template or callback or browser",
+    "passed": 20,
+    "deselected": 28,
+    "warnings": 1
+  },
+  "full_backend_tests": {
+    "command": "python -B -m pytest -q",
+    "passed": 318,
+    "skipped": 127,
+    "warnings": 1,
+    "limitation": "Skipped tests are not claimed as verified"
+  },
+  "warning": "Existing Starlette/AnyIO BlockingPortal deprecation",
+  "new_auth_test_isolation": "TestClient in-process; fake credentials; psycopg and HTTPX network transports blocked in new boundary tests",
+  "verified": [
+    "Correct callback key succeeds without user cookie",
+    "Missing/wrong/unconfigured callback key rejected",
+    "X-API-Key and Bearer credentials not accepted as callback key",
+    "Browser cookie cannot replace callback key",
+    "Callback key does not log in to auth/me or projects",
+    "Template calls do not issue browser sessions",
+    "Errors do not echo test keys"
+  ],
+  "live_agent_callback": "not_yet_verified",
+  "agent_registration": "owned_by_agent_engineer_not_changed",
+  "company_services_changed": false,
+  "assistant_accessed_company": false
+}

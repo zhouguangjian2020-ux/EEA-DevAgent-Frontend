@@ -1,0 +1,64 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts",
+    "tmp/manual-next/types/**/*.ts",
+    "tmp/manual-next/dev/types/**/*.ts",
+    "tmp/crud-stage3-4-next/types/**/*.ts",
+    "tmp/crud-stage3-4-next/dev/types/**/*.ts",
+    "tmp/crud34-build/types/**/*.ts",
+    "tmp/crud34-build/dev/types/**/*.ts",
+    "tmp/prd-stream-next/types/**/*.ts",
+    "tmp/prd-stream-next/dev/types/**/*.ts",
+    "tmp/workflow-build/types/**/*.ts",
+    "tmp/workflow-build/dev/types/**/*.ts",
+    "tmp/workflow-next/types/**/*.ts",
+    "tmp/workflow-next/dev/types/**/*.ts",
+    "tmp/uc-fr-chat-next/types/**/*.ts",
+    "tmp/uc-fr-chat-next/dev/types/**/*.ts",
+    "tmp/uc-fr-chat-production-build/types/**/*.ts",
+    "tmp/uc-fr-chat-production-build/dev/types/**/*.ts",
+    "tmp/prd-creation-s3-next/types/**/*.ts",
+    "tmp/prd-creation-s3-next/dev/types/**/*.ts",
+    "tmp/prd-creation-s3-build/types/**/*.ts",
+    "tmp/prd-creation-s3-build/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "artifacts",
+    "tmp"
+  ]
+}

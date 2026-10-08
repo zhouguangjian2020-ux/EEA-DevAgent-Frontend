@@ -1,0 +1,303 @@
+{
+  "contract_version": 1,
+  "scope": "shared_instance_adapter_not_deployed_OpenAPI",
+  "identity_and_revision_fields": {
+    "artifacts": [
+      {
+        "key": "id",
+        "storage_type": "uuid",
+        "description": "对象稳定标识",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "project_id",
+        "storage_type": "uuid",
+        "description": "所属项目",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "function_id",
+        "storage_type": "uuid",
+        "description": "所属业务功能",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "type_code",
+        "storage_type": "text",
+        "description": "对象类型",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "code",
+        "storage_type": "text",
+        "description": "稳定业务编号",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "head_revision_id",
+        "storage_type": "uuid",
+        "description": "当前工作版本",
+        "nullable": true,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "accepted_revision_id",
+        "storage_type": "uuid",
+        "description": "最近被接受版本",
+        "nullable": true,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "lock_version",
+        "storage_type": "bigint",
+        "description": "对象并发控制令牌",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "decimal_string"
+      },
+      {
+        "key": "metadata",
+        "storage_type": "jsonb",
+        "description": "对象级非核心扩展",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "created_by",
+        "storage_type": "uuid",
+        "description": "创建人",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "created_at",
+        "storage_type": "timestamptz",
+        "description": "创建时间",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "updated_at",
+        "storage_type": "timestamptz",
+        "description": "更新时间",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "archived_at",
+        "storage_type": "timestamptz",
+        "description": "归档时间",
+        "nullable": true,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      }
+    ],
+    "artifact_revisions": [
+      {
+        "key": "id",
+        "storage_type": "uuid",
+        "description": "版本稳定标识",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "project_id",
+        "storage_type": "uuid",
+        "description": "项目归属",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "function_id",
+        "storage_type": "uuid",
+        "description": "功能归属",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "artifact_id",
+        "storage_type": "uuid",
+        "description": "所属对象",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "type_code",
+        "storage_type": "text",
+        "description": "版本类型",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "revision_no",
+        "storage_type": "bigint",
+        "description": "对象内递增版本号",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "decimal_string"
+      },
+      {
+        "key": "base_revision_id",
+        "storage_type": "uuid",
+        "description": "本次版本基于哪一版",
+        "nullable": true,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "type_version_id",
+        "storage_type": "uuid",
+        "description": "采用的类型结构版本",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "created_via",
+        "storage_type": "text",
+        "description": "来源manual/import/migration；M1扩展ai，导入不伪造历史生成任务",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "change_summary",
+        "storage_type": "text",
+        "description": "变更摘要",
+        "nullable": true,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "metadata",
+        "storage_type": "jsonb",
+        "description": "版本级扩展/导入证据：文件SHA-256、sheet/table/row、批次键、缺项；核心来源必须FK",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "created_by",
+        "storage_type": "uuid",
+        "description": "创建人",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      },
+      {
+        "key": "created_at",
+        "storage_type": "timestamptz",
+        "description": "创建时间",
+        "nullable": false,
+        "edit": "readonly",
+        "source": "database",
+        "json_encoding": "native"
+      }
+    ]
+  },
+  "runtime_fields": [
+    {
+      "key": "review_status",
+      "values": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "source": "latest_review_for_viewed_revision",
+      "edit": "readonly"
+    },
+    {
+      "key": "is_head",
+      "type": "boolean",
+      "source": "viewed_revision_equals_head",
+      "edit": "readonly"
+    },
+    {
+      "key": "is_current_accepted",
+      "type": "boolean",
+      "source": "viewed_revision_equals_accepted_pointer",
+      "edit": "readonly"
+    },
+    {
+      "key": "dependencies",
+      "type": "array",
+      "source": "direct_version_references_and_current_accepted_pointers",
+      "edit": "readonly",
+      "items": {
+        "artifact_id": "uuid",
+        "referenced_revision_id": "uuid",
+        "current_accepted_revision_id": "uuid_or_null",
+        "changed": "boolean",
+        "has_unaccepted_working_revision": "boolean"
+      }
+    },
+    {
+      "key": "acceptance_issues",
+      "type": "array",
+      "source": "bound_definition_plus_direct_upstream_checks",
+      "edit": "readonly",
+      "not_authorization": true
+    },
+    {
+      "key": "capabilities",
+      "source": "authenticated_backend_only",
+      "edit": "readonly",
+      "fields": [
+        "can_revise",
+        "can_accept",
+        "readonly_reasons"
+      ],
+      "not_stored": true,
+      "when_absent": "deny_writes"
+    }
+  ],
+  "effective_editability": "field_rule AND authenticated_permission AND current_view_and_version_checks; no client supplied capability is trusted",
+  "acceptance": "explicit_authorized_action_only; saving and AI completion never accept",
+  "implementation_status": "SQL content/state/validation adapters implemented; authenticated API and frontend metadata consumption pending"
+}

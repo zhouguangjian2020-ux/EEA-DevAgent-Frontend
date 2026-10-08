@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-20",
+  "archive_original_files": 85,
+  "archive_hashes_matched": 85,
+  "zip_expanded_copies_matched": 10,
+  "source_evidence_hashes_matched": 26,
+  "current_markdown_files": 8,
+  "markdown_and_entrypoints_checked": 13,
+  "local_links_checked": 85,
+  "missing_or_changed_archive_files": 0,
+  "errors": [],
+  "passed": true
+}

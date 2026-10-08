@@ -1,0 +1,12 @@
+erDiagram
+    direction LR
+    app_users ||--o{ project_members : "先有成员资格"
+    projects ||--o{ project_members : "活动成员"
+    project_members ||--o{ access_bindings : "用户范围授权"
+    access_roles ||--o{ access_bindings : "固定角色版本"
+    access_roles ||--o{ role_permissions : "能力集合"
+    permission_definitions ||--o{ role_permissions : "页面与动作"
+    business_functions o|--o{ access_bindings : "功能及对象范围"
+    artifacts o|--o{ access_bindings : "对象例外权限"
+    projects ||--o{ security_audit_events : "授权与撤权审计"
+    app_users ||--o{ security_audit_events : "操作人"

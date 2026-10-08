@@ -1,0 +1,22 @@
+{
+  "recorded_at": "2026-10-04T09:11:18.6231254+08:00",
+  "source": "User said continue after the database migration scope explanation and successful old-flow acceptance",
+  "execution_boundary": "User executes company commands; assistant does not connect to company",
+  "database": "ee_platform",
+  "system_identifier": "7686454253092706426",
+  "frozen_sql_package": "agent-workflows-r1",
+  "sql_manifest_sha256": "2f4fd6e395635106bde0045eab7cfba1c608c9ab97ac93feab179705cc67fecf",
+  "helper_sha256": "0e79f293d10199661203421de8e1d10b167d190261cdc62a5c324fe5634e6f4a",
+  "proposed_step": "Preflight; stop only compatible main; require quiet; apply.sql; verify.sql; start same compatible main only on verified success",
+  "excluded": [
+    "frontend cutover",
+    "preview start or write enablement",
+    "console cutover",
+    "preset initialization",
+    "mock-data insertion",
+    "automatic database rollback",
+    "old-backend restart"
+  ],
+  "company_execution_status": "pending_user_receipt",
+  "local_fixture_tests_passed": 21
+}

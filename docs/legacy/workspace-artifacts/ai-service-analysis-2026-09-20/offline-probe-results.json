@@ -1,0 +1,68 @@
+{
+  "method": "Source function extraction with local doubles; actual Pydantic models and TaskRecord; no full server or LLM integration test.",
+  "results": [
+    {
+      "probe": "request_model",
+      "observation": {
+        "empty_request_accepted_by_schema": {
+          "message": null,
+          "scene": null,
+          "inputs": null,
+          "thread_id": null,
+          "context": null,
+          "reference_data": null,
+          "response_format": null,
+          "enabled_tools": null,
+          "callback_url": null,
+          "priority": "normal",
+          "timeout_seconds": null,
+          "idempotency_key": null,
+          "trace_id": null
+        },
+        "unknown_top_level_field_ignored": true,
+        "scene_normalized": "ONE_CLICK_EXPAND"
+      }
+    },
+    {
+      "probe": "confirm_classification",
+      "observation": {
+        "type": "ask",
+        "step_id": "step_1",
+        "tool": "product_agent",
+        "skill": "feature_definition",
+        "message": "需要人工确认"
+      }
+    },
+    {
+      "probe": "input_validation",
+      "observation": "A numeric value for a declared string, and an unknown input key, both pass the actual presence-only validator."
+    },
+    {
+      "probe": "callback_payload_json",
+      "observation": "Object of type datetime is not JSON serializable"
+    },
+    {
+      "probe": "async_error_handler",
+      "observation": {
+        "exception": "NameError",
+        "message": "name 'ApiError' is not defined",
+        "remaining_status": "planning"
+      }
+    },
+    {
+      "probe": "sync_timeout_ignored",
+      "observation": {
+        "requested_seconds": 1,
+        "elapsed_seconds": 1.11,
+        "result": "offline test output"
+      }
+    },
+    {
+      "probe": "python_syntax",
+      "observation": {
+        "files_parsed": 27,
+        "errors": []
+      }
+    }
+  ]
+}

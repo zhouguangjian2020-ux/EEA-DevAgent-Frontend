@@ -1,0 +1,16 @@
+来源：2026-09-17 用户聊天回传的关键结果摘录；未提供精确执行时间。
+说明：聊天转义已还原；仅摘录新增 drop-in 和 show 属性，非完整输出的逐字节归档。行尾显示截断符 > 原样保留，不补全被截断内容。
+用户也贴出了 HBA、pg_lsclusters、ss 的输入命令，但本次没有对应输出，不能标为已验收。
+
+# /etc/systemd/system/postgresql@18-main.service.d/20-ee-data-mount.conf
+[Unit]
+RequiresMountsFor=/data/postgresql/18/main
+BindsTo=data.mount
+After=data.mount
+AssertPathIsMountPoint=/data
+AssertPathIsReadWrite=/data
+
+BindsTo=data.mount
+After=systemd-journald.socket -.mount system-postgresql.slice basic.target data.mount>
+RequiresMountsFor=/var/lib/postgresql/18/main /etc/postgresql/18/main /data/postgresq>
+DropInPaths=/etc/systemd/system/postgresql@18-main.service.d/20-ee-data-mount.conf

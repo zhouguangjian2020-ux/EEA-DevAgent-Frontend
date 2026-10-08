@@ -1,0 +1,95 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { DocumentStatus } from "../workbench/document-status";
+import { DatabaseReview, type Persistence } from "../workbench/database-review";
+import { canReviewPrd, type PrdAction, type PrdSession } from "@/features/prd/model";
+import type { PrdGeneration } from "@/features/prd/generation";
+import type { UcGenerationCandidate } from "@/features/workbench/uc-generation-api";
+import { ObjectReview } from "../workbench/object-review";
+type Props = {
+  session: PrdSession; onAction: (action: PrdAction) => void; featureName: string;
+  onGenerateUcs: () => void; ucGenerating: boolean; ucGenerated: boolean; canGenerateUcs: boolean;
+  onStopUcs: () => void; generatedUcs: { id: string; label: string }[]; onOpenUc: (id: string) => void; generatedCandidates?: UcGenerationCandidate[];
+  readOnly?: boolean; persistence?: Persistence;
+  generation?: { state?: PrdGeneration; reason: string | null; onGenerate: () => void; onStop: () => void };
+};
+function MarkdownPreview({ content }: { content: string }) {
+  return <div className="prd-markdown"><Markdown remarkPlugins={[remarkGfm]} skipHtml components={{ img: ({ alt }) => <span>[图片：{alt || "未加载"}]</span>, a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>{content}</Markdown></div>;
+}
+
+function GeneratedUcCandidates({ candidates }: { candidates: UcGenerationCandidate[] }) {
+  if (!candidates.length) return null;
+  const text = (value: string) => value.trim() || "—";
+  return <section className="generated-uc-candidates" aria-label="UC生成候选">
+    <header><div><strong>UC 生成候选</strong><span>仅供审阅 · 尚未创建、保存或确认正式 UC</span></div><small>{candidates.length} 条</small></header>
+    <div className="generated-uc-candidate-list">
+      {candidates.map(candidate => <article key={candidate.candidate_id} className="generated-uc-candidate">
+        <div className="generated-uc-candidate-title"><strong>候选 {candidate.ordinal} · {candidate.name}</strong><span>用例编号：正式保存时由后端生成</span></div>
+        <dl>
+          <div><dt>用例描述</dt><dd>{text(candidate.description)}</dd></div>
+          <div><dt>参与者</dt><dd>{text(candidate.actors)}</dd></div>
+          <div><dt>前置条件</dt><dd>{text(candidate.preconditions)}</dd></div>
+          <div><dt>场景 · 主事件流</dt><dd>{text(candidate.scenario.main_flow)}</dd></div>
+          <div><dt>场景 · 分支事件流</dt><dd>{candidate.scenario.branches.length ? <ol>{candidate.scenario.branches.map((item, index) => <li key={`${candidate.candidate_id}-branch-${index}`}>{item}</li>)}</ol> : "无适用分支"}</dd></div>
+          <div><dt>场景 · 异常事件流</dt><dd>{candidate.scenario.exceptions.length ? <ol>{candidate.scenario.exceptions.map((item, index) => <li key={`${candidate.candidate_id}-exception-${index}`}>{item}</li>)}</ol> : "无适用异常"}</dd></div>
+          <div><dt>后置条件</dt><dd>{text(candidate.postconditions)}</dd></div>
+          <div><dt>扩展用例</dt><dd>{text(candidate.extensions)}</dd></div>
+          <div><dt>HMI 交互逻辑</dt><dd>{text(candidate.hmi)}</dd></div>
+          <div><dt>法规需求</dt><dd>{text(candidate.regulations)}</dd></div>
+          <div><dt>性能需求</dt><dd>{text(candidate.performance)}</dd></div>
+          <div><dt>非功能需求</dt><dd>{text(candidate.nonfunctional)}</dd></div>
+        </dl>
+      </article>)}
+    </div>
+  </section>;
+}
+
+export function PrdWorkspace({ session, onAction, featureName, onGenerateUcs, ucGenerating, ucGenerated, canGenerateUcs, onStopUcs, generatedUcs, onOpenUc, generatedCandidates = [], readOnly = false, persistence, generation }: Props) {
+  const [livePreview, setLivePreview] = useState(false);
+  const [originalFor, setOriginalFor] = useState<string | null>(null);
+  const paper = useRef<HTMLDivElement>(null), stick = useRef(true);
+  const state = generation?.state, generating = state?.status === "streaming";
+  const hasPreview = state?.status === "streaming" || state?.status === "succeeded";
+  const showPreview = hasPreview && originalFor !== state.id;
+  const doc = session.document, editing = !readOnly && session.editDraft !== null;
+  useEffect(() => {
+    if (showPreview && stick.current && paper.current) paper.current.scrollTop = paper.current.scrollHeight;
+  }, [showPreview, state?.text]);
+  return <section className="prd-workspace with-document document-only" data-testid="prd-workspace" onKeyDown={e => { if (e.key === "Escape" && session.confirmDiscard) onAction({ type: "cancel-discard" }); }}>
+    <section className="prd-document" aria-label="PRD 正文区">
+      <div className="prd-document-toolbar">
+        <span className="document-type">PRD</span><strong>{featureName}</strong>
+        {showPreview ? <span className="object-status document-toolbar-status pending" role="status" aria-label="文档状态">{generating ? "生成中" : "未保存"}</span> : <DocumentStatus status={doc?.status} editing={editing} />}
+        <span className="document-toolbar-spacer" aria-hidden="true" />
+        {generation && <>
+          <button type="button" className="button-secondary" disabled={Boolean(generation.reason)} title={generation.reason ?? "根据当前已保存的功能描述生成 PRD 预览，不覆盖原正文"} aria-busy={generating} onClick={() => { stick.current = true; generation.onGenerate(); }}>{generating ? "正在生成 PRD…" : state?.status === "succeeded" ? "已生成 PRD" : "生成 PRD"}</button>
+          {generating && <button type="button" className="button-secondary" onClick={generation.onStop}>停止生成</button>}
+        </>}
+        {!showPreview && !generating && <>
+          {!readOnly && !persistence && <ObjectReview kind="PRD" label={featureName} status={doc?.status} selected={session.selected} reviewable={!ucGenerating && canReviewPrd(session)} confirming={session.confirmDiscard} onSelect={selected => onAction({ type: "select", selected })} onAccept={() => onAction({ type: "accept" })} onConfirmDiscard={() => onAction({ type: "confirm-discard" })} onCancelDiscard={() => onAction({ type: "cancel-discard" })} onDiscard={() => onAction({ type: "discard" })} />}
+          {persistence && <DatabaseReview persistence={persistence} status={doc?.status} editing={editing} selected={session.selected} onSelect={selected => onAction({ type: "select", selected })} onAccept={() => onAction({ type: "accept" })} />}
+          {editing ? <><button className="button-secondary" disabled={persistence?.saving} onClick={() => onAction({ type: "cancel-edit" })}>取消编辑</button><button className="button-primary" disabled={persistence ? Boolean(persistence.saving) : !session.editDraft?.trim()} onClick={() => onAction({ type: "save" })}>保存草稿</button></> : readOnly ? <span className="document-readonly">只读</span> : <button className="button-secondary" disabled={persistence ? persistence.saving || !persistence.canUpdate : ucGenerating || !canReviewPrd(session) || session.confirmDiscard} onClick={() => onAction({ type: "edit" })}>编辑</button>}
+        </>}
+      </div>
+      {hasPreview && <div className="prd-generation-bar">
+        <div role="group" aria-label="PRD 内容视图">
+          <button type="button" aria-pressed={!showPreview} onClick={() => setOriginalFor(state.id)}>原 PRD</button>
+          <button type="button" aria-pressed={showPreview} onClick={() => { stick.current = true; setOriginalFor(null); }}>生成预览（未保存）</button>
+        </div>
+        <span role="status">{generating ? "正在接收生成内容…" : "生成完成 · 未保存、未确认"}</span>
+      </div>}
+      {state?.status === "failed" && <p className="prd-generation-message error" role="alert">{state.error} 可点击上方“生成 PRD”重试。</p>}
+      {state?.status === "cancelled" && <p className="prd-generation-message" role="status">已停止接收，原 PRD 未修改。远端 Agent 推理不保证同时取消。</p>}
+      <div className={"prd-paper" + (editing && !showPreview ? " is-editing" : "")} ref={paper} onScroll={e => { const el = e.currentTarget; stick.current = el.scrollHeight - el.clientHeight - el.scrollTop < 80; }}>
+        {showPreview ? <article aria-label="PRD 生成预览" aria-busy={generating}>
+          {state.text ? <MarkdownPreview content={state.text} /> : <div className="work-empty"><h2>正在生成 PRD…</h2><p>首段内容返回后将在这里实时展示，可以停止等待。</p></div>}
+        </article> : doc ? editing ? <><label className="document-feedback"><input type="checkbox" checked={livePreview} onChange={e => setLivePreview(e.target.checked)} /> 显示 Markdown 实时预览</label><textarea className="prd-editor" aria-label="编辑 PRD 正文" disabled={persistence?.saving} value={session.editDraft!} onChange={e => onAction({ type: "edit-text", value: e.target.value })} />{livePreview && <div className="markdown-edit-preview"><MarkdownPreview content={session.editDraft!} /></div>}</> : <article aria-label="PRD 正文预览"><MarkdownPreview content={doc.content} /></article> : <div className="work-empty"><h2>PRD 草稿已放弃</h2><p>功能目录和项目对话保留，可从工作台重新生成。</p></div>}
+      </div>
+      {showPreview && <p className="prd-generation-message">生成预览仅保留在当前页面，刷新后丢失；不会覆盖原 PRD，也不会自动保存或确认。</p>}
+      {!showPreview && session.notice && <p className="document-feedback" role="status">{session.notice}</p>}
+      {!readOnly && !showPreview && !generating && <div className="prd-downstream">{generatedCandidates.length > 0 && ucGenerated && <GeneratedUcCandidates candidates={generatedCandidates} />}{generatedUcs.length > 0 && ucGenerated && <div className="generated-uc-list" aria-label="已生成用例"><span>已模拟生成 {generatedUcs.length} 条 UC</span>{generatedUcs.map(uc => <button key={uc.id} onClick={() => onOpenUc(uc.id)}>{uc.label} →</button>)}</div>}<div className="prd-next-step"><div><strong>生成 UC</strong><p>{persistence ? "根据当前已确认 PRD 生成并追加待确认 UC，结果请到需求工程 UC 目录审阅；已有实例保持不变。" : "根据当前已确认的 PRD 模拟生成用例。生成成功后按钮置灰；后续修改请通过项目 AI 对话完成。"}</p></div><button className="button-secondary" disabled={!canGenerateUcs} aria-busy={ucGenerating} onClick={onGenerateUcs}>{ucGenerating ? <><span className="loading-icon" aria-hidden="true" />正在生成 UC…</> : ucGenerated ? "已生成 UC" : "生成 UC"}</button>{ucGenerating && <button className="button-secondary" onClick={onStopUcs}>停止</button>}</div></div>}
+    </section>
+  </section>;
+}

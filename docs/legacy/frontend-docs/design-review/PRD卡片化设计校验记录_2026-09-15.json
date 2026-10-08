@@ -1,0 +1,152 @@
+{
+  "date": "2026-09-15",
+  "status": "complete",
+  "fileKey": "zJPTee4kYlALLVqOCp3Pai",
+  "sourcePage": "326:1227",
+  "objectTabsPage": "359:1227",
+  "outputComponentSet": "337:1622",
+  "pending": {
+    "id": "334:1246",
+    "paper": "334:1253",
+    "stack": "423:1507",
+    "cards": [
+      "422:1505",
+      "423:1508",
+      "423:1509",
+      "423:1510",
+      "423:1511",
+      "423:1512"
+    ],
+    "originalTextNodesPreserved": true
+  },
+  "themeCollection": "VariableCollectionId:326:1229",
+  "numericCollection": "VariableCollectionId:345:1508",
+  "frontendBusinessCodeChanged": false,
+  "notes": [
+    "保留原正文节点、字符绑定和原型反应；卡片为同一份自由文本PRD的展示分组。",
+    "颜色以当前前端集合ID锁定，不能按名称匹配历史同名变量。"
+  ],
+  "screens": {
+    "objectTabsLight": "383:1935",
+    "objectTabsDark": "428:3153",
+    "fullCards": "428:3165",
+    "originalReviewDark": "329:1333",
+    "originalReviewLight": "429:3645"
+  },
+  "variants": [
+    {
+      "id": "334:1246",
+      "state": "Pending",
+      "stack": "423:1507",
+      "cardCount": 6,
+      "originalTextNodesPreserved": 12,
+      "scroll": "VERTICAL"
+    },
+    {
+      "id": "337:1266",
+      "state": "Unselected",
+      "stack": "425:1513",
+      "cardCount": 6,
+      "originalTextNodesPreserved": 12,
+      "scroll": "VERTICAL"
+    },
+    {
+      "id": "337:1328",
+      "state": "Editing",
+      "stack": "426:1513",
+      "cardCount": 6,
+      "originalTextNodesPreserved": 12,
+      "scroll": "VERTICAL"
+    },
+    {
+      "id": "337:1382",
+      "state": "EditingFilled",
+      "stack": "426:3442",
+      "cardCount": 6,
+      "originalTextNodesPreserved": 12,
+      "scroll": "VERTICAL"
+    },
+    {
+      "id": "337:1436",
+      "state": "Accepted",
+      "stack": "426:3462",
+      "cardCount": 6,
+      "originalTextNodesPreserved": 12,
+      "scroll": "VERTICAL"
+    },
+    {
+      "id": "337:1498",
+      "state": "ConfirmDiscard",
+      "stack": "426:3482",
+      "cardCount": 6,
+      "originalTextNodesPreserved": 12,
+      "scroll": "VERTICAL"
+    },
+    {
+      "id": "337:1560",
+      "state": "UCNotice",
+      "stack": "426:3502",
+      "cardCount": 6,
+      "originalTextNodesPreserved": 12,
+      "scroll": "VERTICAL"
+    }
+  ],
+  "discardedVariant": {
+    "id": "338:1465",
+    "changed": false,
+    "cardCount": 0
+  },
+  "validation": {
+    "sourceVariantNodeLinks": 22,
+    "sourceBrokenLinks": 0,
+    "sourceCrossPageLinks": 0,
+    "sourceWrongColorCollectionBindings": 0,
+    "sourceHorizontalTextOverflows": 0,
+    "objectPageNodeLinks": 56,
+    "objectPageBrokenLinks": 0,
+    "objectPageCrossPageLinks": 0,
+    "objectPageTopLevelOverlaps": 0,
+    "objectScreensHorizontalTextOverflows": 0,
+    "objectScreensSize": [
+      1440,
+      900
+    ],
+    "objectViewportHeight": 606,
+    "fullCardsSize": [
+      740,
+      733
+    ],
+    "aiIdentity": "当前对象：PRD · AEB",
+    "sessionLabel": "独立会话",
+    "originalOverviewCharacterBinding": "VariableID:337:1265"
+  },
+  "baselineChecks": {
+    "lint": {
+      "exitCode": 0,
+      "warnings": 2,
+      "errors": 0
+    },
+    "typecheck": {
+      "exitCode": 0
+    },
+    "test": {
+      "exitCode": 0,
+      "passed": 31,
+      "failed": 0
+    },
+    "build": {
+      "exitCode": 0
+    }
+  },
+  "browserEndToEnd": {
+    "verified": false,
+    "scope": "本轮完成MCP截图、节点与链接检查，未执行浏览器端到端点击验收。"
+  },
+  "limitations": [
+    "原PRD页面保留预设编辑、保存、勾选、接受、放弃及生成UC说明交互，不是任意文本编辑器或真实AI。",
+    "多对象页面沿用原有导航及视觉输出实例，本次只新增PRD主题切换；未追加完整对象级审阅状态机。",
+    "深色多对象页面切换到其他对象会进入既有明亮预设画面，不是完整运行时主题状态管理。",
+    "LKA现有新建工作仍无产物，不为展示卡片而虚构一份已生成LKA PRD。",
+    "卡片为内容呈现分组，六组仅为AEB示例，不新增固定字段、对象、会话或单卡审批。"
+  ]
+}

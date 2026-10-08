@@ -1,0 +1,131 @@
+{
+  "received_date": "2026-10-05",
+  "evidence": "user-provided company execution transcript; no direct company access by assistant",
+  "attachment_path": "C:\\Users\\zhouguangjian\\.codex\\attachments\\beac036e-ad66-4eb6-bdc4-f84edd94dff8\\已粘贴的文本.txt",
+  "attachment_sha256": "912dc7fff069583fe579ff22f02ab5840b93c770c63fc1ff6cafdf02aa1be295",
+  "plan_id": "uc-copy-approved-20261005-r1",
+  "verification": "all three approved IDs, source mappings, per-item creation revisions and before/after normalized hashes match",
+  "preflight": {
+    "confirmation_performed": false,
+    "items": [
+      {
+        "empty_slots_added": [
+          "a4"
+        ],
+        "name": "查看行车记录仪实时影像",
+        "new_code": null,
+        "new_revision_id": null,
+        "new_uc_id": "59fa9c55-1691-4758-8c0a-c48eea56592d",
+        "normalized_content_sha256": "35ca8b1c80401a8c146755dfab23dc64295c909f6a0165e554444ce5467d6820",
+        "source_uc_id": "6c214cdc-afaa-5f0f-905e-dad877601ee0",
+        "state": "not_copied"
+      },
+      {
+        "empty_slots_added": [
+          "a4"
+        ],
+        "name": "退出实时影像",
+        "new_code": null,
+        "new_revision_id": null,
+        "new_uc_id": "0a1a9943-a2e5-4506-8718-aa1e9bd4861d",
+        "normalized_content_sha256": "4149fc088831faf44071327d7a1bdd5b326ab73da06ac5ee5bde0959eaa63779",
+        "source_uc_id": "d8b255d4-0af4-5e96-ade0-4bafc97abbda",
+        "state": "not_copied"
+      },
+      {
+        "empty_slots_added": [
+          "a3",
+          "a4"
+        ],
+        "name": "上电自动开启循环录像",
+        "new_code": null,
+        "new_revision_id": null,
+        "new_uc_id": "d5ca0b02-2e38-4854-be04-6b0a02b54646",
+        "normalized_content_sha256": "a408d2eefbce192ae1193fa16f4d7cc3d95d31b8be8f79f397a4d93c2a1ba1d5",
+        "source_uc_id": "482af1ea-e70b-5211-9217-93170b53038b",
+        "state": "not_copied"
+      }
+    ],
+    "plan_id": "uc-copy-approved-20261005-r1",
+    "status": "COPY_CHECK_ONLY_OK",
+    "writes_performed": false
+  },
+  "item_receipts": [
+    {
+      "artifact_id": "59fa9c55-1691-4758-8c0a-c48eea56592d",
+      "confirmed": false,
+      "created": true,
+      "revision_id": "1a65f64e-2b73-4ecc-823d-9091d8726d46",
+      "status": "COPY_ITEM_VERIFIED"
+    },
+    {
+      "artifact_id": "0a1a9943-a2e5-4506-8718-aa1e9bd4861d",
+      "confirmed": false,
+      "created": true,
+      "revision_id": "f7ef27c4-a930-4772-a886-b8750e98391f",
+      "status": "COPY_ITEM_VERIFIED"
+    },
+    {
+      "artifact_id": "d5ca0b02-2e38-4854-be04-6b0a02b54646",
+      "confirmed": false,
+      "created": true,
+      "revision_id": "2e3aea12-0ef2-43bd-a387-659107d8c390",
+      "status": "COPY_ITEM_VERIFIED"
+    }
+  ],
+  "final_receipt": {
+    "confirmed_count": 0,
+    "items": [
+      {
+        "empty_slots_added": [
+          "a4"
+        ],
+        "name": "查看行车记录仪实时影像",
+        "new_code": "UC-59FA9C551691",
+        "new_revision_id": "1a65f64e-2b73-4ecc-823d-9091d8726d46",
+        "new_uc_id": "59fa9c55-1691-4758-8c0a-c48eea56592d",
+        "normalized_content_sha256": "35ca8b1c80401a8c146755dfab23dc64295c909f6a0165e554444ce5467d6820",
+        "source_uc_id": "6c214cdc-afaa-5f0f-905e-dad877601ee0",
+        "state": "already_copied_pending"
+      },
+      {
+        "empty_slots_added": [
+          "a4"
+        ],
+        "name": "退出实时影像",
+        "new_code": "UC-0A1A9943A2E5",
+        "new_revision_id": "f7ef27c4-a930-4772-a886-b8750e98391f",
+        "new_uc_id": "0a1a9943-a2e5-4506-8718-aa1e9bd4861d",
+        "normalized_content_sha256": "4149fc088831faf44071327d7a1bdd5b326ab73da06ac5ee5bde0959eaa63779",
+        "source_uc_id": "d8b255d4-0af4-5e96-ade0-4bafc97abbda",
+        "state": "already_copied_pending"
+      },
+      {
+        "empty_slots_added": [
+          "a3",
+          "a4"
+        ],
+        "name": "上电自动开启循环录像",
+        "new_code": "UC-D5CA0B022E38",
+        "new_revision_id": "2e3aea12-0ef2-43bd-a387-659107d8c390",
+        "new_uc_id": "d5ca0b02-2e38-4854-be04-6b0a02b54646",
+        "normalized_content_sha256": "a408d2eefbce192ae1193fa16f4d7cc3d95d31b8be8f79f397a4d93c2a1ba1d5",
+        "source_uc_id": "482af1ea-e70b-5211-9217-93170b53038b",
+        "state": "already_copied_pending"
+      }
+    ],
+    "plan_id": "uc-copy-approved-20261005-r1",
+    "status": "UC_COPY_COMPLETE_PENDING_CONFIRMATION",
+    "target_function_id": "3bb1333a-1ebf-428c-831f-c26dcd66cfa3",
+    "target_prd_revision_id": "8995ab55-2970-45eb-a214-b572fdc1e4a8",
+    "target_project_id": "bf8f4d08-d086-44bf-9cbe-f31abc67ee03",
+    "transaction_policy": "three independent service transactions; stable IDs support safe retry",
+    "verified_copy_count": 3
+  },
+  "private_server_logs": [
+    "/home/t7920/uc-copy-approved-20261005-r1-incoming/copy-check-only-VgvyCW.log",
+    "/home/t7920/uc-copy-approved-20261005-r1-incoming/copy-apply-aSHDKy.log"
+  ],
+  "manual_confirmation": "not performed; awaiting user review in original frontend",
+  "agent_diagram_acceptance": "not performed; only test after manual confirmation"
+}

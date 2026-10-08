@@ -1,0 +1,118 @@
+/* Only the two new panorama bodies and their popup. Existing shell/PRD/UC/FR styles stay untouched. */
+.panorama-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 320px; height: 100%; min-height: 0; min-width: 0; background: var(--ee-canvas); }
+.panorama-main { display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+.panorama-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-shrink: 0; min-height: 84px; padding: 16px 24px; background: var(--ee-surface); }
+.panorama-toolbar h1 { margin: 0; font-size: 20px; line-height: 30px; font-weight: 600; color: var(--ee-text); }
+.panorama-toolbar p { margin: 4px 0 0; font-size: 11px; color: var(--ee-muted); }
+.panorama-readonly { flex-shrink: 0; border: 1px solid var(--ee-border); border-radius: 5px; padding: 8px 12px; color: var(--ee-muted); background: var(--ee-canvas); font-size: 11px; }
+.panorama-body { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; padding: 16px 24px; gap: 16px; }
+.panorama-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; padding: 10px 12px; border: 1px solid var(--ee-border); border-radius: 8px; background: var(--ee-surface); color: var(--ee-text); font-size: 12px; }
+.panorama-status small { font-size: 11px; color: var(--ee-muted); white-space: nowrap; }
+.panorama-notes { flex-shrink: 0; font-size: 11px; line-height: 20px; color: var(--ee-muted); }
+.panorama-notes > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.panorama-notes p { margin: 6px 0 0; }
+.panorama-empty { display: grid; align-content: center; justify-items: center; flex: 1; padding: 32px; border: 1px dashed var(--ee-border); border-radius: 12px; text-align: center; color: var(--ee-muted); }
+.panorama-empty strong { color: var(--ee-text); }
+.panorama-empty p { font-size: 13px; line-height: 1.7; }
+.panorama-workspace .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.uc-diagram-scroll { flex: 1; min-height: 0; overflow: auto; background: var(--ee-surface); border: 1px solid var(--ee-border); border-radius: 12px; scrollbar-width: thin; }
+.uc-panorama-diagram { position: relative; width: 840px; min-width: 840px; margin: 0 auto; color: var(--ee-text); isolation: isolate; }
+.uc-system-boundary { position: absolute; z-index: 0; left: 248px; top: 28px; width: 552px; padding: 14px 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border: 1px solid var(--ee-border); border-radius: 8px; background: var(--ee-surface); }
+.uc-system-boundary strong { font-size: 14px; font-weight: 500; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uc-system-boundary > span { color: var(--ee-muted); font-size: 11px; white-space: nowrap; }
+.uc-association { position: absolute; z-index: 1; height: 1px; background: var(--ee-muted); transform-origin: left center; pointer-events: none; }
+.uc-diagram-actor { position: absolute; z-index: 2; left: 64px; width: 92px; height: 134px; }
+.uc-actor-head, .uc-actor-body { position: absolute; display: block; background: var(--ee-text); mask-position: center; mask-repeat: no-repeat; mask-size: 100% 100%; }
+.uc-actor-head { top: 0; left: 32px; width: 24px; height: 24px; mask-image: url('/figma/uc-actor-head.svg'); }
+.uc-actor-body { top: 24px; left: 16px; width: 56px; height: 76px; mask-image: url('/figma/uc-actor-body.svg'); }
+.uc-actor-name { position: absolute; left: -32px; top: 112px; width: 156px; text-align: center; overflow-wrap: anywhere; color: var(--ee-text); font-size: 13px; line-height: 20px; }
+.uc-diagram-usecase { position: absolute; z-index: 2; left: 402px; width: 296px; padding: 10px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px solid var(--ee-border); border-radius: 50%; color: var(--ee-text); background: var(--ee-surface); text-align: center; cursor: default; }
+.uc-diagram-usecase small { font-size: 10px; color: var(--ee-muted); line-height: 17px; }
+.uc-diagram-usecase > span { font-size: 13px; font-weight: 500; line-height: 19px; overflow-wrap: anywhere; }
+.allocation-table-scroll { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; }
+.allocation-table { width: 100%; min-width: 760px; table-layout: fixed; border-collapse: separate; border-spacing: 0; background: var(--ee-surface); color: var(--ee-text); font-size: 12px; }
+.allocation-table th, .allocation-table td { padding: 12px; border-bottom: 1px solid var(--ee-border); border-right: 1px solid var(--ee-border); text-align: left; vertical-align: top; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.allocation-table th:first-child, .allocation-table td:first-child { border-left: 1px solid var(--ee-border); }
+.allocation-table thead th { position: sticky; top: 0; z-index: 1; border-top: 1px solid var(--ee-border); background: var(--ee-canvas); color: var(--ee-text); font-weight: 500; }
+.allocation-table tbody tr { height: 68px; }
+.subsystem-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 36px; gap: 8px; padding: 7px 10px; border: 1px solid var(--ee-border); border-radius: 6px; color: var(--ee-text); background: var(--ee-surface); text-align: left; font-size: 12px; line-height: 20px; cursor: pointer; }
+.subsystem-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.subsystem-trigger > span:last-child { color: var(--ee-muted); }
+.subsystem-trigger[aria-expanded="true"], .subsystem-trigger:focus-visible { outline: 1px solid var(--ee-primary); border-color: var(--ee-primary); outline-offset: 0; }
+.subsystem-popup { height: 420px; position: fixed; z-index: 80; display: flex; flex-direction: column; padding: 12px 0 0; border: 1px solid var(--ee-border); border-radius: 8px; background: var(--ee-surface); color: var(--ee-text); box-shadow: var(--ee-card-shadow); overflow: hidden; font-size: 12px; }
+.subsystem-popup button, .subsystem-popup input { font: inherit; }
+.subsystem-popup-title { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 0 12px 10px 16px; }
+.subsystem-popup-title strong { font-weight: 500; }
+.subsystem-popup-title button, .subsystem-search button { width: 26px; height: 26px; border: 0; background: transparent; color: var(--ee-muted); cursor: pointer; }
+.subsystem-search { display: flex; align-items: center; flex-shrink: 0; gap: 8px; margin: 0 12px; padding: 6px 8px; border: 1px solid var(--ee-border); border-radius: 6px; }
+.subsystem-search:focus-within { border-color: var(--ee-primary); }
+.subsystem-search > span { color: var(--ee-muted); }
+.subsystem-search input { width: 100%; min-width: 0; height: 24px; padding: 0; border: 0; outline: none; color: var(--ee-text); background: transparent; }
+.subsystem-search input::placeholder { color: var(--ee-input-placeholder); }
+.subsystem-caption { flex-shrink: 0; margin: 12px 16px 8px; color: var(--ee-muted); }
+.subsystem-options { flex: 1; min-height: 0; padding: 0 16px 12px; overflow-y: auto; }
+.subsystem-option { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+.subsystem-option:hover, .subsystem-option:focus-within { background: var(--ee-canvas); }
+.subsystem-option input { width: 16px; height: 16px; margin: 0; accent-color: var(--ee-primary); }
+.subsystem-empty { min-height: 160px; padding: 30px 0; text-align: center; }
+.subsystem-empty p, .subsystem-empty small { color: var(--ee-muted); line-height: 20px; }
+.subsystem-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; padding: 12px 16px; border-top: 1px solid var(--ee-border); background: var(--ee-canvas); }
+.subsystem-footer > span { display: flex; flex-direction: column; gap: 4px; color: var(--ee-muted); }
+.subsystem-footer small { font-size: 10px; }
+.subsystem-footer .button-secondary { padding: 7px 16px; font-size: 12px; }
+@media (max-width: 1180px) { .panorama-workspace { grid-template-columns: minmax(0,1fr) 280px; } .panorama-toolbar { padding: 12px 16px; } .panorama-body { padding: 16px; } .panorama-status { align-items: flex-start; } }
+/* Functional hit-target split only; does not import the Figma sidebar appearance. */
+.tree-folder.tree-folder-split { gap: 2px; padding-top: 0; padding-bottom: 0; font-weight: 500; }
+.tree-folder-split .folder-drop { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 32px; border: 0; background: transparent; color: var(--ee-muted); border-radius: 4px; cursor: pointer; }
+.tree-folder-split .folder-open { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; min-height: 36px; padding: 0 4px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.tree-folder-split.current-panorama { color: var(--ee-primary); background: var(--ee-primary-soft); }
+.tree-folder-split .folder-drop:focus-visible, .tree-folder-split .folder-open:focus-visible { outline: 2px solid var(--ee-primary); outline-offset: -2px; }
+
+/* UC -> FR batch controls are separate from the read-only diagram. */
+.uc-fr-generation { flex-shrink: 0; padding: 12px 24px; background: var(--ee-surface); border-top: 1px solid var(--ee-border); border-bottom: 1px solid var(--ee-border); color: var(--ee-text); }
+.uc-fr-generation-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.uc-fr-generation strong { font-size: 13px; }
+.uc-fr-generation p { margin: 6px 0; font-size: 12px; line-height: 1.6; }
+.uc-fr-generation-row p, .uc-fr-generation small { color: var(--ee-muted); }
+.uc-fr-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.uc-fr-feedback { margin-top: 8px; max-height: 150px; overflow: auto; border-top: 1px solid var(--ee-border); }
+.uc-fr-feedback ul { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 6px; }
+.uc-fr-feedback button { text-align: left; white-space: normal; overflow-wrap: anywhere; }
+/* Database-backed FR allocation directory: the full project catalogue remains visible in read-only mode. */
+.subsystem-directory { flex-shrink: 0; min-height: 0; border: 1px solid var(--ee-border); border-radius: 10px; background: var(--ee-surface); color: var(--ee-text); overflow: hidden; }
+.subsystem-directory > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--ee-border); }
+.subsystem-directory h2 { margin: 0; font-size: 13px; font-weight: 600; }
+.subsystem-directory p { margin: 4px 0 0; color: var(--ee-muted); font-size: 11px; line-height: 17px; }
+.subsystem-directory > header > span { flex-shrink: 0; color: var(--ee-primary); font-size: 11px; }
+.subsystem-directory ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 190px; margin: 0; padding: 8px; overflow-y: auto; list-style: none; scrollbar-width: thin; }
+.subsystem-directory li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; padding: 7px 8px; border-radius: 6px; color: var(--ee-muted); font-size: 11px; line-height: 17px; }
+.subsystem-directory li.is-used { color: var(--ee-text); background: var(--ee-primary-soft); }
+.subsystem-directory li > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.subsystem-directory li strong { margin-right: 6px; color: inherit; font-weight: 600; }
+.subsystem-directory li small { flex-shrink: 0; color: var(--ee-muted); font-size: 10px; white-space: nowrap; }
+@media (max-width: 860px) { .subsystem-directory ul { grid-template-columns: minmax(0, 1fr); } }
+
+/* Agent-backed UC diagram: code is shown as inert text until Mermaid rendering is intentionally enabled. */
+.uc-agent-diagram { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 12px; padding: 16px; border: 1px solid var(--ee-border); border-radius: 12px; background: var(--ee-surface); color: var(--ee-text); overflow: auto; }
+.uc-agent-diagram-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.uc-agent-diagram-header strong { font-size: 14px; }
+.uc-agent-diagram-header p { margin: 5px 0 0; color: var(--ee-muted); font-size: 11px; line-height: 18px; }
+.uc-agent-diagram-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.uc-agent-count { color: var(--ee-primary); font-size: 11px; white-space: nowrap; }
+.uc-agent-diagram-status { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--ee-border); border-radius: 8px; background: var(--ee-canvas); color: var(--ee-muted); font-size: 12px; line-height: 18px; }
+.uc-agent-diagram-status.is-succeeded { color: var(--ee-text); }
+.uc-agent-diagram-status.is-error { border-color: color-mix(in srgb, var(--ee-danger) 50%, var(--ee-border)); color: var(--ee-danger); }
+.uc-agent-diagram-status.is-empty { color: var(--ee-muted); }
+.uc-agent-diagram-status code { flex-shrink: 0; max-width: 100%; overflow-wrap: anywhere; color: var(--ee-muted); font-size: 10px; }
+.uc-agent-code { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--ee-border); border-radius: 8px; overflow: hidden; background: var(--ee-canvas); }
+.uc-agent-code header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border-bottom: 1px solid var(--ee-border); }
+.uc-agent-code header strong { font-size: 12px; }
+.uc-agent-code header small { color: var(--ee-muted); font-size: 10px; }
+.uc-agent-code pre { min-height: 180px; max-height: 540px; margin: 0; padding: 14px; overflow: auto; color: var(--ee-text); font: 11px/1.65 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.uc-agent-no-code { display: grid; place-items: center; min-height: 180px; border: 1px dashed var(--ee-border); border-radius: 8px; color: var(--ee-muted); font-size: 12px; text-align: center; }
+@media (max-width: 860px) { .uc-agent-diagram-status { flex-direction: column; } .uc-agent-code header { align-items: flex-start; flex-direction: column; gap: 4px; } }
+
+.uc-mermaid-render { min-height:160px;overflow:auto;background:var(--ee-surface);border:1px solid var(--ee-border);border-radius:var(--ee-radius-sm);padding:16px; }
+.uc-mermaid-render img { display:block;width:100%;min-width:420px;height:auto; }
+.uc-agent-code summary { cursor:pointer;padding:10px;font-weight:600; }
+.uc-agent-code pre { white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto; }

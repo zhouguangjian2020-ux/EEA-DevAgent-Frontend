@@ -1,0 +1,34 @@
+聊天文本转存，不是附件原始字节归档。
+用户于 2026-09-17 在服务器 t7920 手动执行 4.3.12 的本地 socket SQL 验收后回传。
+助手没有连接或操作服务器。
+
+执行方式：
+sudo -u postgres /usr/lib/postgresql/18/bin/psql -X -w -v ON_ERROR_STOP=1 -P pager=off \
+  -h /var/run/postgresql -p 5432 -U postgres -d postgres
+
+结果摘要：
+- server_version: 18.6 (Ubuntu 18.6-1.pgdg22.04+2)
+- current_user: postgres
+- current_database: postgres
+- config_file: /etc/postgresql/18/main/postgresql.conf
+- data_directory: /data/postgresql/18/main
+- hba_file: /etc/postgresql/18/main/pg_hba.conf
+- listen_addresses: 127.0.0.1
+- port: 5432
+- server_encoding: UTF8
+- password_encryption: scram-sha-256
+- ssl: on
+- TimeZone/log_timezone: Asia/Shanghai
+- 所查询十项 pg_settings 的 pending_restart 均为 f。
+- pg_file_settings 中 error IS NOT NULL 的查询返回 0 行。
+- pg_hba_file_rules 解析十条规则，所有 error 为空：
+  1. host all postgres 127.0.0.1 reject
+  2. host all postgres ::1 reject
+  3. host replication postgres 127.0.0.1 reject
+  4. host replication postgres ::1 reject
+  5. local all all peer
+  6. host all all 127.0.0.1 scram-sha-256
+  7. host all all ::1 scram-sha-256
+  8. local replication all peer
+  9. host replication all 127.0.0.1 scram-sha-256
+  10. host replication all ::1 scram-sha-256

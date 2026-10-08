@@ -1,0 +1,24 @@
+.project-dialog-picker { width: min(500px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; }
+.project-dialog-heading, .project-heading-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.project-heading-actions { flex-shrink: 0; }
+.project-dialog-picker .project-options { max-height: 330px; overflow-y: auto; }
+.project-dialog-picker .project-option > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+.project-dialog-picker .project-empty { padding: 22px 14px; background: var(--ee-canvas); border-radius: var(--ee-radius-sm); }
+.project-dialog-picker .project-field-hint { margin: 5px 0 16px; color: var(--ee-subtle); font-size: 11px; }
+.project-dialog-picker .project-form-note, .project-dialog-picker .project-retry-note { margin: 16px 0 0; padding: 10px; border-radius: var(--ee-radius-sm); background: var(--ee-canvas); }
+.project-dialog-picker .field-label { margin-top: 12px; }
+.project-load-more { margin-top: 12px; width: 100%; }
+.project-dialog-picker :is(button, input, textarea):focus-visible { outline: 2px solid var(--ee-primary); outline-offset: 2px; }
+.project-dialog-picker button:disabled { opacity: .55; cursor: not-allowed; }
+.project-dialog-picker input:disabled, .project-dialog-picker textarea:disabled { opacity: .7; }
+
+.project-option-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; }
+.project-option-row .project-option { flex: 1; min-width: 0; }
+.project-more { border: 1px solid var(--ee-border); border-radius: var(--ee-radius-sm); background: var(--ee-surface); padding: 0 12px; font-size: 20px; color: var(--ee-text); }
+.project-row-actions { width: 100%; display: flex; justify-content: flex-end; padding-bottom: 6px; }
+.project-row-actions button { padding: 8px 12px; background: var(--ee-canvas); border: 1px solid var(--ee-border); border-radius: var(--ee-radius-sm); }\n.project-row-actions button.danger { color: var(--ee-danger); }
+.project-info-details { display: grid; gap: 10px; margin: 20px 0; }
+.project-info-details dt { color: var(--ee-muted); font-size: 12px; }
+.project-info-details dd { margin: 0 0 10px; overflow-wrap: anywhere; }
+.project-reload { margin-top: 12px; }
+

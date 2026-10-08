@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-05",
+  "stage": "readonly_preflight_prepared",
+  "user_requested_copy_count": 3,
+  "source_project_id": "10d4c8a0-ff3a-56c3-abf6-18dc3b531e62",
+  "target_project_id": "bf8f4d08-d086-44bf-9cbe-f31abc67ee03",
+  "offline_tests_passed": 16,
+  "python_compile": "PASS",
+  "bash_syntax": "PASS",
+  "powershell_parse": "PASS",
+  "company_executed": false,
+  "ucs_copied": 0,
+  "confirmation_performed": false,
+  "pending": "User-run readonly preflight receipt before preparing business writes",
+  "files": [
+    {
+      "sha256": "b4a850c1794750d99e63c6150dd2f52c1d4013fb6ed6854559884caee2d9b06d",
+      "path": "E:/Git projects/TS-frontend/deploy/workflows/inspect_uc_copy_20261005_r1.py"
+    },
+    {
+      "sha256": "02bf55c19ed1c3ba0da4e3b24b15a4e395ed4e70a2238a39c455db9b85a4d4f9",
+      "path": "E:/Git projects/TS-frontend/deploy/workflows/test_inspect_uc_copy_20261005_r1.py"
+    },
+    {
+      "sha256": "129a0f635c0f151c96e73fb618c2060442549227f7f6814ec6defbdb1532abb7",
+      "path": "E:/Git projects/TS-frontend/deploy/workflows/run-uc-copy-preflight-20261005-r1.sh"
+    },
+    {
+      "sha256": "379a770b42c1266a6184e433dca1368f7afe851f7b4990a54a7fa5b022ae1ff3",
+      "path": "E:/Git projects/TS-frontend/deploy/workflows/upload-and-inspect-uc-copy-20261005-r1.ps1"
+    }
+  ]
+}

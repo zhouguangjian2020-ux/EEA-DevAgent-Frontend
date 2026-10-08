@@ -1,0 +1,21 @@
+来源：2026-09-17 用户回传的 systemctl status 与 journalctl -xeu 关键摘录；聊天转义已还原，省略重复日志与分页器空白 ~，保留原有 > 截断。不作为完整原始日志。
+
+× postgresql@18-main.service - PostgreSQL Cluster 18-main
+Loaded: loaded (/lib/systemd/system/postgresql@.service; disabled; vendor preset>
+Drop-In: /etc/systemd/system/postgresql@18-main.service.d
+└─20-ee-data-mount.conf
+Active: failed (Result: protocol) since Thu 2026-09-17 19:54:39 CST; 5min ago
+Process: 1583711 ExecStart=/usr/bin/pg_ctlcluster --skip-systemctl-redirect 18-ma>
+CPU: 68ms
+
+9月 17 19:54:39 t7920 systemd[1]: Starting PostgreSQL Cluster 18-main...
+9月 17 19:54:39 t7920 postgresql@18-main[1583711]: Error: /usr/lib/postgresql/18/bin/>
+9月 17 19:54:39 t7920 postgresql@18-main[1583711]: 2026-09-17 11:54:39.209 GMT [15837>
+9月 17 19:54:39 t7920 postgresql@18-main[1583711]: 2026-09-17 11:54:39.210 GMT [15837>
+9月 17 19:54:39 t7920 postgresql@18-main[1583711]: pg_ctl: could not start server
+9月 17 19:54:39 t7920 postgresql@18-main[1583711]: Examine the log output.
+9月 17 19:54:39 t7920 systemd[1]: postgresql@18-main.service: Can't open PID file /ru>
+9月 17 19:54:39 t7920 systemd[1]: postgresql@18-main.service: Failed with result 'pro>
+9月 17 19:54:39 t7920 systemd[1]: Failed to start PostgreSQL Cluster 18-main.
+
+The job identifier is 243808 and the job result is failed.

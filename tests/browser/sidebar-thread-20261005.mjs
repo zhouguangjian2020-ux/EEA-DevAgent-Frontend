@@ -1,0 +1,76 @@
+import {createRequire} from 'node:module';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import fs from 'node:fs/promises';
+const require=createRequire(import.meta.url);
+const {chromium}=require('C:/Users/zhouguangjian/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const base='http://127.0.0.1:3109',output='E:/Git projects/TS-frontend/tmp/uc-fr-chat-20261005/sidebar-thread-r3';
+await fs.mkdir(output,{recursive:true});
+const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();page.setDefaultTimeout(45000);
+const headers={Origin:base,'X-Project-Request':'1'},checks=[],errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
+const check=s=>{checks.push(s);console.log('PASS',s)};
+const chat=()=>page.locator('.live-project-conversation:not([hidden])'),active=()=>page.locator('.object-panel:not([hidden])');
+async function poll(fn){const end=Date.now()+45000;while(Date.now()<end){if(await fn())return;await new Promise(r=>setTimeout(r,100));}throw new Error('Condition timed out');}
+async function post(url,data){const r=await context.request.post(base+url,{headers,data});assert.ok([200,201].includes(r.status()),url+' '+r.status()+' '+await r.text());return r.json();}
+async function captured(){const r=await context.request.get('http://127.0.0.1:8419/requests');assert.equal(r.status(),200);return r.json();}
+let project,prefix,tid;
+try{
+ const auth=await context.request.post(base+'/api/v1/auth/login',{data:{username:'engineer01',password:'change-me-before-demo'}});assert.equal(auth.status(),200);
+ project=await post('/api/v1/projects',{creation_id:randomUUID(),name:'自动回归-导航会话-'+randomUUID().slice(0,8)});prefix='/api/v1/projects/'+project.id;
+ const fid=(await post(prefix+'/functions',{creation_id:randomUUID(),name:'导航会话验收'})).function_id;
+ const prd=await post(prefix+'/functions/'+fid+'/artifacts',{kind:'PRD',creation_id:randomUUID(),name:'导航回归PRD'});
+ await post(prefix+'/artifacts/'+prd.artifact_id+'/accept',{mutation_id:randomUUID(),revision_id:prd.revision_id});
+ const threads=async()=>{const r=await context.request.get(base+prefix+'/conversations');assert.equal(r.status(),200);return (await r.json()).threads};
+ await page.goto(base+'/?project_id='+project.id);
+ await page.getByText('产品工程 / PRD生成 / 导航会话验收',{exact:true}).waitFor();
+ await poll(async()=>Boolean(await chat().getByLabel('选择会话').inputValue()));
+ tid=await chat().getByLabel('选择会话').inputValue();assert.equal((await threads()).length,1);
+ assert.equal(await chat().getByRole('button',{name:'发送提示词'}).isEnabled(),false);
+ check('进入项目自动建立唯一新会话，无需点击新增');
+ const tab=await page.locator('.object-tab[aria-selected=true]').getAttribute('id'),tabs=await page.locator('.object-tab').count();
+ await page.locator('.primary-item').filter({hasText:'产品工程'}).click();
+ await page.getByRole('tab',{name:'工作空间',exact:true}).click();
+ await page.getByLabel('搜索对象',{exact:true}).fill('不会匹配的搜索词');
+ await active().getByRole('button',{name:'生成 UC',exact:true}).click();
+ await page.getByRole('button',{name:/打开 导航会话验收 .*用例1/}).waitFor();
+ assert.equal(await page.locator('.object-tab[aria-selected=true]').getAttribute('id'),tab);
+ assert.equal(await page.locator('.object-tab').count(),tabs);
+ assert.equal(await page.getByLabel('搜索对象',{exact:true}).inputValue(),'');
+ assert.equal(await page.getByRole('tab',{name:'工作空间',exact:true}).getAttribute('aria-selected'),'true');
+ assert.equal(await page.getByRole('heading',{name:'需求工程',exact:true}).isVisible(),true);
+ assert.equal(await page.getByRole('button',{name:'收起 导航会话验收 UC 文件夹',exact:true}).getAttribute('aria-expanded'),'true');
+ assert.equal(await active().locator('.uc-generation-candidates,.generated-uc-list').count(),0);
+ assert.equal(await chat().getByLabel('选择会话').inputValue(),tid);
+ check('UC追加后自动展开需求工程UC目录，清除搜索，中间标签不切换也不增加');
+ await page.getByRole('button',{name:/打开 导航会话验收 .*用例1/}).click();
+ assert.equal(await chat().getByLabel('选择会话').inputValue(),tid);
+ await page.locator('.object-tab').filter({hasText:'PRD · 导航会话验收'}).click();
+ assert.equal(await chat().getByLabel('选择会话').inputValue(),tid);
+ assert.equal((await threads()).length,1);
+ check('切换UC和PRD对象标签保持同一会话，不创建额外thread');
+ const first='首个问题：请说明验收流程';
+ await chat().getByLabel('项目对话输入').fill(first);await chat().getByRole('button',{name:'发送提示词'}).click();
+ await poll(async()=>(await threads()).find(t=>t.id===tid)?.title===first);
+ await poll(async()=>await chat().getByLabel('选择会话').isEnabled());
+ assert.equal(await chat().getByLabel('选择会话').locator('option:checked').innerText(),first);
+ const second='继续说明刚才的问题';await chat().getByLabel('项目对话输入').fill(second);await chat().getByRole('button',{name:'发送提示词'}).click();
+ await poll(async()=>{const r=await context.request.get(base+prefix+'/conversations/'+tid);const body=await r.json();return body.turns.length===2&&body.turns[1].status==='completed'});
+ await poll(async()=>await chat().getByLabel('选择会话').isEnabled());
+ assert.equal(await chat().getByLabel('选择会话').locator('option:checked').innerText(),first);
+ const calls=(await captured()).filter(r=>r.reference_data?.thread_id===tid);assert.equal(calls.length,4);
+ for(const r of calls.slice(-2)){assert.equal(r.reference_data.messages.length,2);assert.equal(r.reference_data.messages[0].content,first);assert.equal(r.reference_data.messages[1].role,'assistant');assert.deepEqual(r.reference_data.attachments,[]);}
+ check('会话名称固定为首问、不显示ID，第二轮实际Agent请求包含首轮问答上下文');
+ await page.reload();await page.getByText('产品工程 / PRD生成 / 导航会话验收',{exact:true}).waitFor();
+ await poll(async()=>Boolean(await chat().getByLabel('选择会话').inputValue()));const fresh=await chat().getByLabel('选择会话').inputValue();
+ assert.notEqual(fresh,tid);assert.equal((await threads()).length,2);
+ await chat().getByLabel('项目对话输入').fill('新会话的第一个问题');await chat().getByRole('button',{name:'发送提示词'}).click();
+ await poll(async()=>{const r=await context.request.get(base+prefix+'/conversations/'+fresh);return (await r.json()).turns[0]?.status==='completed'});
+ const freshCalls=(await captured()).filter(r=>r.reference_data?.thread_id===fresh);assert.equal(freshCalls.length,2);assert.ok(freshCalls.every(r=>r.reference_data.messages.length===0));
+ await poll(async()=>await chat().getByLabel('选择会话').isEnabled());await chat().getByLabel('选择会话').selectOption(tid);await chat().getByLabel('项目对话记录').getByText(first,{exact:true}).waitFor();
+ assert.equal(await chat().getByLabel('选择会话').inputValue(),tid);assert.equal((await threads()).length,2);
+ check('刷新自动准备新会话且不混入旧历史，选择历史会话后不会被自动切走');
+ await page.screenshot({path:output+'/verified.png'});assert.deepEqual(errors,[]);
+ await fs.writeFile(output+'/result.json',JSON.stringify({status:'PASS',checks,errors,project_id:project.id,thread_id:tid,scope:'local isolated regression project; existing user project not changed'},null,2));
+ await context.request.post(base+'/api/v1/auth/logout');
+}catch(e){await page.screenshot({path:output+'/failure.png'});await fs.writeFile(output+'/failure.html',await page.content());throw e;}finally{await browser.close();}

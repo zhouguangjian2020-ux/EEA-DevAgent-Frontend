@@ -1,0 +1,38 @@
+.permission-dialog { width: min(920px, calc(100vw - 32px)); max-height: min(820px, calc(100dvh - 32px)); overflow: auto; padding: 24px; border: 1px solid var(--ee-border); border-radius: var(--ee-radius-lg); background: var(--ee-surface); box-shadow: var(--ee-shadow); }
+.permission-dialog .dialog-heading { align-items: flex-start; }
+.permission-dialog h2 { margin: 2px 0 4px; }
+.permission-project-name { margin: 0; color: var(--ee-muted); font-size: 12px; }
+.permission-tabs { display: flex; gap: 4px; margin: 20px 0 14px; border-bottom: 1px solid var(--ee-border); }
+.permission-tabs button { padding: 9px 14px; border: 0; border-bottom: 2px solid transparent; color: var(--ee-muted); background: transparent; font-size: 12px; cursor: pointer; }
+.permission-tabs button.active { border-bottom-color: var(--ee-primary); color: var(--ee-primary); font-weight: 600; }
+.permission-body { display: flex; flex-direction: column; gap: 14px; min-height: 300px; }
+.permission-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.permission-section-heading > div { display: flex; flex-direction: column; gap: 4px; }
+.permission-section-heading strong { color: var(--ee-text); font-size: 14px; }
+.permission-section-heading span { color: var(--ee-muted); font-size: 11px; }
+.permission-section-heading select, .permission-add-row select, .permission-table select { min-width: 150px; padding: 8px 10px; border: 1px solid var(--ee-border); border-radius: var(--ee-radius-sm); color: var(--ee-text); background: var(--ee-canvas); font: inherit; font-size: 12px; }
+.permission-add-row { display: grid; grid-template-columns: minmax(0, 1fr) 180px auto; gap: 8px; padding: 12px; border: 1px dashed var(--ee-border); border-radius: var(--ee-radius-sm); background: var(--ee-canvas); }
+.permission-table-wrap { overflow: auto; border: 1px solid var(--ee-border); border-radius: var(--ee-radius-sm); }
+.permission-table { width: 100%; min-width: 650px; border-collapse: collapse; font-size: 12px; }
+.permission-table th, .permission-table td { padding: 11px 12px; border-bottom: 1px solid var(--ee-border); text-align: left; vertical-align: middle; }
+.permission-table th { color: var(--ee-muted); background: var(--ee-canvas); font-size: 10px; font-weight: 600; }
+.permission-table tr:last-child td { border-bottom: 0; }
+.permission-table td strong, .permission-table td small { display: block; }
+.permission-table td small { margin-top: 3px; color: var(--ee-muted); font-size: 10px; }
+.permission-state { color: var(--ee-muted); font-size: 11px; }
+.permission-state.active { color: var(--ee-success, #27814a); }
+.permission-remove { border: 0; color: var(--ee-danger); background: transparent; font-size: 11px; cursor: pointer; }
+.permission-remove:disabled { color: var(--ee-muted); cursor: not-allowed; }
+.permission-function-summary { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: var(--ee-radius-sm); background: var(--ee-canvas); }
+.permission-function-summary span { color: var(--ee-muted); font-size: 11px; }
+.permission-note { margin: 0; color: var(--ee-muted); font-size: 11px; line-height: 1.7; }
+.permission-feedback { margin: 10px 0; padding: 9px 10px; border: 1px solid var(--ee-border); border-radius: var(--ee-radius-sm); color: var(--ee-muted); font-size: 11px; }
+.permission-feedback.error { color: var(--ee-danger); border-color: color-mix(in srgb, var(--ee-danger) 35%, var(--ee-border)); }
+.permission-empty { padding: 34px 16px; border: 1px dashed var(--ee-border); border-radius: var(--ee-radius-sm); color: var(--ee-muted); text-align: center; font-size: 12px; }
+@media (max-width: 720px) { .permission-dialog { padding: 18px; } .permission-add-row { grid-template-columns: 1fr; } .permission-section-heading { align-items: stretch; flex-direction: column; } .permission-section-heading select { width: 100%; } }
+.account-create-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; align-items: end; gap: 10px; margin: 14px 0; padding: 12px; border: 1px dashed var(--ee-border); border-radius: var(--ee-radius-sm); background: var(--ee-canvas); }
+.account-create-form .field-label { margin: 0; }
+.account-create-form .button-primary { min-height: 36px; white-space: nowrap; }
+.account-dialog { width: min(1000px, calc(100vw - 32px)); }
+@media (max-width: 820px) { .account-create-form { grid-template-columns: 1fr 1fr; } .account-create-form .button-primary { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .account-create-form { grid-template-columns: 1fr; } .account-create-form .button-primary { grid-column: auto; } }

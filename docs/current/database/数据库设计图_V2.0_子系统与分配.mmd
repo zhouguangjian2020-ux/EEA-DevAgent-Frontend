@@ -1,0 +1,78 @@
+erDiagram
+    direction LR
+    projects {
+        uuid id PK
+        text code UK
+        uuid created_by FK
+    }
+    project_subsystem_designs {
+        uuid project_id PK,FK
+        uuid current_version_id FK
+        uuid created_by FK
+        uuid updated_by FK
+    }
+    subsystem_design_versions {
+        uuid id PK
+        uuid project_id FK
+        uuid parent_version_id FK
+        uuid created_by FK
+    }
+    subsystems {
+        uuid id PK
+        uuid project_id FK
+        uuid created_by FK
+    }
+    subsystem_version_items {
+        uuid project_id PK,FK
+        uuid design_version_id PK,FK
+        uuid subsystem_id PK,FK
+    }
+    functional_requirements {
+        uuid artifact_id PK,FK
+        uuid project_id FK
+        uuid function_id FK
+        text type_code FK
+    }
+    fr_versions {
+        uuid revision_id PK,FK
+        uuid project_id FK
+        uuid function_id FK
+        uuid fr_id FK
+        text type_code FK
+    }
+    fr_allocations {
+        uuid artifact_id PK,FK
+        uuid project_id FK
+        uuid function_id FK
+        uuid fr_id FK
+        text type_code FK
+    }
+    allocation_versions {
+        uuid revision_id PK,FK
+        uuid project_id FK
+        uuid function_id FK
+        uuid allocation_id FK
+        uuid fr_id FK
+        uuid fr_revision_id FK
+        uuid design_version_id FK
+        text type_code FK
+    }
+    allocation_targets {
+        uuid project_id FK
+        uuid function_id FK
+        uuid allocation_revision_id PK,FK
+        uuid design_version_id FK
+        uuid subsystem_id PK,FK
+    }
+    functional_requirements ||--o{ fr_versions : "需求历史"
+    project_subsystem_designs ||--o{ subsystem_design_versions : "方案历史"
+    projects ||--o{ subsystems : "项目身份"
+    subsystem_design_versions ||--o{ subsystem_version_items : "方案条目"
+    subsystems ||--o{ subsystem_version_items : "条目身份"
+    fr_allocations ||--o{ allocation_versions : "分配历史"
+    fr_versions ||--o{ allocation_versions : "依据FR版"
+    subsystem_design_versions ||--o{ allocation_versions : "依据方案版"
+    allocation_versions ||--o{ allocation_targets : "目标集合"
+    subsystem_version_items ||--o{ allocation_targets : "选定条目"
+    projects ||--o| project_subsystem_designs : "方案入口"
+    functional_requirements ||--o| fr_allocations : "独立分配"

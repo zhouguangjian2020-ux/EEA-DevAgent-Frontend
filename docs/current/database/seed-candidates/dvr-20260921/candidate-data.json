@@ -1,0 +1,907 @@
+{
+  "format_version": 1,
+  "status": "pending_confirmation_do_not_import",
+  "target_project_id": null,
+  "target_function_id": null,
+  "created_via_proposal": "import",
+  "source_manifest": [
+    {
+      "name": "FR划分.xlsx",
+      "file": "C:\\Users\\zhouguangjian\\Desktop\\X光\\数据\\FR划分.xlsx",
+      "sha256": "b66f423b1e848ae8df817a713982a7fec7efe36e120f98fab79dfd131f091b90",
+      "bytes": 123843,
+      "sheets": [
+        {
+          "name": "封面",
+          "max_row": 23,
+          "max_column": 14,
+          "merged_ranges": [
+            "A21:N22",
+            "G16:I16",
+            "A8:N11",
+            "A1:N3",
+            "A4:N4",
+            "G18:I18",
+            "G17:I17"
+          ]
+        },
+        {
+          "name": "变更记录",
+          "max_row": 4,
+          "max_column": 4,
+          "merged_ranges": []
+        },
+        {
+          "name": "01_Fr_List模板、示例",
+          "max_row": 23,
+          "max_column": 4,
+          "merged_ranges": []
+        },
+        {
+          "name": "02_需求分配表",
+          "max_row": 9,
+          "max_column": 3,
+          "merged_ranges": []
+        },
+        {
+          "name": "行车记录仪Fr_List",
+          "max_row": 15,
+          "max_column": 5,
+          "merged_ranges": []
+        },
+        {
+          "name": "行车记录仪功能需求分配表 ",
+          "max_row": 15,
+          "max_column": 3,
+          "merged_ranges": []
+        }
+      ],
+      "docx_body_tables": 0,
+      "tracked_insertions": 0,
+      "tracked_deletions": 0
+    },
+    {
+      "name": "FR列表.xlsx",
+      "file": "C:\\Users\\zhouguangjian\\Desktop\\X光\\数据\\FR列表.xlsx",
+      "sha256": "46417d99f2678787b2cbc33359bb6782ca559e213e7ce90971a5fdabdeb5285c",
+      "bytes": 123758,
+      "sheets": [
+        {
+          "name": "封面",
+          "max_row": 23,
+          "max_column": 14,
+          "merged_ranges": [
+            "A21:N22",
+            "G16:I16",
+            "A1:N3",
+            "A8:N11",
+            "A4:N4",
+            "G18:I18",
+            "G17:I17"
+          ]
+        },
+        {
+          "name": "变更记录",
+          "max_row": 4,
+          "max_column": 4,
+          "merged_ranges": []
+        },
+        {
+          "name": "01_Fr_List模板、示例",
+          "max_row": 23,
+          "max_column": 4,
+          "merged_ranges": []
+        },
+        {
+          "name": "02_需求分配表",
+          "max_row": 9,
+          "max_column": 3,
+          "merged_ranges": []
+        },
+        {
+          "name": "行车记录仪Fr_List",
+          "max_row": 15,
+          "max_column": 4,
+          "merged_ranges": []
+        },
+        {
+          "name": "行车记录仪功能需求分配表 ",
+          "max_row": 15,
+          "max_column": 3,
+          "merged_ranges": []
+        }
+      ],
+      "docx_body_tables": 0,
+      "tracked_insertions": 0,
+      "tracked_deletions": 0
+    },
+    {
+      "name": "PRD文档.docx",
+      "file": "C:\\Users\\zhouguangjian\\Desktop\\X光\\数据\\PRD文档.docx",
+      "sha256": "ed8420b9fde44d7a8394c5df27e108abc24c7b785d7ca76d83ef9ef353fbfc91",
+      "bytes": 56046,
+      "sheets": [],
+      "docx_body_tables": 44,
+      "tracked_insertions": 0,
+      "tracked_deletions": 0
+    },
+    {
+      "name": "UC.docx",
+      "file": "C:\\Users\\zhouguangjian\\Desktop\\X光\\数据\\UC.docx",
+      "sha256": "147c1c5a2b040267ac88b6242bcda3c25e16cd55d2f1ba526d9adbd9aa695283",
+      "bytes": 72656,
+      "sheets": [],
+      "docx_body_tables": 3,
+      "tracked_insertions": 0,
+      "tracked_deletions": 0
+    }
+  ],
+  "required_confirmations": [
+    "isolated target project/function and real user identity",
+    "missing UC branch adapter policy",
+    "three subsystem name differences",
+    "PRD conversion and import association confirmation"
+  ],
+  "prd": {
+    "markdown_file": "prd-body.draft.md",
+    "source_file": "PRD文档.docx",
+    "review_status": "pending",
+    "conversion_limits": [
+      "body text/tables only",
+      "no original Word page layout, styles or automatic numbering guarantees",
+      "header logos and footer not in business body"
+    ]
+  },
+  "ucs": [
+    {
+      "source_code": "UC-301-01-01",
+      "source_file": "UC.docx",
+      "source_table": 1,
+      "content": {
+        "name": "查看行车记录仪实时影像",
+        "description": "用户可通过车机中控屏，实时查看摄像头捕获的车辆前方、后方及车外周边影像，为驾驶员提供直观的行车视野。",
+        "number": "UC-301-01-01",
+        "actors": "用户，行车记录仪系统",
+        "preconditions": "a&b&c\na. 车辆处于上电状态，IG ON；\nb. 行车记录仪系统处于正常状态；\nc.摄像头工作正常",
+        "mainFlow": "1.用例开始\n2.用户在中控屏上点击“行车记录仪”应用图标\n3. 行车记录仪系统采集摄像头前视角（默认视角）图像数据，并输出图像显示。\na1: 用户操作切换为左视角视图\na2：用户操作切换为右视角视图\na3：用户操作切换为后视角视图\ne1:摄像头故障\ne2:电源馈电\n4. 用例切换视角为前视角\n\n中控屏界面持续显示前视摄像头图像画面，直到用户退出；\n5.正常用例结束",
+        "postconditions": "正常事件流（主事件流/分支事件流）结束达到的状态：\n1．中控显示屏界面显示摄像头实时影像画面，包括（前后左右视角）。\n异常事件流结束达到的状态：\n1. 中控显示屏界面显示黑屏状态并文言提示“摄像头故障”。 ",
+        "extensions": "无",
+        "hmi": " ",
+        "regulations": "（“N/A”）",
+        "performance": "行车记录仪影像实时画面显示无延时≤500ms（TBD）",
+        "nonfunctional": "N/A",
+        "branches": [
+          "a1:用户切换视角为左视角视图\n行车记录仪系统采集摄像头左视角图像数据，并输出图像显示\n中控屏界面持续显示左摄像头图像画面\n用例回到主事件流4",
+          "a2:用户切换视角为右视角视图\n行车记录仪系统采集摄像头右视角图像数据，并输出图像显示\n中控屏界面持续显示右摄像头图像画面\n用例切换视角为前视角\n用例回到主事件流4",
+          "a3:用户切换视角为后视角视图\n行车记录仪系统采集摄像头后视角图像数据，并输出图像显示\n中控屏界面持续显示以后摄像头图像画面\n用例切换视角为前视角\n用例回到主事件流4",
+          ""
+        ],
+        "exceptions": [
+          "无",
+          "e1:摄像头故障\n开启过程中，如果摄像头故障，显示画面黑屏并文言提示“摄像头故障”；",
+          "无",
+          "无",
+          "e2:电源馈电\n图像显示过程中，如果低压电压异常<8.5（TBD）V，系统自动退出；"
+        ]
+      },
+      "field_locations": {
+        "name": {
+          "table": 1,
+          "row": 1
+        },
+        "description": {
+          "table": 1,
+          "row": 2
+        },
+        "number": {
+          "table": 1,
+          "row": 3
+        },
+        "actors": {
+          "table": 1,
+          "row": 4
+        },
+        "preconditions": {
+          "table": 1,
+          "row": 5
+        },
+        "mainFlow": {
+          "table": 1,
+          "row": 6
+        },
+        "postconditions": {
+          "table": 1,
+          "row": 15
+        },
+        "extensions": {
+          "table": 1,
+          "row": 16
+        },
+        "hmi": {
+          "table": 1,
+          "row": 17
+        },
+        "regulations": {
+          "table": 1,
+          "row": 18
+        },
+        "performance": {
+          "table": 1,
+          "row": 19
+        },
+        "nonfunctional": {
+          "table": 1,
+          "row": 20
+        }
+      },
+      "original_branches": [
+        {
+          "category": "a1",
+          "body": "a1:用户切换视角为左视角视图\n行车记录仪系统采集摄像头左视角图像数据，并输出图像显示\n中控屏界面持续显示左摄像头图像画面\n用例回到主事件流4",
+          "source_row": 7
+        },
+        {
+          "category": "a2",
+          "body": "a2:用户切换视角为右视角视图\n行车记录仪系统采集摄像头右视角图像数据，并输出图像显示\n中控屏界面持续显示右摄像头图像画面\n用例切换视角为前视角\n用例回到主事件流4",
+          "source_row": 8
+        },
+        {
+          "category": "a3",
+          "body": "a3:用户切换视角为后视角视图\n行车记录仪系统采集摄像头后视角图像数据，并输出图像显示\n中控屏界面持续显示以后摄像头图像画面\n用例切换视角为前视角\n用例回到主事件流4",
+          "source_row": 9
+        }
+      ],
+      "original_exceptions": [
+        {
+          "category": "vehicle_state",
+          "body": "无",
+          "source_row": 10
+        },
+        {
+          "category": "mechanical",
+          "body": "e1:摄像头故障\n开启过程中，如果摄像头故障，显示画面黑屏并文言提示“摄像头故障”；",
+          "source_row": 11
+        },
+        {
+          "category": "environmental",
+          "body": "无",
+          "source_row": 12
+        },
+        {
+          "category": "misuse",
+          "body": "无",
+          "source_row": 13
+        },
+        {
+          "category": "power",
+          "body": "e2:电源馈电\n图像显示过程中，如果低压电压异常<8.5（TBD）V，系统自动退出；",
+          "source_row": 14
+        }
+      ],
+      "missing_branch_slots": [
+        4
+      ],
+      "projection_policy": "empty slots are adapter-only placeholders, NOT source N/A or accepted content",
+      "review_status": "pending",
+      "prd_relation_status": "proposed_import_association_not_proven_generation"
+    },
+    {
+      "source_code": "UC-301-01-02",
+      "source_file": "UC.docx",
+      "source_table": 2,
+      "content": {
+        "name": "退出实时影像",
+        "description": "在用户查看行车记录仪实时影像的过程中，因用户主动操作或系统高优先级事件（如倒车、紧急呼叫等）触发，系统自动退出实时影像界面，并返回上一级菜单或切换至更高优先级的功能界面。确保高优先级安全功能（如倒车影像、紧急呼叫）能够及时获取显示资源，避免界面冲突，保障驾驶安全。",
+        "number": "UC-301-01-02",
+        "actors": "用户，行车记录仪系统",
+        "preconditions": "a&b&c\na. 车辆处于上电状态，IG ON；\nb. 行车记录仪系统处于正常状态；\nc. 用户当前正在查看实时影像界面（即UC-301-01-01已处于活动状态）",
+        "mainFlow": "用例开始\n系统检测到退出触发事件\na1:  用户主动退出\na2：车辆挂入R挡\na3：E-call触发\n系统停止实时影像的显示输出。\n中控屏界面退出实时影像画面；\n系统返回上一级菜单或桌面，或切换至触发事件对应的功能界面\n正常用例结束",
+        "postconditions": "正常事件流（主事件流/分支事件流）结束达到的状态：\n1．实时影像界面已退出，系统已切换至上一级菜单或高优先级功能界面。",
+        "extensions": "N/A",
+        "hmi": "N/A",
+        "regulations": "N/A",
+        "performance": "N/A",
+        "nonfunctional": "N/A",
+        "branches": [
+          "a1:用户主动退出\n用户操作退出实时画面\n用例回到主事件流3",
+          "a2：倒挡触发退出\n车辆挂入R挡\n用例回到主事件流3",
+          "a3：E-Call触发退出\n车辆触发E-call\n用例回到主事件流3",
+          ""
+        ],
+        "exceptions": [
+          "无",
+          "无",
+          "无",
+          "无",
+          "无"
+        ]
+      },
+      "field_locations": {
+        "name": {
+          "table": 2,
+          "row": 1
+        },
+        "description": {
+          "table": 2,
+          "row": 2
+        },
+        "number": {
+          "table": 2,
+          "row": 3
+        },
+        "actors": {
+          "table": 2,
+          "row": 4
+        },
+        "preconditions": {
+          "table": 2,
+          "row": 5
+        },
+        "mainFlow": {
+          "table": 2,
+          "row": 6
+        },
+        "postconditions": {
+          "table": 2,
+          "row": 15
+        },
+        "extensions": {
+          "table": 2,
+          "row": 16
+        },
+        "hmi": {
+          "table": 2,
+          "row": 17
+        },
+        "regulations": {
+          "table": 2,
+          "row": 18
+        },
+        "performance": {
+          "table": 2,
+          "row": 19
+        },
+        "nonfunctional": {
+          "table": 2,
+          "row": 20
+        }
+      },
+      "original_branches": [
+        {
+          "category": "a1",
+          "body": "a1:用户主动退出\n用户操作退出实时画面\n用例回到主事件流3",
+          "source_row": 7
+        },
+        {
+          "category": "a2",
+          "body": "a2：倒挡触发退出\n车辆挂入R挡\n用例回到主事件流3",
+          "source_row": 8
+        },
+        {
+          "category": "a3",
+          "body": "a3：E-Call触发退出\n车辆触发E-call\n用例回到主事件流3",
+          "source_row": 9
+        }
+      ],
+      "original_exceptions": [
+        {
+          "category": "vehicle_state",
+          "body": "无",
+          "source_row": 10
+        },
+        {
+          "category": "mechanical",
+          "body": "无",
+          "source_row": 11
+        },
+        {
+          "category": "environmental",
+          "body": "无",
+          "source_row": 12
+        },
+        {
+          "category": "misuse",
+          "body": "无",
+          "source_row": 13
+        },
+        {
+          "category": "power",
+          "body": "无",
+          "source_row": 14
+        }
+      ],
+      "missing_branch_slots": [
+        4
+      ],
+      "projection_policy": "empty slots are adapter-only placeholders, NOT source N/A or accepted content",
+      "review_status": "pending",
+      "prd_relation_status": "proposed_import_association_not_proven_generation"
+    },
+    {
+      "source_code": "UC-301-01-03",
+      "source_file": "UC.docx",
+      "source_table": 3,
+      "content": {
+        "name": "上电自动开启循环录像",
+        "description": "行车记录仪系统在上电后自动开始循环录像，分段保存视频文件，并在存储空间不足时自动覆盖最早的未保护视频。确保行车过程不间断记录，并实现存储卡的自动循环利用。",
+        "number": "UC-301-01-03",
+        "actors": "用户，行车记录仪系统",
+        "preconditions": "a&b&c\na. 车辆处于上电状态，IG ON；\nb. 行车记录仪摄像头正常工作；\nc．储存卡已插入且处于正常状态",
+        "mainFlow": "用例开始\n行车记录仪系统开始自检\ne1：检测到摄像头故障;\ne2：检测到存储卡异常无法写入文件;\ne3：检测到存储卡已满;\n系统自检正常，系统开始录制视频；默认录制1路视频，可根据用户设置录制5路视频；录制视频视角根据用户设置视角见用例UC-301-03-01 录制视角设置\n中控显示屏界面显示行车记录仪录制状态图标，见UC-301-01-11录制状态显示用例\n录制视频文件进行分段保存（如每段1分钟，具体时长根据用户设置），达到时间限制则自动保存至行车记录仪相册列表内并自动开始新的录制行为；用户录制设置时长见用例UC-301-03-02 录制时长设置；\n录制过程中，系统持续监测SD卡剩余空间。若剩余空间低于预设阈值，系统自动删除最早的未被保护（非紧急/非加锁）的视频文件，以腾出空间\ne4：电源馈电\n循环步骤2-6，直至车辆下电；\n车辆下电，行车记录仪系统停止录制\n正常用例结束",
+        "postconditions": "正常事件流（主事件流/分支事件流）结束达到的状态：\n1．行车录像文件已分段保存至存储卡。\n异常事件流结束达到的状态：\n1. 录像功能停止，系统发出相应故障或警告提示。 ",
+        "extensions": "N/A",
+        "hmi": "状态栏显示录像图标",
+        "regulations": "N/A",
+        "performance": "N/A",
+        "nonfunctional": "行车记录仪视频录制帧率不低于25fps，编码格式H.265，视频格式为MP4,分辨率至少为1080P\n录制并存储的视频画面必须清晰连续，不能出现画面卡滞现象\n分段视频之间要求时间与画面能够无缝拼接\n在白天和晚上都能够清晰的录像，要求在≥1lux （TBD）情况下能够清晰记录汽车周围影像信息；",
+        "branches": [
+          "N/A",
+          "N/A",
+          "",
+          ""
+        ],
+        "exceptions": [
+          "无",
+          "e1:摄像头故障\n自检过程中，如果监测到摄像头故障，则文言提示“摄像头故障”，行车记录仪停止录制；\ne2：检测到存储卡异常无法写入文件;\n自检过程中，如果检测到存储卡异常，则文言提示“存储卡异常，无法写入文件“，行车记录仪停止录制\ne3：检测到存储卡已满;\n1.自检过程中，如果检测到存储卡已满，则文言提示“存储卡已满，请删除文件“，行车记录仪停止录制",
+          "无",
+          "无",
+          "e2:电源馈电\n摄像头录制过程中，如果低压电压异常<8.5（TBD）V，录制自动停止；"
+        ]
+      },
+      "field_locations": {
+        "name": {
+          "table": 3,
+          "row": 1
+        },
+        "description": {
+          "table": 3,
+          "row": 2
+        },
+        "number": {
+          "table": 3,
+          "row": 3
+        },
+        "actors": {
+          "table": 3,
+          "row": 4
+        },
+        "preconditions": {
+          "table": 3,
+          "row": 5
+        },
+        "mainFlow": {
+          "table": 3,
+          "row": 6
+        },
+        "postconditions": {
+          "table": 3,
+          "row": 14
+        },
+        "extensions": {
+          "table": 3,
+          "row": 15
+        },
+        "hmi": {
+          "table": 3,
+          "row": 16
+        },
+        "regulations": {
+          "table": 3,
+          "row": 17
+        },
+        "performance": {
+          "table": 3,
+          "row": 18
+        },
+        "nonfunctional": {
+          "table": 3,
+          "row": 19
+        }
+      },
+      "original_branches": [
+        {
+          "category": "a1",
+          "body": "N/A",
+          "source_row": 7
+        },
+        {
+          "category": "a2",
+          "body": "N/A",
+          "source_row": 8
+        }
+      ],
+      "original_exceptions": [
+        {
+          "category": "vehicle_state",
+          "body": "无",
+          "source_row": 9
+        },
+        {
+          "category": "mechanical",
+          "body": "e1:摄像头故障\n自检过程中，如果监测到摄像头故障，则文言提示“摄像头故障”，行车记录仪停止录制；\ne2：检测到存储卡异常无法写入文件;\n自检过程中，如果检测到存储卡异常，则文言提示“存储卡异常，无法写入文件“，行车记录仪停止录制\ne3：检测到存储卡已满;\n1.自检过程中，如果检测到存储卡已满，则文言提示“存储卡已满，请删除文件“，行车记录仪停止录制",
+          "source_row": 10
+        },
+        {
+          "category": "environmental",
+          "body": "无",
+          "source_row": 11
+        },
+        {
+          "category": "misuse",
+          "body": "无",
+          "source_row": 12
+        },
+        {
+          "category": "power",
+          "body": "e2:电源馈电\n摄像头录制过程中，如果低压电压异常<8.5（TBD）V，录制自动停止；",
+          "source_row": 13
+        }
+      ],
+      "missing_branch_slots": [
+        3,
+        4
+      ],
+      "projection_policy": "empty slots are adapter-only placeholders, NOT source N/A or accepted content",
+      "review_status": "pending",
+      "prd_relation_status": "proposed_import_association_not_proven_generation"
+    }
+  ],
+  "frs": [
+    {
+      "source_code": "Fr-301-01-001",
+      "description": "需【低压电源管理系统】提供车辆低压电源状态IG ON，",
+      "source_text": "UC-301-01-01、UC-301-01-03",
+      "uc_source_codes": [
+        "UC-301-01-01",
+        "UC-301-01-03"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 2,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-002",
+      "description": "需【HMI交互及显示系统】提供用户操作的行车记录仪HMI图标界面",
+      "source_text": "UC-301-01-01",
+      "uc_source_codes": [
+        "UC-301-01-01"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 3,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-003",
+      "description": "需【感知融合与定位系统】提供摄像头的图像数据",
+      "source_text": "UC-301-01-01",
+      "uc_source_codes": [
+        "UC-301-01-01"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 4,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-004",
+      "description": "需【行车记录仪系统】针对摄像头数据进行图像处理，输出显示屏图像显示",
+      "source_text": "UC-301-01-01",
+      "uc_source_codes": [
+        "UC-301-01-01"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 5,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-005",
+      "description": "需【HMI交互及显示系统】提供用户可以操作操作切换视角的HMI界面",
+      "source_text": "UC-301-01-01",
+      "uc_source_codes": [
+        "UC-301-01-01"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 6,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-006",
+      "description": "需【车外传感器提供】提供摄像头状态信息",
+      "source_text": "UC-301-01-01、UC-301-01-03",
+      "uc_source_codes": [
+        "UC-301-01-01",
+        "UC-301-01-03"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 7,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-007",
+      "description": "【HMI交互及显示系统】检测到用户退出或者倒挡触发或者E-CALL时间触发时HMI显示系统请求时退出行车记录仪显示",
+      "source_text": "UC-301-01-02",
+      "uc_source_codes": [
+        "UC-301-01-02"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 8,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-008",
+      "description": "需【挡位系统】提供车辆挡位状态",
+      "source_text": "UC-301-01-02",
+      "uc_source_codes": [
+        "UC-301-01-02"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 9,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-009",
+      "description": "需【E-Call系统】提供E-call状态",
+      "source_text": "UC-301-01-02",
+      "uc_source_codes": [
+        "UC-301-01-02"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 10,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-010",
+      "description": "需【HMI交互及显示系统】提供退出行车记录仪HMI操作图标界面",
+      "source_text": "UC-301-01-02",
+      "uc_source_codes": [
+        "UC-301-01-02"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 11,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-011",
+      "description": "需【外部连接子系统】提供存储SD卡/USB连接状态",
+      "source_text": "UC-301-01-03",
+      "uc_source_codes": [
+        "UC-301-01-03"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 12,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-012",
+      "description": "【行车记录仪系统】进行录制并进行分段保存视频",
+      "source_text": "UC-301-01-03",
+      "uc_source_codes": [
+        "UC-301-01-03"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 13,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-013",
+      "description": "【行车记录仪系统】需针对行车记录仪系统进行自检，并发送故障状态提醒驾驶员",
+      "source_text": "UC-301-01-03",
+      "uc_source_codes": [
+        "UC-301-01-03"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 14,
+      "review_status": "pending"
+    },
+    {
+      "source_code": "Fr-301-01-014",
+      "description": "【HMI交互及显示系统】通过HMI界面提示驾驶员行车记录仪故障状态包括存储卡无法写入故障，储存空间已满，摄像头故障",
+      "source_text": "UC-301-01-03",
+      "uc_source_codes": [
+        "UC-301-01-03"
+      ],
+      "source_file": "FR列表.xlsx",
+      "source_sheet": "行车记录仪Fr_List",
+      "source_row": 15,
+      "review_status": "pending"
+    }
+  ],
+  "allocations": [
+    {
+      "fr_source_code": "Fr-301-01-001",
+      "subsystem_source_name": "低压电源子系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 2,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-002",
+      "subsystem_source_name": "HMI交互及显示系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 3,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-003",
+      "subsystem_source_name": "感知融合与定位系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 4,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-004",
+      "subsystem_source_name": "行车记录仪系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 5,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-005",
+      "subsystem_source_name": "HMI交互及显示系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 6,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-006",
+      "subsystem_source_name": "感知融合与定位系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 7,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-007",
+      "subsystem_source_name": "HMI交互及显示系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 8,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-008",
+      "subsystem_source_name": "挡位系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 9,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-009",
+      "subsystem_source_name": "X-Call系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 10,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-010",
+      "subsystem_source_name": "HMI交互及显示系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 11,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-011",
+      "subsystem_source_name": "外部连接子系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 12,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-012",
+      "subsystem_source_name": "行车记录仪系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 13,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-013",
+      "subsystem_source_name": "行车记录仪系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 14,
+      "review_status": "pending"
+    },
+    {
+      "fr_source_code": "Fr-301-01-014",
+      "subsystem_source_name": "HMI交互及显示系统",
+      "function_source_name": "行车录制功能",
+      "source_file": "FR划分.xlsx",
+      "source_sheet": "行车记录仪功能需求分配表 ",
+      "source_row": 15,
+      "review_status": "pending"
+    }
+  ],
+  "subsystems": [
+    {
+      "source_name": "低压电源子系统",
+      "code": null,
+      "description": null,
+      "responsibility_in": null,
+      "responsibility_out": null,
+      "source": "allocation target name, not a complete architecture specification"
+    },
+    {
+      "source_name": "HMI交互及显示系统",
+      "code": null,
+      "description": null,
+      "responsibility_in": null,
+      "responsibility_out": null,
+      "source": "allocation target name, not a complete architecture specification"
+    },
+    {
+      "source_name": "感知融合与定位系统",
+      "code": null,
+      "description": null,
+      "responsibility_in": null,
+      "responsibility_out": null,
+      "source": "allocation target name, not a complete architecture specification"
+    },
+    {
+      "source_name": "行车记录仪系统",
+      "code": null,
+      "description": null,
+      "responsibility_in": null,
+      "responsibility_out": null,
+      "source": "allocation target name, not a complete architecture specification"
+    },
+    {
+      "source_name": "挡位系统",
+      "code": null,
+      "description": null,
+      "responsibility_in": null,
+      "responsibility_out": null,
+      "source": "allocation target name, not a complete architecture specification"
+    },
+    {
+      "source_name": "X-Call系统",
+      "code": null,
+      "description": null,
+      "responsibility_in": null,
+      "responsibility_out": null,
+      "source": "allocation target name, not a complete architecture specification"
+    },
+    {
+      "source_name": "外部连接子系统",
+      "code": null,
+      "description": null,
+      "responsibility_in": null,
+      "responsibility_out": null,
+      "source": "allocation target name, not a complete architecture specification"
+    }
+  ]
+}

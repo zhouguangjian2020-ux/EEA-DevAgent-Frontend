@@ -1,0 +1,18 @@
+erDiagram
+    direction LR
+    app_users ||--o{ project_members : "项目成员"
+    projects ||--o{ project_members : "授权范围"
+    projects ||--o{ ai_runs : "阶段任务"
+    ai_runs ||--o{ ai_run_inputs : "冻结上游全集"
+    artifact_revisions ||--o{ ai_run_inputs : "固定输入版本"
+    ai_runs ||--o{ ai_run_outputs : "完整候选产物"
+    artifact_revisions ||--o| ai_run_outputs : "AI产物来源"
+    projects ||--o{ project_events : "事务事件流"
+    artifact_revisions ||--o{ review_events : "接受与拒绝审计"
+    artifact_revisions ||--o{ field_changes : "新旧字段差异"
+    artifact_revisions ||--o{ trace_field_links : "二期字段证据端点"
+    projects ||--o{ impact_analyses : "二期影响分析"
+    impact_analyses ||--o{ impact_items : "受影响候选及评审"
+    projects ||--o{ baselines : "二期跨对象基线"
+    baselines ||--o{ baseline_items : "冻结版本组合"
+    artifact_revisions ||--o{ baseline_items : "被基线引用"

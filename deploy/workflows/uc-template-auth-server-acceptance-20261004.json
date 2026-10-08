@@ -1,0 +1,27 @@
+{
+  "reported_date": "2026-10-04",
+  "evidence_source": "User-provided Ubuntu read-only check output",
+  "container": "ts-agent-backend-20261003-workflows-r2",
+  "expected_image_id_checked_by_script": "sha256:4ca6143e223802bc957256f55e78c3f648f3d010208fba2f2171f77df4abb989",
+  "endpoint": "GET /v1/agent/uc-template?scene=FROM_PRD_CREATE_UC",
+  "base_url": "http://192.168.64.3:7000",
+  "header_name": "X-Agent-Internal-Key",
+  "credential_source": "Existing backend AGENT_CALLBACK_KEY; value neither displayed nor recorded",
+  "without_key_http_status": 401,
+  "with_key_http_status": 200,
+  "template_contract_check": "passed: scene, twelve fields and candidate_schema object",
+  "user_reported_markers": [
+    "UC_TEMPLATE_AUTH_OK",
+    "READ_ONLY_CHECK_FINISHED: no key printed; no service changes"
+  ],
+  "acceptance_scope": "Existing UC template authentication as called from main backend container on company Ubuntu host",
+  "agent_host_network": "not_verified",
+  "agent_runtime_key_configuration": "not_verified",
+  "agent_tool_registration": "not_performed_by_this_task",
+  "fr_template_endpoint": "not_implemented",
+  "existing_attachment_question_failure": "unchanged_pending_agent_evidence",
+  "existing_modification_preview_failure": "unchanged_pending_agent_evidence",
+  "runtime_application_changes": false,
+  "company_configuration_changes": false,
+  "assistant_company_access": false
+}

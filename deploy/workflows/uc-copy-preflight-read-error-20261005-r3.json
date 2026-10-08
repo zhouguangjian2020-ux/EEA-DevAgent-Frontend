@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-05",
+  "evidence_source": "user-pasted company r2 execution output",
+  "container_image_ref": "sha256:4ca6143e223802bc957256f55e78c3f648f3d010208fba2f2171f77df4abb989",
+  "container_actual_image_id": "sha256:4ca6143e223802bc957256f55e78c3f648f3d010208fba2f2171f77df4abb989",
+  "running": true,
+  "network": "host",
+  "identity_check": "PASS",
+  "readonly_inspection": "attempted but failed",
+  "reported_exception": "ProjectReadError",
+  "reported_stage": null,
+  "reported_error_code": null,
+  "remote_root_cause": "not established from opaque r1 exception output",
+  "known_preflight_defects": [
+    "r1 required extra source uc.read capability unlike deployed workspace reads",
+    "r1 suppressed safe status/code/stage as well as sensitive details"
+  ],
+  "source_policy_evidence": "Four local relevant service files matched frozen workflows-r2 release byte-for-byte",
+  "r3_fixes": [
+    "source uses existing project visibility plus active project/function ownership checks",
+    "target uc.create remains mandatory",
+    "diagnostics emit allowlisted stage/error_code/status/SQLSTATE only"
+  ],
+  "permissions_changed": false,
+  "company_writes": false,
+  "ucs_copied": 0,
+  "confirmations": 0,
+  "offline_tests_passed": 27,
+  "identity_guard_unchanged_from_r2": true,
+  "company_r3_execution": "PENDING",
+  "files": [
+    {
+      "path": "E:/Git projects/TS-frontend/deploy/workflows/inspect_uc_copy_20261005_r3.py",
+      "sha256": "57bde1e9a44112478b6e293411425069329c892b98a3b8fb95d7bb021461b007"
+    },
+    {
+      "path": "E:/Git projects/TS-frontend/deploy/workflows/run-uc-copy-preflight-20261005-r3.sh",
+      "sha256": "f2165a5f788182ec92c6ddf5c2294e8360400f553370c3cd25966eff11d1f874"
+    },
+    {
+      "path": "E:/Git projects/TS-frontend/deploy/workflows/upload-and-inspect-uc-copy-20261005-r3.ps1",
+      "sha256": "ebdc35a692db98ec190b633d1bfc911584ddb44b59151a7905ac57cb09086497"
+    },
+    {
+      "path": "E:/Git projects/TS-frontend/deploy/workflows/test_inspect_uc_copy_20261005_r3.py",
+      "sha256": "2564bce034d215a9cebf0bfe5067839b23a6a59cda332f1d0d11563d89d3c506"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+来源：2026-09-17 用户回传的关键错误摘录；转义已还原，重复回传视为同一次失败。
+Active: failed (Result: protocol) since Thu 2026-09-17 19:54:39 CST
+ExecStart=/usr/bin/pg_ctlcluster --skip-systemctl-redirect 18-main start (code=exited, status=1/FAILURE)
+2026-09-17 11:54:39.209 GMT [1583716] LOG: syntax error in file "/etc/postgresql/18/main/postgresql.conf" line 60, near token ".0"
+2026-09-17 11:54:39.210 GMT [1583716] FATAL: configuration file "/etc/postgresql/18/main/postgresql.conf" contains errors
+pg_ctl: could not start server
+Examine the log output.
+postgresql@18-main.service: Can't open PID file /run/postgresql/18-main.pid (yet?) after start: Operation not permitted
+postgresql@18-main.service: Failed with result 'protocol'.
+The job identifier is 243808 and the job result is failed.
