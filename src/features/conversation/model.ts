@@ -44,21 +44,16 @@ export function createConversation(): ConversationState {
 }
 export function conversationFeatures(projectId: string, p: ProjectWorks, includeTestFeatures = true): { id: string; name: string }[] {
   const features = new Map((includeTestFeatures ? getTestFeatures(projectId) : []).map(f => [f.id, f]));
+  for (const feature of Object.values(p.features ?? {})) features.set(feature.id, { id: feature.id, name: feature.name });
   for (const work of Object.values(p.works)) features.set(work.featureId, { id: work.featureId, name: work.featureName });
   return [...features.values()];
-}
-function newFeatureName(p: ProjectWorks, base: string): string {
-  const names = new Set(Object.values(p.works).map(w => w.featureName));
-  let name = base, suffix = 2;
-  while (names.has(name)) name = `${base}（${suffix++}）`;
-  return name;
 }
 export function prdForFeature(p: ProjectWorks, featureId: string): PrdWork | undefined {
   return Object.values(p.works).find((w): w is PrdWork => w.kind === "PRD" && w.featureId === featureId && Boolean(w.session.document));
 }
 export function featureDisabledReason(p: ProjectWorks, mode: GenerationMode, featureId: string): string {
   const prd = prdForFeature(p, featureId);
-  if (mode === "PRD") return prd ? "已有 PRD" : "";
+  if (mode === "PRD") return prd || p.features?.[featureId]?.hasPrd ? "已有 PRD" : "";
   if (!prd) return "尚未生成 PRD";
   return prd.session.document?.status === "accepted" ? "" : "PRD 尚未确认";
 }
@@ -69,7 +64,12 @@ export function validateConversationRequest(p: ProjectWorks, r: ConversationRequ
   if (r.mode && r.references.length) return "生成模式不能同时引用对象附件。";
   if (r.mode === "PRD" && r.kind === "send") {
     if (!r.featureId || !r.featureName?.trim()) return "新功能信息不完整，请重新提交 PRD 生成。";
-    if (conversationFeatures(r.projectId, p).some(f => f.id === r.featureId)) return "功能标识已存在，没有覆盖现有功能或 PRD。";
+    const features = conversationFeatures(r.projectId, p);
+    const existing = features.find(f => f.id === r.featureId);
+    if (existing) {
+      if (existing.name !== r.featureName) return "所选功能已变化，请重新选择。";
+      if (featureDisabledReason(p, "PRD", existing.id)) return "该功能已有PRD，未生成或覆盖。";
+    } else if (features.some(f => f.name.trim().replace(/\s+/g, " ").toLowerCase() === r.featureName!.trim().replace(/\s+/g, " ").toLowerCase())) return "该功能已存在，本次生成已终止。";
   }
   if (r.mode === "UC") {
     const feature = conversationFeatures(r.projectId, p).find(f => f.id === r.featureId);
@@ -86,13 +86,13 @@ export function validateConversationRequest(p: ProjectWorks, r: ConversationRequ
 }
 export function buildConversationRequest(projectId: string, p: ProjectWorks, id: string, kind: "send" | "expand"): ConversationRequest {
   const c = p.conversation;
-  const feature = c.mode === "UC" ? conversationFeatures(projectId, p).find(f => f.id === c.featureId) : undefined;
+  const feature = c.mode === "UC" || c.mode === "PRD" && kind === "send" ? conversationFeatures(projectId, p).find(f => f.id === c.featureId) : undefined;
   const prdName = c.mode === "PRD" ? c.prdNameHint ?? mockFunctionName(c.prompt) : null;
   const source = feature && c.mode === "UC" ? prdForFeature(p, feature.id) : undefined;
   return {
     id, projectId, kind, mode: c.mode,
-    featureId: c.mode === "PRD" && kind === "send" ? `${projectId}-feature-${id}` : feature?.id ?? null,
-    featureName: prdName !== null ? kind === "send" ? newFeatureName(p, prdName) : prdName : feature?.name ?? null,
+    featureId: c.mode === "PRD" && kind === "send" && !feature ? `${projectId}-feature-${id}` : feature?.id ?? null,
+    featureName: feature?.name ?? prdName,
     prompt: c.prompt.trim(), references: c.attachments.map(o => ({ ...o })),
     sourcePrd: source?.session.document ? { workId: source.id, document: { ...source.session.document } } : null,
   };
@@ -109,7 +109,7 @@ export function reduceProjectConversation(p: ProjectWorks, a: ConversationAction
     case "mode":
       if (c.operation) return withConversation(p, { ...c, notice: "请等待当前回复完成，或先停止本次请求。" });
       return withConversation(p, { ...c, mode: a.mode, featureId: a.mode === "UC" ? a.featureId ?? null : null, attachments: a.mode ? [] : c.attachments, error: null, notice: a.mode && c.attachments.length ? "已移除对话附件，切换为快捷生成。" : "" });
-    case "feature": return c.operation || c.mode !== "UC" ? p : withConversation(p, { ...c, featureId: a.featureId, error: null, notice: "" });
+    case "feature": return c.operation || !c.mode ? p : withConversation(p, { ...c, featureId: a.featureId, error: null, notice: "" });
     case "attach": {
       if (c.operation || !a.objects.length) return p;
       const attachments = new Map(c.attachments.map(o => [o.id, o]));

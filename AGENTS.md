@@ -1,3 +1,11 @@
+<!-- 2026-10-09 repository material relocation -->
+Documentation, historical release materials, and test scripts were moved at the user's request to:
+E:/Git projects/EEA-DevAgent-support-20261009/
+Frontend materials: TS-frontend/; backend materials: TS-backend/.
+Tests are preserved, not deleted, but are no longer part of these code-only repositories.
+Historical test runners may depend on the original layout. Restore/review their paths in an isolated checkout before running them; do not point them at the company database.
+Read E:/Git projects/EEA-DevAgent-support-20261009/README.md before following historical paths below.
+This is repository organization only, not a new company deployment or additional acceptance result.
 # Frontend Agent Rules
 
 ## Scope
@@ -7,7 +15,7 @@
 - Preserve the existing object workspaces. Do not treat the old placeholder-only scope or the proposed product MVP roadmap as authorization for new work.
 
 ## Documentation
-- Start with `E:/Git projects/TS-frontend/docs/current/README.md`. `E:/Git projects/TS-frontend/docs/legacy` preserves historical evidence, not active instructions or implementation status.
+- Start with `E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/current/README.md`. `E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/legacy` preserves historical evidence, not active instructions or implementation status.
 - Distinguish confirmed requirements, source-code facts, implementation defaults, and unresolved decisions. Do not promote proposals to deployed capabilities.
 
 ## Architecture
@@ -20,7 +28,7 @@
 ## Figma and tokens
 - Do not use screenshots as UI backgrounds.
 - Use semantic tokens from `src/app/globals.css`; do not scatter hex colors in components.
-- `E:/Git projects/TS-frontend/docs/current/07_Figma与样式映射.md` is the mapping layer between Figma variables and CSS tokens. If Figma changes, update the mapping first, then the CSS values.
+- `E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/current/07_Figma与样式映射.md` is the mapping layer between Figma variables and CSS tokens. If Figma changes, update the mapping first, then the CSS values.
 - Preserve the desktop target 1440x900 and exact copy `搜素对象文件···`.
 
 ## API and collaboration
@@ -35,7 +43,7 @@ Before marking a task complete:
 - `pnpm typecheck`
 - `pnpm build`
 - manually verify the affected flow
-- update `E:/Git projects/TS-frontend/docs/current/06_工程维护与验证记录.md`
+- update `E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/current/06_工程维护与验证记录.md`
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -48,14 +56,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 <!-- END:nextjs-agent-rules -->
 
 ## Tabs and object workspaces
-- Before designing or implementing tabs, sidebar synchronization, object workspaces, or project-level AI conversations, read `E:/Git projects/TS-frontend/docs/current/02_前端交互规范.md`.
+- Before designing or implementing tabs, sidebar synchronization, object workspaces, or project-level AI conversations, read `E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/current/02_前端交互规范.md`.
 - Confirmed baseline: one tab per object; multiple business features per project; object documents and edit drafts follow object tabs, but conversation, composer draft, attachments and chat requests are project-scoped and never switch with tabs (confirmed 2026-09-21).
 - UC detail views must preserve the 12 fields and nested merged scenario structure specified in section 7 of that document.
 - Do not treat design defaults, pending decisions, static mockups, or Figma prototype behaviors as implemented backend capabilities.
 
 
 ## Frontend interaction contract
-- Before adding, changing, or removing a UI interaction, read `E:/Git projects/TS-frontend/docs/current/02_前端交互规范.md` first. It is the unified component interaction contract; latest user-confirmed entries supersede older design defaults.
+- Before adding, changing, or removing a UI interaction, read `E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/current/02_前端交互规范.md` first. It is the unified component interaction contract; latest user-confirmed entries supersede older design defaults.
 - Update that document and relevant tests in the same change as the component. Mark unspecified rules as pending; do not invent subsystem detail/edit behavior.
 - Panorama workspaces must not overwrite unrelated shell or existing PRD/UC/FR detail designs. UC diagram is derived and read-only; only searchable subsystem selectors are editable in FR allocation.
 
@@ -98,7 +106,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## 2026-09-28 staged CRUD authorization — stages 3 and 4 together
 
 - User explicitly started stage 3, then authorized continuing directly into stage 4 for joint acceptance. This supersedes the stage-2 stop rule only for sidebar single deletion, truthful allocation navigation/UI synchronization, and explicit-selection atomic batch deletion with focused local tests. Stop after stage 4; stage 5 is NOT authorized.
-- Do not update `E:/Git projects/TS-frontend/docs/current/25_工作交接_项目功能PRD_UC_FR_CRUD_20260928.md`. Maintain current interaction, progress and verification documents instead.
+- Do not update `E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/current/25_工作交接_项目功能PRD_UC_FR_CRUD_20260928.md`. Maintain current interaction, progress and verification documents instead.
 - Keep the original local acceptance services (3000/8000/56430) untouched. Use isolated disposable databases or separate stage-3/4 preview ports. No company database, SSH, deployment, credential changes or edits to frozen SQL packages. No restore/recycle bin, permission administration, complete allocation CRUD or new Agent flows.
 
 
@@ -107,11 +115,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - User explicitly continued with “第五部分，继续” on 2026-09-28. This supersedes the prior stage-3/4 stop rule and authorizes stage 5 only: full local/isolated CRUD regression, browser/API verification, SQL package/hash/rollback-boundary review, and current execution-package documentation.
 - Keep the confirmed scope: project/function/PRD/UC/FR and FR-allocation deletion behavior, dependency guards, active head/accepted reference checks, PRD delete-then-new-ID creation, batch atomicity and failure recovery. Do not count complete FR-allocation create/edit/accept CRUD as implemented.
 - Do not connect to company databases, SSH, deploy, restart company services, change company credentials/configuration/bindings, modify frozen SQL packages, add permission administration, add restore/recycle-bin UI, or add new Agent flows. The user executes company materials and returns safe receipts for review.
-- Do not modify `E:/Git projects/TS-frontend/docs/current/25_工作交接_项目功能PRD_UC_FR_CRUD_20260928.md`. Stage 5 ends after the local/isolated evidence and documentation are delivered; stop and wait for final user acceptance.
+- Do not modify `E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/current/25_工作交接_项目功能PRD_UC_FR_CRUD_20260928.md`. Stage 5 ends after the local/isolated evidence and documentation are delivered; stop and wait for final user acceptance.
 
 ## Company frontend release gate (2026-10-02)
 
-- Before supplying or changing company frontend deployment commands, read E:/Git projects/TS-frontend/docs/current/公司前端发布必读_20261002.md and the current release DEPLOY.md. Do not rely on chat memory or generic Docker examples.
+- Before supplying or changing company frontend deployment commands, read E:/Git projects/EEA-DevAgent-support-20261009/TS-frontend/docs/current/公司前端发布必读_20261002.md and the current release DEPLOY.md. Do not rely on chat memory or generic Docker examples.
 - For the known 192.168.64.3 frontend build, preserve the receipt-validated --network=host --pull=false options unless a replacement network setup is explicitly verified. Runtime host networking does not imply build host networking.
 - New checksum manifests must be UTF-8 without BOM and LF-only; validate raw archive bytes and the delivered checksum command. Do not silently overwrite a delivered archive or its hash.
 - Track upload/checksum/build/cutover/browser acceptance separately. Company operations remain user-executed; preserve actual container environment privately and retain rollback containers/images.

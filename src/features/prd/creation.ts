@@ -12,7 +12,7 @@ const empty = (): CreationState => ({ prompt: '', candidateName: null, input: nu
 export const creationInFlight = (intent: PrdCreationIntent | null) => intent?.status === 'planning' || intent?.status === 'generating';
 export function canResetCreation(s: CreationState) { return !s.busy && !s.uncertain && !creationInFlight(s.intent) && !(s.intent?.function_id && ['failed', 'interrupted'].includes(s.intent.status)); }
 export function canChooseCreation(s: CreationState) { return !s.busy && !s.uncertain && !s.intent?.function_id && Boolean(s.intent?.review) && ['planned', 'failed', 'interrupted'].includes(s.intent!.status); }
-export function canRetryCreation(s: CreationState) { return !s.busy && !s.uncertain && Boolean(s.intent) && ['failed', 'interrupted'].includes(s.intent!.status) && (!s.intent!.review || Boolean(s.intent!.function_id)); }
+export function canRetryCreation(s: CreationState) { return !s.busy && !s.uncertain && Boolean(s.intent) && ['planned', 'failed', 'interrupted'].includes(s.intent!.status); }
 const message = (e: unknown) => e instanceof Error ? e.message : '请求未完成';
 
 // One project/thread-local creation intent. No chat messages, auth storage or general task engine.
@@ -21,10 +21,29 @@ export class PrdCreationSession {
   private listeners = new Set<() => void>();
   private epoch = 0;
   private abort: AbortController | null = null;
-  constructor(private project: string, private onResult: (intent: PrdCreationIntent, automatic: boolean, signal: AbortSignal) => Promise<string>, private api = prdCreationApi, private getThread?: () => string) {}
+  private target: { target_function_id?: string; new_function_name?: string } = {};
+  constructor(private project: string, private onResult: (intent: PrdCreationIntent, automatic: boolean, signal: AbortSignal) => Promise<string>, private api = prdCreationApi, private getThread?: () => string, private refreshDirectory?: () => Promise<unknown>) {}
   snapshot = () => this.value;
   subscribe = (fn: () => void) => { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; };
   private patch(change: Partial<CreationState>) { this.value = { ...this.value, ...change }; this.listeners.forEach(fn => fn()); }
+  setTarget(target_function_id?: string, new_function_name?: string) {
+    if (!this.value.input && !this.value.busy) this.target = { ...(target_function_id ? { target_function_id } : {}), ...(new_function_name ? { new_function_name } : {}) };
+  }
+  async restore(client_request_id: string) {
+    if (this.value.busy) return;
+    const thread_id = this.getThread?.();
+    const input: CreationInput = { client_request_id, message: '', ...(thread_id ? { thread_id } : {}) };
+    await this.run('read', async signal => {
+      const intent = await this.api.read(this.project, input, null, signal);
+      if (signal.aborted) return;
+      if (intent.project_id !== this.project || intent.client_request_id !== client_request_id) throw new Error('创建回执身份不匹配');
+      if (!intent.original_message) throw new Error('原始需求暂不可恢复，请勿创建替代任务。');
+      this.patch({ input: { ...input, message: intent.original_message,
+        ...(intent.target_function_id ? { target_function_id: intent.target_function_id } : {}),
+        ...(intent.new_function_name ? { new_function_name: intent.new_function_name } : {}) } });
+      await this.accept(intent, signal, false, false);
+    }, false);
+  }
   setPrompt(prompt: string) { if (!this.value.input && !this.value.busy) this.patch({ prompt }); }
   setCandidateName(candidateName: string) { if (canChooseCreation(this.value)) this.patch({ candidateName }); }
   reset() { if (canResetCreation(this.value)) { this.value = empty(); this.listeners.forEach(fn => fn()); } }
@@ -39,7 +58,7 @@ export class PrdCreationSession {
     if (!prompt || [...prompt].length > 4000 || prompt.includes('\0')) { this.patch({ error: '请输入1至4000字的需求，不能包含空字符。' }); return; }
     let thread_id: string | undefined;
     try { thread_id = this.getThread?.(); } catch (e) { this.patch({ error: message(e) }); return; }
-    this.patch({ input: { client_request_id: createUuid(), message: prompt, ...(thread_id ? { thread_id } : {}) } });
+    this.patch({ input: { client_request_id: createUuid(), message: prompt, ...this.target, ...(thread_id ? { thread_id } : {}) } });
     await this.run('plan', async signal => this.accept(await this.api.create(this.project, this.value.input!, signal), signal, true));
   }
   async resend() {
@@ -52,29 +71,32 @@ export class PrdCreationSession {
   }
   async retry() {
     if (!canRetryCreation(this.value)) return;
-    await this.run(this.value.intent!.function_id ? 'generate' : 'plan', async signal => this.accept(await this.api.execute(this.project, this.value.intent!, { action: 'continue' }, signal), signal, true));
+    await this.run(this.value.intent!.function_id ? 'generate' : 'plan', async signal => this.accept(await this.api.execute(this.project, this.value.intent!, { action: this.value.intent!.status === 'planned' ? 'auto' : 'continue' }, signal), signal, true));
   }
   async refresh() {
     if (this.value.busy || !this.value.input) return;
-    await this.run('read', async signal => this.accept(await this.api.read(this.project, this.value.input!, this.value.intent, signal), signal, false), false);
+    await this.run('read', async signal => this.accept(await this.api.read(this.project, this.value.input!, this.value.intent, signal), signal, false, false), false);
   }
   async open(artifactId?: string) {
     if (this.value.busy || !this.value.intent) return;
     const intent = artifactId ? { ...this.value.intent, artifact_id: artifactId } : this.value.intent;
     await this.run('read', async signal => { const notice = await this.onResult(intent, false, signal); if (!signal.aborted) this.patch({ notice }); }, false);
   }
-  private async accept(intent: PrdCreationIntent, signal: AbortSignal, auto: boolean): Promise<void> {
+  private async accept(intent: PrdCreationIntent, signal: AbortSignal, auto: boolean, notify = true): Promise<void> {
     if (signal.aborted) return;
     if (intent.project_id !== this.project || intent.client_request_id !== this.value.input?.client_request_id) throw new Error('创建回执身份不匹配，已停止处理。');
     this.patch({ intent, uncertain: false, notFound: false, error: '', notice: '' });
-    if (intent.status === 'saved') {
+    if (notify && intent.function_id && ['failed', 'interrupted'].includes(intent.status)) {
+      try { await this.refreshDirectory?.(); } catch { this.patch({ notice: '目标功能已保留，但目录刷新失败；请读取目录，不要重复新建。' }); }
+    }
+    if (intent.status === 'saved' && notify) {
       // Saving has already committed. A directory/navigation failure must never become a generation failure.
       this.patch({ notice: 'PRD已保存为待确认版本；正在读取最新工作空间。' });
       try { const notice = await this.onResult(intent, true, signal); if (!signal.aborted) this.patch({ notice }); }
-      catch { if (!signal.aborted) this.patch({ notice: 'PRD已保存，但目录刷新失败。请点击“打开已保存PRD”重试读取；不要重新生成。' }); }
-    } else if (auto && intent.status === 'planned' && intent.review?.status === 'ready_to_create' && intent.review.can_create_new_function) {
+      catch { if (!signal.aborted) this.patch({ notice: 'PRD已保存，但目录刷新失败。请在文档目录中查看；不要重新生成。' }); }
+    } else if (auto && intent.status === 'planned') {
       this.patch({ phase: 'generate' });
-      await this.accept(await this.api.execute(this.project, intent, { action: 'auto' }, signal), signal, false);
+      await this.accept(await this.api.execute(this.project, intent, this.value.input?.target_function_id ? { action: 'reuse', function_id: this.value.input.target_function_id } : { action: 'auto' }, signal), signal, false);
     }
   }
   private async run(phase: CreationState['phase'], task: (signal: AbortSignal) => Promise<void>, recover = true) {

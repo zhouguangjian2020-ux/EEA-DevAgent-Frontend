@@ -154,7 +154,7 @@ function buildFunctionWorks(workspace: ProjectWorkspace, feature: WorkspaceFunct
 export function databaseWorkspaceWorks(workspace: ProjectWorkspace) {
   const works = workspace.functions.flatMap(feature => buildFunctionWorks(workspace, feature));
   const first = works.find(work => work.kind === "PRD") ?? works.find(work => work.kind === "UC_OVERVIEW") ?? works[0];
-  const features: BusinessFeature[] = workspace.functions.map(f => ({ id: f.id, code: f.code, name: f.name, description: f.description ?? "", lockVersion: f.lock_version, canUpdate: Boolean(f.can_update), ...(f.can_delete ? { canDelete: true } : {}), acceptedPrdRevisionId: f.prd?.revision.accepted_revision_id, acceptedUcs: f.accepted_use_cases ?? [] }));
+  const features: BusinessFeature[] = workspace.functions.map(f => ({ id: f.id, code: f.code, name: f.name, description: f.description ?? "", lockVersion: f.lock_version, canUpdate: Boolean(f.can_update), ...(f.can_delete ? { canDelete: true } : {}), hasPrd: Boolean(f.prd), acceptedPrdRevisionId: f.prd?.revision.accepted_revision_id, acceptedUcs: f.accepted_use_cases ?? [] }));
   return { works, features, capabilities: workspace.capabilities ?? [], openId: first?.id ?? "" };
 }
 

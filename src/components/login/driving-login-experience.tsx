@@ -1,8 +1,9 @@
 "use client";
+import { useI18n } from "@/features/i18n/provider";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { View } from "./create-driving-scene";
-import type { LightPhase } from "./theme-transition";
+import { BrandLockup } from "@/components/brand/brand-lockup";
 import { useTheme } from "@/features/theme/use-theme";
 import CarStage from "./car-stage";
 import DrivingLoginPanel from "./driving-login-panel";
@@ -22,16 +23,14 @@ function useReducedMotion() {
 }
 
 export default function DrivingLoginExperience() {
+  const { t: tr } = useI18n();
   const [theme, setTheme] = useTheme();
   const [view, setView] = useState<View>("home");
-  const [paused, setPaused] = useState(false);
+  const [homeSettled, setHomeSettled] = useState(true);
   const reducedMotion = useReducedMotion();
   const [slogan, setSlogan] = useState(0);
-  const [phase, setPhase] = useState<LightPhase>("settled");
-  const [lamps, setLamps] = useState(theme === "dark" ? 1 : 0);
-  const [credits, setCredits] = useState(false);
   const enter = useRef<HTMLButtonElement>(null);
-  const creditDialog = useRef<HTMLDialogElement>(null);
+  const returningHome = useRef(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -39,57 +38,55 @@ export default function DrivingLoginExperience() {
   }, [theme]);
 
   useEffect(() => {
-    if (paused || reducedMotion || view !== "home") return;
+    if (reducedMotion || view !== "home" || !homeSettled) return;
     const timer = window.setInterval(() => {
       if (!document.hidden) setSlogan((current) => (current + 1) % slogans.length);
     }, 4800);
     return () => window.clearInterval(timer);
-  }, [paused, reducedMotion, view]);
+  }, [homeSettled, reducedMotion, view]);
 
-  useEffect(() => {
-    if (credits) creditDialog.current?.showModal();
-    else if (creditDialog.current?.open) creditDialog.current.close();
-  }, [credits]);
-
-  const onPhase = useCallback((next: LightPhase, value: number) => {
-    setPhase(next);
-    setLamps(value);
+  const onViewSettled = useCallback((settled: View) => {
+    if (settled !== "home") return;
+    setHomeSettled(true);
   }, []);
 
   const back = () => {
+    returningHome.current = true;
+    setHomeSettled(false);
     setView("home");
-    window.setTimeout(() => enter.current?.focus({ preventScroll: true }), reducedMotion ? 120 : 1350);
   };
-
-  const lightStatus = phase === "environment" ? "环境渐变中" : phase === "delay" ? (theme === "dark" ? "准备开启车灯" : "准备关闭车灯") : phase === "lights" ? (theme === "dark" ? "车灯缓缓亮起" : "车灯缓缓熄灭") : (lamps > 0.5 ? "夜间 · 车灯已开启" : "日间 · 车灯已关闭");
+  const homeVisible = view === "home" && homeSettled;
+  useEffect(() => {
+    if (!homeVisible || !returningHome.current) return;
+    returningHome.current = false;
+    enter.current?.focus({ preventScroll: true });
+  }, [homeVisible]);
 
   return (
-    <main className="driving-login-experience" data-theme={theme} data-view={view} data-reduced-motion={reducedMotion}>
-      <CarStage theme={theme} view={view} paused={paused} reducedMotion={reducedMotion} onPhase={onPhase} />
+    <main className="driving-login-experience" data-theme={theme} data-view={view} data-reduced-motion={reducedMotion} data-home-settled={homeSettled}>
+      <CarStage theme={theme} view={view} paused={false} reducedMotion={reducedMotion} onViewSettled={onViewSettled} />
       <header className="topbar">
-        <div className="wordmark" aria-label="天枢 · 工程体验"><span className="brand-symbol"><i /><i /></span><span>天枢<span className="brand-divider">/</span><span className="brand-en">ENGINEERING IN MOTION</span></span></div>
+        <BrandLockup />
         <div className="top-controls">
-          <span className="prototype-label">LOGIN EXPERIENCE <span>01</span></span>
-          <button type="button" className="motion-toggle icon-button" onClick={() => setPaused((current) => !current)} aria-label={paused ? "播放动效" : "暂停动效"} title={paused ? "播放动效" : "暂停动效"} aria-pressed={paused}>{paused ? "▶" : "Ⅱ"}</button>
-          <button type="button" className="theme-toggle" role="switch" aria-checked={theme === "dark"} aria-label={theme === "light" ? "切换为深色模式" : "切换为明亮模式"} onClick={() => setTheme(theme === "light" ? "dark" : "light")}><span className="theme-thumb" /><span aria-hidden="true">☼</span><span aria-hidden="true">☾</span></button>
+          <button type="button" className="theme-toggle" role="switch" aria-checked={theme === "dark"} aria-label={theme === "light" ? tr("切换为深色模式") : tr("切换为明亮模式")} onClick={() => setTheme(theme === "light" ? "dark" : "light")}><span className="theme-thumb" /><span aria-hidden="true">☼</span><span aria-hidden="true">☾</span></button>
         </div>
       </header>
 
-      <section className={"hero-copy" + (view === "login" ? " is-away" : "")} aria-hidden={view !== "home"} inert={view !== "home"}>
+      <section className={"hero-copy" + (!homeVisible ? " is-away" : "")} aria-hidden={!homeVisible} inert={!homeVisible}>
         <div className="eyebrow"><span className="live-dot" /> IDEAS INTO ENGINEERING</div>
-        <h1 className="slogan-window" aria-label={slogans[slogan].join("")}>
-          {slogans.map((lines, index) => <span key={index} className={"slogan" + (index === slogan ? " is-active" : "")} aria-hidden={index !== slogan}><span>{lines[0]}</span><span>{lines[1]}</span></span>)}
+        <h1 className="slogan-window" aria-label={slogans[slogan].map(line => tr(line)).join("")}>
+          {slogans.map((lines, index) => <span key={index} className={"slogan" + (index === slogan ? " is-active" : "")} aria-hidden={index !== slogan}><span>{tr(lines[0])}</span><span>{tr(lines[1])}</span></span>)}
         </h1>
-        <p className="hero-description">少一点重复，多一点创造。<br />把复杂留给智能，把方向握在手中。</p>
-        <div className="capability-line"><span>需求洞察</span><i /><span>智能协同</span><i /><span>工程可追溯</span></div>
-        <div className="slogan-pagination" aria-label="切换标语">{slogans.map((_, index) => <button type="button" key={index} aria-label={"第 " + (index + 1) + " 条标语"} aria-pressed={slogan === index} onClick={() => setSlogan(index)} className={index === slogan ? "active" : ""} />)}</div>
+        <p className="hero-description">{tr("少一点重复，多一点创造。")}<br />{tr("把复杂留给智能，把方向握在手中。")}</p>
+        <div className="capability-line"><span>{tr("需求洞察")}</span><i /><span>{tr("智能协同")}</span><i /><span>{tr("工程可追溯")}</span></div>
+        <div className="slogan-pagination" aria-label={tr("切换标语")}>{slogans.map((_, index) => <button type="button" key={index} aria-label={tr("第 ") + (index + 1) + tr(" 条标语")} aria-pressed={slogan === index} onClick={() => setSlogan(index)} className={index === slogan ? "active" : ""} />)}</div>
       </section>
 
       <DrivingLoginPanel active={view === "login"} onBack={back} />
-      <div className={"entry-action" + (view === "login" ? " is-away" : "")} aria-hidden={view !== "home"} inert={view !== "home"}><button type="button" ref={enter} className="primary-button enter-button" onClick={() => setView("login")}>前往工作区 <span aria-hidden="true">→</span></button><span className="entry-hint">让下一程，从这里开始</span></div>
+      <div className={"entry-action" + (!homeVisible ? " is-away" : "")} aria-hidden={!homeVisible} inert={!homeVisible}><button type="button" ref={enter} className="primary-button enter-button" onClick={() => setView("login")}>{tr("前往工作区 ")}<span aria-hidden="true">→</span></button></div>
 
-      <footer className="bottom-bar"><button type="button" className="credits-button" onClick={() => setCredits(true)}>3D 登录体验 ↗</button><span className={"lighting-status " + (lamps > 0.5 ? "is-on" : "")} aria-live="polite"><i />{lightStatus}</span><span className="footer-caption">BUILT FOR WHAT&apos;S NEXT.</span></footer>
-      <dialog ref={creditDialog} className="credits-dialog" onCancel={() => setCredits(false)} onClose={() => setCredits(false)}><button type="button" className="dialog-close icon-button" onClick={() => setCredits(false)} aria-label="关闭说明">×</button><div className="eyebrow">ABOUT THIS LOGIN</div><h2>先体验，再启程。</h2><p>这是正式前端登录页的 3D 视觉层，登录仍使用既有认证接口，不改变 Cookie 会话、Mock 模式和登录失败处理。</p><p>同一份 3D 车型贯穿明亮、深色、首页和登录页；环境渐变完成后，车灯与车底灯稍后再渐亮或渐灭。</p><h3>模型来源</h3><p>本页面使用 Car Concept 作为授权的交互车型，资产标注 CC BY 4.0。此车型仅用于登录界面视觉，不代表业务车辆。</p><a href="/MODEL-LICENSE.txt" target="_blank" rel="noreferrer">查看模型来源与许可说明 ↗</a><button type="button" className="primary-button" onClick={() => setCredits(false)}>继续体验 <span aria-hidden="true">→</span></button></dialog>
+      <footer className="bottom-bar"><span className={"entry-hint home-footer-copy" + (!homeVisible ? " is-away" : "")} aria-hidden={!homeVisible}>{tr("让下一程，从这里开始")}</span><span className="footer-caption">BUILT FOR WHAT&apos;S NEXT.</span></footer>
+      <span className="sr-only">3D model: Car Concept. <a href="/MODEL-LICENSE.txt" target="_blank" rel="noreferrer">Model source and license</a></span>
     </main>
   );
 }

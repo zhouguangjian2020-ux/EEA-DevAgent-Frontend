@@ -5,7 +5,7 @@ import { gsap } from 'gsap';
 import { ThemeTransition, type Theme, type LightPhase } from './theme-transition';
 
 export type View = 'home' | 'login';
-export interface SceneOptions { theme: Theme; view: View; reducedMotion: boolean; paused: boolean; onReady: () => void; onProgress: (value: number) => void; onError: (message: string) => void; onPhase: (phase: LightPhase, lamps: number) => void; }
+export interface SceneOptions { theme: Theme; view: View; reducedMotion: boolean; paused: boolean; onReady: () => void; onViewSettled: (view: View) => void; onProgress: (value: number) => void; onError: (message: string) => void; onPhase: (phase: LightPhase, lamps: number) => void; }
 export interface SceneController { setTheme: (theme: Theme) => void; setView: (view: View) => void; setPaused: (paused: boolean) => void; setReducedMotion: (reduced: boolean) => void; dispose: () => void; }
 
 function radialTexture() {
@@ -96,8 +96,10 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
   const colors=new THREE.Color();
   const resize=()=>{ const size=container.getBoundingClientRect(); width=Math.max(1,size.width);height=Math.max(1,size.height);renderer.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix(); };
   const observer=new ResizeObserver(resize); observer.observe(container);resize();
-  const onPointer=(e:PointerEvent)=>{if(reduced)return;const x=(e.clientX/window.innerWidth-.5),y=(e.clientY/window.innerHeight-.5);gsap.to(motion,{parallaxX:x*.2,parallaxY:y*.08,duration:1.5,overwrite:'auto',ease:'power2.out'});};
+  const onPointer=(e:PointerEvent)=>{if(reduced)return;const x=(e.clientX/window.innerWidth-.5),y=(e.clientY/window.innerHeight-.5);gsap.to(motion,{parallaxX:x*.7,parallaxY:y*.28,duration:1.2,overwrite:'auto',ease:'power2.out'});};
   window.addEventListener('pointermove',onPointer,{passive:true});
+  const resetPointer=()=>gsap.to(motion,{parallaxX:0,parallaxY:0,duration:1.2,ease:'power2.out',overwrite:'auto'});
+  document.documentElement.addEventListener('pointerleave',resetPointer);
   const onLost=(e:Event)=>{e.preventDefault(); if(!disposed)options.onError('3D 场景暂时不可用；登录演示仍可使用。请刷新重试。');};
   renderer.domElement.addEventListener('webglcontextlost',onLost);
 
@@ -152,8 +154,8 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
     ambient.intensity=THREE.MathUtils.lerp(2.2,.62,night);key.intensity=THREE.MathUtils.lerp(3.2,1.55,night);rim.intensity=THREE.MathUtils.lerp(2,2.3,night);fill.intensity=THREE.MathUtils.lerp(1.4,.8,night);
     scene.environmentIntensity=THREE.MathUtils.lerp(1.0,.48,night);
     const lamp=theme.lamps;contactShadowMaterial.opacity=THREE.MathUtils.lerp(.3,.6,night);
-    frontMaterials.forEach(m=>m.emissiveIntensity=lamp*5.5);rearMaterials.forEach(m=>m.emissiveIntensity=lamp*.7);
-    headSpots.forEach(s=>s.intensity=lamp*24);pools.forEach(m=>m.opacity=lamp*.1);underGlowMaterial.opacity=lamp*.58;stripMaterial.opacity=lamp;underLight.intensity=lamp*1.7;
+    frontMaterials.forEach(m=>m.emissiveIntensity=lamp*9);rearMaterials.forEach(m=>m.emissiveIntensity=lamp*.7);
+    headSpots.forEach(s=>s.intensity=lamp*54);pools.forEach(m=>m.opacity=lamp*.24);underGlowMaterial.opacity=lamp*.58;stripMaterial.opacity=lamp;underLight.intensity=lamp*1.7;
     trackMaterial.uniforms.uTime.value=driveTime;trackMaterial.uniforms.uDark.value=night;
     carGroup.position.y=(reduced?0:Math.sin(driveTime*2.2)*.004);carGroup.rotation.z=reduced?0:Math.sin(driveTime*.72)*.0009;
     const v=motion.view,mobile=width<760;
@@ -165,17 +167,17 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
     camera.projectionMatrix.elements[8]=mobile?0:THREE.MathUtils.lerp(-.43,.4,v);
     camera.projectionMatrix.elements[9]=mobile?THREE.MathUtils.lerp(.36,-.58,v):-.015;
     camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
-    container.dataset.lightPhase=theme.phase;container.dataset.lamps=lamp.toFixed(3);container.dataset.environment=night.toFixed(3);container.dataset.cameraView=v.toFixed(3);
+    container.dataset.lightPhase=theme.phase;container.dataset.lamps=lamp.toFixed(3);container.dataset.environment=night.toFixed(3);container.dataset.cameraView=v.toFixed(3);container.dataset.parallaxX=motion.parallaxX.toFixed(3);container.dataset.parallaxY=motion.parallaxY.toFixed(3);
     if(lastPhase!==theme.phase||Math.abs(lastLamp-lamp)>.24){lastPhase=theme.phase;lastLamp=lamp;options.onPhase(theme.phase,lamp);}
     renderer.render(scene,camera);
   };
   renderer.setAnimationLoop(frame);
   return {
     setTheme(theme){themes.setTarget(theme,performance.now());},
-    setView(view){gsap.to(motion,{view:view==='login'?1:0,duration:reduced?.12:1.65,ease:'power3.inOut',overwrite:'auto'});},
+    setView(view){gsap.to(motion,{view:view==='login'?1:0,duration:reduced?.12:1.65,ease:'power3.inOut',overwrite:'auto',onComplete:()=>{if(!disposed)options.onViewSettled(view);}});},
     setPaused(value){paused=value;},
     setReducedMotion(value){reduced=value;themes.setReducedMotion(value);if(value){gsap.set(motion,{parallaxX:0,parallaxY:0});}},
-    dispose(){if(disposed)return;disposed=true;abort.abort();gsap.killTweensOf(motion);observer.disconnect();window.removeEventListener('pointermove',onPointer);renderer.domElement.removeEventListener('webglcontextlost',onLost);renderer.setAnimationLoop(null);disposeTree(scene);environmentTarget.dispose();glowTexture.dispose();renderer.dispose();renderer.domElement.remove();},
+    dispose(){if(disposed)return;disposed=true;abort.abort();gsap.killTweensOf(motion);observer.disconnect();window.removeEventListener('pointermove',onPointer);document.documentElement.removeEventListener('pointerleave',resetPointer);renderer.domElement.removeEventListener('webglcontextlost',onLost);renderer.setAnimationLoop(null);disposeTree(scene);environmentTarget.dispose();glowTexture.dispose();renderer.dispose();renderer.domElement.remove();},
   };
 }
 

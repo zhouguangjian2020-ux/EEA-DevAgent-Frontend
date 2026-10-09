@@ -35,3 +35,10 @@
 .conversation-task-card p { margin: 6px 0; }
 .conversation-task-card small { display: block; color: var(--text-secondary, #64748b); margin-bottom: 6px; }
 .conversation-task-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+
+.conversation-input-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.conversation-input-actions:empty { display: none; }
+.conversation-input-actions button, .conversation-input-actions select { font: inherit; font-size: 11px; padding: 5px 8px; border: 1px solid var(--ee-border); border-radius: 6px; color: var(--ee-text); background: var(--ee-surface); }
+.conversation-input-actions button:disabled { opacity: .5; cursor: not-allowed; }
+.conversation-input-actions select { max-width: 200px; }
+.conversation-composer-area .conversation-feature-inline { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }

@@ -1,3 +1,4 @@
+import { validDurationMs } from "@/features/conversation/task-duration";
 import { API_BASE_URL, request } from '@/lib/api/client';
 import type { FrBody, ManualContent } from './manual-api';
 export type SourceSnapshot = { artifact_id: string; revision_id: string; number: string; content: Record<string, unknown> };
@@ -6,12 +7,12 @@ export type AllocationCandidate = { candidate_id: string; fr_id: string; fr_revi
 export type Modification = { original_content?: ManualContent; candidate_id: string; artifact_id: string; base_revision_id: string; content: ManualContent };
 export type Generation<T> = { generation_id: string; scene: string; source_version: string; source: { sources: SourceSnapshot[]; subsystems: { subsystem_id: string; name: string; design_version_id: string }[] }; candidates: T[] };
 export type Thread = { id: string; title: string };
-export type Turn = { created_at?: string; client_request_id: string; prompt: string; body: string; status: string };
+export type Turn = { duration_ms?: number | null; created_at?: string; client_request_id: string; prompt: string; body: string; status: string };
 export const projectPath = (id: string) => '/v1/projects/' + encodeURIComponent(id);
 export function workflowPost<T>(path: string, body: unknown, signal?: AbortSignal) {
   return request<T>(path, { method: 'POST', headers: { 'X-Project-Request': '1' }, body: JSON.stringify(body), signal });
 }
-export type ChatEvent = { type: string; content?: string; changes?: Modification[]; message?: string; status?: string };
+export type ChatEvent = { duration_ms?: number | null; type: string; content?: string; changes?: Modification[]; message?: string; status?: string };
 export async function readChatStream(path: string, body: unknown, signal: AbortSignal, onEvent: (event: ChatEvent) => void) {
   const response = await fetch(API_BASE_URL + path, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'X-Project-Request': '1' }, body: JSON.stringify(body), signal });
   if (!response.ok) { const b = await response.json().catch(() => null); throw new Error(b?.detail?.message ?? '对话请求失败（' + response.status + '）'); }
@@ -29,7 +30,8 @@ export async function readChatStream(path: string, body: unknown, signal: AbortS
         const data = block.split(nl).filter(l => l.startsWith('data:')).map(l => l.slice(5).trimStart()).join(nl);
         if (!data) continue;
         const event = JSON.parse(data) as ChatEvent;
-        if (event.type === 'error') throw new Error(event.message ?? '对话失败');
+        if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
+        if (event.type === 'error') { onEvent({ ...event, duration_ms: validDurationMs(event.duration_ms) }); throw new Error(event.message ?? '对话失败'); }
         if (event.type === 'token' && typeof event.content !== 'string') throw new Error('流式内容异常');
         if (event.type === 'done' && event.status !== 'completed') throw new Error('对话未完整完成');
         if (signal.aborted) throw new DOMException('Stopped', 'AbortError');

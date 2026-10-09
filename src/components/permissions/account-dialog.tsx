@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/features/i18n/provider";
 
 import { useEffect, useState } from "react";
 import { ApiError, createAccount, getAccounts, updateAccount, type Account } from "@/lib/api/client";
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function AccountDialog({ open, databaseMode, mockAccounts, onMockAccountsChange, onClose }: Props) {
+  const { t: tr } = useI18n();
   const [databaseAccounts, setDatabaseAccounts] = useState<Account[]>([]);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ login_name: "", display_name: "", department: "", password: "" });
@@ -93,26 +95,26 @@ export function AccountDialog({ open, databaseMode, mockAccounts, onMockAccounts
   return <div className="modal-backdrop">
     <section className="account-dialog permission-dialog" role="dialog" aria-modal="true" aria-labelledby="account-dialog-title">
       <div className="dialog-heading">
-        <div><span className="eyebrow">全局账号</span><h2 id="account-dialog-title">账号管理</h2><p className="permission-project-name">账号创建后默认没有任何项目权限。</p></div>
-        <button className="close-button" type="button" aria-label="关闭账号管理" onClick={onClose}>×</button>
+        <div><span className="eyebrow">{tr("全局账号")}</span><h2 id="account-dialog-title">{tr("账号管理")}</h2><p className="permission-project-name">{tr("账号创建后默认没有任何项目权限。")}</p></div>
+        <button className="close-button" type="button" aria-label={tr("关闭账号管理")} onClick={onClose}>×</button>
       </div>
-      {error && <div className="permission-feedback error" role="alert">{error}</div>}
-      {notice && <div className="permission-feedback" role="status">{notice}</div>}
+      {error && <div className="permission-feedback error" role="alert">{tr(error)}</div>}
+      {notice && <div className="permission-feedback" role="status">{tr(notice)}</div>}
       <form className="account-create-form" onSubmit={submit}>
-        <label className="field-label">登录名<input required value={form.login_name} onChange={event => setForm({ ...form, login_name: event.target.value })} /></label>
-        <label className="field-label">显示名称<input required value={form.display_name} onChange={event => setForm({ ...form, display_name: event.target.value })} /></label>
-        <label className="field-label">部门<input required value={form.department} onChange={event => setForm({ ...form, department: event.target.value })} /></label>
-        <label className="field-label">初始密码<input required type="password" autoComplete="new-password" value={form.password} onChange={event => setForm({ ...form, password: event.target.value })} /></label>
-        <button className="button-primary" disabled={creating}>{creating ? "创建中…" : "创建账号"}</button>
+        <label className="field-label">{tr("登录名")}<input required value={form.login_name} onChange={event => setForm({ ...form, login_name: event.target.value })} /></label>
+        <label className="field-label">{tr("显示名称")}<input required value={form.display_name} onChange={event => setForm({ ...form, display_name: event.target.value })} /></label>
+        <label className="field-label">{tr("部门")}<input required value={form.department} onChange={event => setForm({ ...form, department: event.target.value })} /></label>
+        <label className="field-label">{tr("初始密码")}<input required type="password" autoComplete="new-password" value={form.password} onChange={event => setForm({ ...form, password: event.target.value })} /></label>
+        <button className="button-primary" disabled={creating}>{creating ? tr("创建中…") : tr("创建账号")}</button>
       </form>
       <div className="permission-table-wrap">
         <table className="permission-table">
-          <thead><tr><th>账号</th><th>部门</th><th>状态</th><th aria-label="操作" /></tr></thead>
-          <tbody>{accounts.map(account => <tr key={account.id}><td><strong>{account.display_name}</strong><small>{account.login_name}</small></td><td>{account.department || "—"}</td><td>{account.state === "active" ? "已启用" : "已停用"}</td><td><button type="button" className="permission-remove" disabled={busyId === account.id} onClick={() => void toggle(account)}>{account.state === "active" ? "停用" : "启用"}</button></td></tr>)}</tbody>
+          <thead><tr><th>{tr("账号")}</th><th>{tr("部门")}</th><th>{tr("状态")}</th><th aria-label={tr("操作")} /></tr></thead>
+          <tbody>{accounts.map(account => <tr key={account.id}><td><strong>{account.display_name}</strong><small>{account.login_name}</small></td><td>{account.department || "—"}</td><td>{account.state === "active" ? tr("已启用") : tr("已停用")}</td><td><button type="button" className="permission-remove" disabled={busyId === account.id} onClick={() => void toggle(account)}>{account.state === "active" ? tr("停用") : tr("启用")}</button></td></tr>)}</tbody>
         </table>
       </div>
-      <p className="permission-note">密码不会显示或导出；账号停用后不能登录。加入项目和功能授权在“项目权限”中完成。</p>
-      <div className="dialog-actions"><button type="button" className="button-secondary" onClick={onClose}>关闭</button></div>
+      <p className="permission-note">{tr("密码不会显示或导出；账号停用后不能登录。加入项目和功能授权在“项目权限”中完成。")}</p>
+      <div className="dialog-actions"><button type="button" className="button-secondary" onClick={onClose}>{tr("关闭")}</button></div>
     </section>
   </div>;
 }

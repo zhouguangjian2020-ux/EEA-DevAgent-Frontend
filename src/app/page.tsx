@@ -12,8 +12,9 @@ import { projectIdFromUrl, projectSelectionUrl, resolveProjectSelection } from "
 import { initialMockAccounts } from "@/mocks/permissions";
 
 import { ObjectWorkbench } from "@/components/workbench/object-workbench";
+import { BrandLockup } from "@/components/brand/brand-lockup";
 import { useTheme } from "@/features/theme/use-theme";
-type Language = "zh-CN" | "en" | "ja";
+import { useI18n } from "@/features/i18n/provider";
 
 const demoUser: User = {
   id: "demo-engineer-01",
@@ -24,6 +25,7 @@ const demoUser: User = {
 };
 
 export default function Home() {
+  const { t: tr } = useI18n();
   const router = useRouter();
   const [authReady, setAuthReady] = useState(USE_MOCKS);
   const [authUser, setAuthUser] = useState<User | null>(USE_MOCKS ? demoUser : null);
@@ -43,7 +45,7 @@ export default function Home() {
   const [accountAdminOpen, setAccountAdminOpen] = useState(false);
   const [mockAccounts, setMockAccounts] = useState<Account[]>(() => initialMockAccounts.map(account => ({ ...account })));
   const [theme, setTheme] = useTheme();
-  const [language, setLanguage] = useState<Language>("zh-CN");
+  const { locale: language, setLocale: setLanguage } = useI18n();
   const [accountOpen, setAccountOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -162,7 +164,7 @@ export default function Home() {
 
   async function logout() {
     if (logoutLoading) return;
-    if (hasLocalData && !window.confirm("退出后将清空本页内的模拟业务对象、会话和草稿，确定退出？")) return;
+    if (hasLocalData && !window.confirm(tr("退出后将清空本页内的模拟业务对象、会话和草稿，确定退出？"))) return;
     setLogoutLoading(true);
     try {
       if (!USE_MOCKS) await logoutRequest();
@@ -175,7 +177,7 @@ export default function Home() {
   }
 
   if (!authReady) {
-    return <main className="login-page"><section className="login-card"><div className="eyebrow">研发工作空间</div><h1>{bootstrapError ? "项目列表加载失败" : "正在验证登录状态…"}</h1><p className="login-description" role={bootstrapError ? "alert" : "status"}>{bootstrapError || "请稍候。"}</p>{bootstrapError && <button className="button-primary" onClick={() => { setBootstrapError(""); setBootstrapRetry(value => value + 1); }}>重新加载</button>}</section></main>;
+    return <main className="login-page"><section className="login-card"><div className="eyebrow">{tr("研发工作空间")}</div><h1>{bootstrapError ? tr("项目列表加载失败") : tr("正在验证登录状态…")}</h1><p className="login-description" role={bootstrapError ? "alert" : "status"}>{bootstrapError || tr("请稍候。")}</p>{bootstrapError && <button className="button-primary" onClick={() => { setBootstrapError(""); setBootstrapRetry(value => value + 1); }}>{tr("重新加载")}</button>}</section></main>;
   }
 
   const user = authUser ?? demoUser;
@@ -189,39 +191,41 @@ export default function Home() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <div className="brand">天枢</div>
+        <BrandLockup />
         <button className="project-picker" onClick={() => { setProjectDialogOpen(true); }}>
-          <span className="project-mark">{USE_MOCKS ? project : currentProject?.code?.slice(0, 1) ?? "…"}</span><span>{USE_MOCKS ? "项目" + project : currentProject?.name ?? "选择或新建项目"}</span><span className="muted">⌄</span>
+          <span className="project-mark">{USE_MOCKS ? project : currentProject?.code?.slice(0, 1) ?? "…"}</span><span>{USE_MOCKS ? tr("项目") + project : currentProject?.name ?? tr("选择或新建项目")}</span><span className="muted">⌄</span>
         </button>
-         {canManagePermissions && <button type="button" className="permission-topbar-button" onClick={() => setPermissionOpen(true)}>项目权限</button>}
-        <div className="breadcrumb">研发工作空间 <span>/</span> <strong>{workspaceContext}</strong></div>
-        <button type="button" className="theme-quick-toggle" aria-label={theme === "light" ? "切换至深色模式" : "切换至明亮模式"} onClick={() => setTheme(theme === "light" ? "dark" : "light")}>{theme === "light" ? "◐ 深色" : "☼ 明亮"}</button>
+         {canManagePermissions && <button type="button" className="permission-topbar-button" onClick={() => setPermissionOpen(true)}>{tr("项目权限")}</button>}
+        <div className="breadcrumb">{tr("研发工作空间 ")}<span>/</span> <strong>{workspaceContext}</strong></div>
         <div className="account-anchor" ref={accountAnchorRef}>
-          <button className="account-trigger" onClick={() => setAccountOpen((open) => !open)} aria-label="打开账户菜单">
-            <span className="avatar">{avatarSource ? <img src={avatarSource} alt="头像" /> : "◉"}</span>
-            <span className="account-copy"><strong>{user.username}</strong><small>{user.department} · 已登录</small></span>
+          <button className="account-trigger" onClick={() => setAccountOpen((open) => !open)} aria-label={tr("打开账户菜单")}>
+            <span className="avatar">{avatarSource ? <img src={avatarSource} alt={tr("头像")} /> : "◉"}</span>
+            <span className="account-copy"><strong>{user.username}</strong><small>{user.department} {tr(" · 已登录")}</small></span>
           </button>
           {accountOpen && (
             <div className="account-menu">
-              <div className="menu-theme"><span>外观</span><button className="switch" role="switch" aria-checked={theme === "dark"} aria-label="深色模式" onClick={() => setTheme(theme === "light" ? "dark" : "light")}><span className={theme === "dark" ? "switch-knob on" : "switch-knob"} /></button><small>{theme === "light" ? "明亮模式" : "深色模式"}</small></div>
-              <div className="menu-row menu-hover" onMouseEnter={() => setLanguageOpen(true)} onMouseLeave={() => setLanguageOpen(false)}><span>语言</span><span>{language === "zh-CN" ? "简体中文" : language === "en" ? "English" : "日本語"}　›</span>{languageOpen && <div className="language-menu"><button onClick={() => { setLanguage("zh-CN"); setLanguageOpen(false); }}>简体中文</button><button onClick={() => { setLanguage("en"); setLanguageOpen(false); }}>英文（English）</button><button onClick={() => { setLanguage("ja"); setLanguageOpen(false); }}>日文（日本语）</button></div>}</div>
-              <button className="menu-row" onClick={() => { setProfileSaved(false); setProfileOpen(true); setAccountOpen(false); }}><span>自定义个人资料</span><span>›</span></button>
-               {user.canManageAccounts && <button className="menu-row" onClick={() => { setAccountAdminOpen(true); setAccountOpen(false); }}><span>账号管理</span><span>›</span></button>}
+              <div className="menu-theme"><span>{tr("外观")}</span><button className="switch" role="switch" aria-checked={theme === "dark"} aria-label={tr("深色模式")} onClick={() => setTheme(theme === "light" ? "dark" : "light")}><span className={theme === "dark" ? "switch-knob on" : "switch-knob"} /></button><small>{theme === "light" ? tr("明亮模式") : tr("深色模式")}</small></div>
+              <div className="language-picker">
+                <button type="button" className="menu-row" aria-expanded={languageOpen} aria-controls="account-language-options" onClick={() => setLanguageOpen(open => !open)}><span>{tr("语言")}</span><span>{language === "zh-CN" ? tr("简体中文") : "English"} <span aria-hidden="true">›</span></span></button>
+                {languageOpen && <div id="account-language-options" className="language-options" role="group" aria-label={tr("界面语言")}><button type="button" aria-pressed={language === "zh-CN"} onClick={() => { setLanguage("zh-CN"); setLanguageOpen(false); }}>{tr("简体中文")}</button><button type="button" aria-pressed={language === "en"} onClick={() => { setLanguage("en"); setLanguageOpen(false); }}>English</button></div>}
+              </div>
+              <button className="menu-row" onClick={() => { setProfileSaved(false); setProfileOpen(true); setAccountOpen(false); }}><span>{tr("自定义个人资料")}</span><span>›</span></button>
+               {user.canManageAccounts && <button className="menu-row" onClick={() => { setAccountAdminOpen(true); setAccountOpen(false); }}><span>{tr("账号管理")}</span><span>›</span></button>}
               <div className="menu-divider" />
-              <button className="menu-row danger" onClick={logout} disabled={logoutLoading}><span>{logoutLoading ? "退出中…" : "退出登录"}</span><span>↗</span></button>
+              <button className="menu-row danger" onClick={logout} disabled={logoutLoading}><span>{logoutLoading ? tr("退出中…") : tr("退出登录")}</span><span>↗</span></button>
             </div>
           )}
         </div>
       </header>
 
       {projectSelectionWarning && <p className="workbench-notice" role="alert">{projectSelectionWarning}</p>}
-      <ObjectWorkbench project={project} projectLabel={USE_MOCKS ? "项目" + project : currentProject ? `${currentProject.name} · ${currentProject.code}` : ""} deletedProjectIds={deletedProjectIds} databaseMode={!USE_MOCKS} onContextChange={setWorkspaceContext} onLocalDataChange={setHasLocalData} />
+      <ObjectWorkbench project={project} projectLabel={USE_MOCKS ? tr("项目") + project : currentProject ? `${currentProject.name} · ${currentProject.code}` : ""} deletedProjectIds={deletedProjectIds} databaseMode={!USE_MOCKS} onContextChange={setWorkspaceContext} onLocalDataChange={setHasLocalData} />
 
       <ProjectDialog databaseMode={!USE_MOCKS} onUpdated={updated => setProjects(current => mergeProjects(current, [updated]))} open={projectDialogOpen} currentProject={project} items={projectOptions} canCreate={!USE_MOCKS && canCreateProject} hasMore={!USE_MOCKS && hasMoreProjects} onLoadMore={loadMoreProjects} onClose={() => setProjectDialogOpen(false)} onSwitch={commitProject} onCreated={onProjectCreated} onDeletedProject={onProjectDeleted} />
-      {permissionOpen && <PermissionDialog open={permissionOpen} projectId={project} projectName={USE_MOCKS ? `项目${project}` : currentProject?.name ?? "当前项目"} databaseMode={!USE_MOCKS} mockAccounts={mockAccounts} onClose={() => setPermissionOpen(false)} />}
+      {permissionOpen && <PermissionDialog open={permissionOpen} projectId={project} projectName={USE_MOCKS ? tr("项目{0}", { "0": project }) : currentProject?.name ?? tr("当前项目")} databaseMode={!USE_MOCKS} mockAccounts={mockAccounts} onClose={() => setPermissionOpen(false)} />}
       {accountAdminOpen && <AccountDialog open={accountAdminOpen} databaseMode={!USE_MOCKS} mockAccounts={mockAccounts} onMockAccountsChange={setMockAccounts} onClose={() => setAccountAdminOpen(false)} />}
 
-      {profileOpen && <div className="modal-backdrop"><div className="profile-dialog"><div className="dialog-heading"><div><span className="eyebrow">账户设置</span><h2>自定义个人资料</h2></div><button className="close-button" onClick={() => setProfileOpen(false)}>×</button></div><label className="upload-avatar"><span className="large-avatar">{avatarSource ? <img src={avatarSource} alt="头像预览" /> : "◉"}</span><span><strong>上传头像</strong><small>支持 JPG、PNG，建议 200×200</small><input type="file" accept="image/png,image/jpeg" onChange={onAvatarUpload} /></span></label><label className="field-label">个人简介<textarea placeholder="介绍一下自己…" defaultValue="负责电子电器架构相关工作" /></label><label className="field-label">修改密码<input type="password" placeholder="输入新密码" /></label>{profileSaved && <div className="saved-message">资料已保存（演示状态）</div>}<div className="dialog-actions"><button className="button-secondary" onClick={() => setProfileOpen(false)}>取消</button><button className="button-primary" onClick={() => setProfileSaved(true)}>保存</button></div></div></div>}
+      {profileOpen && <div className="modal-backdrop"><div className="profile-dialog"><div className="dialog-heading"><div><span className="eyebrow">{tr("账户设置")}</span><h2>{tr("自定义个人资料")}</h2></div><button className="close-button" onClick={() => setProfileOpen(false)}>×</button></div><label className="upload-avatar"><span className="large-avatar">{avatarSource ? <img src={avatarSource} alt={tr("头像预览")} /> : "◉"}</span><span><strong>{tr("上传头像")}</strong><small>{tr("支持 JPG、PNG，建议 200×200")}</small><input type="file" accept="image/png,image/jpeg" onChange={onAvatarUpload} /></span></label><label className="field-label">{tr("个人简介")}<textarea placeholder={tr("介绍一下自己…")} defaultValue="负责电子电器架构相关工作" /></label><label className="field-label">{tr("修改密码")}<input type="password" placeholder={tr("输入新密码")} /></label>{profileSaved && <div className="saved-message">{tr("资料已保存（演示状态）")}</div>}<div className="dialog-actions"><button className="button-secondary" onClick={() => setProfileOpen(false)}>{tr("取消")}</button><button className="button-primary" onClick={() => setProfileSaved(true)}>{tr("保存")}</button></div></div></div>}
     </main>
   );
 }

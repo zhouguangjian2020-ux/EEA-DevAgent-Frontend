@@ -1,4 +1,0 @@
-证书和私钥文件对 postgres 可读（未输出文件内容）。
-配置备份目录：/root/ee-pg-prestart.nwMAWg
-/lib/systemd/system/snapd.service:23: Unknown key name 'RestartMode' in section 'Service', ignoring.
-配置已写入并完成 systemd 静态检查；数据库尚未启动。

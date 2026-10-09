@@ -53,3 +53,11 @@ next-env.d.ts
 *.zip
 *.archived
 /deploy/workflows/server-*.json
+
+# Public build template only; all actual env files stay ignored.
+!.env.example
+
+# Non-runtime materials are maintained outside this code repository.
+/docs/
+/tests/
+/deploy/

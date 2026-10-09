@@ -1,10 +1,12 @@
 'use client';
+import { useI18n } from "@/features/i18n/provider";
 import { useEffect, useRef, useState } from 'react';
 import { getProjectWorkspace } from '@/lib/api/client';
 import { createUuid } from '@/lib/uuid';
 import { appendGenerated } from '@/features/workbench/append-api';
 type Props={getTaskThread?:()=>string;project:string;featureId:string;active:boolean;onSaved:()=>Promise<unknown>;blockedReason?:string};
 export function AppendFrPanel({project,featureId,onSaved,blockedReason,active,getTaskThread}:Props){
+  const { t: tr } = useI18n();
   const [canCreate,setCanCreate]=useState(false);
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const originThread=useRef<string|undefined>(undefined);
@@ -30,9 +32,9 @@ export function AppendFrPanel({project,featureId,onSaved,blockedReason,active,ge
     }catch(e){if(alive.current)setError((e instanceof Error&&e.name==='AbortError'?'已停止等待，后端可能仍完成保存':e instanceof Error?e.message:'生成失败')+'。重试将复用同一请求，不会重复创建。');}
     finally{running.current=false;controller.current=null;if(alive.current)setBusy(false);}
   }
-  return <section className='workflow-panel' aria-label='FR生成并追加' aria-busy={busy}>
-    <header className='workflow-toolbar'><strong>生成功能需求</strong><button className='button-primary' disabled={busy||!canCreate||Boolean(blockedReason)} onClick={()=>void generate()}>{busy?'正在生成并保存…':error?'重试本次FR生成':'生成 FR'}</button>{busy&&<button className='button-secondary' onClick={()=>controller.current?.abort()}>停止等待</button>}</header>
-    <p>以当前功能的全部已确认UC为来源；成功后追加待确认FR，已有FR保留，确认仍需人工操作。</p>
-    {blockedReason&&<p role='status'>{blockedReason}</p>}{notice&&<p role='status'>{notice}</p>}{error&&<p role='alert'>{error}</p>}
+  return <section className='workflow-panel' aria-label={tr("FR生成并追加")} aria-busy={busy}>
+    <header className='workflow-toolbar'><strong>{tr("生成功能需求")}</strong><button className='button-primary' disabled={busy||!canCreate||Boolean(blockedReason)} onClick={()=>void generate()}>{busy?tr("正在生成并保存…"):error?tr("重试本次FR生成"):tr("生成 FR")}</button>{busy&&<button className='button-secondary' onClick={()=>controller.current?.abort()}>{tr("停止等待")}</button>}</header>
+    <p>{tr("以当前功能的全部已确认UC为来源；成功后追加待确认FR，已有FR保留，确认仍需人工操作。")}</p>
+    {blockedReason&&<p role='status'>{tr(blockedReason)}</p>}{notice&&<p role='status'>{tr(notice)}</p>}{error&&<p role='alert'>{tr(error)}</p>}
   </section>;
 }

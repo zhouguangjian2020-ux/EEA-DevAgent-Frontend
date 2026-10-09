@@ -1,7 +1,0 @@
-来源：用户聊天输出，转义已还原；非原始附件字节归档。
-
-RequiresMountsFor 检查通过：/data/postgresql/18/main
-BindsTo 检查通过：data.mount
-After 检查通过：data.mount
-Job for postgresql@18-main.service failed because the service did not take the steps required by its unit configuration.
-See "systemctl status postgresql@18-main.service" and "journalctl -xeu postgresql@18-main.service" for details.

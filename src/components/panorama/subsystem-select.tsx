@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/features/i18n/provider";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { PRESET_SUBSYSTEMS } from "@/mocks/subsystems";
@@ -6,6 +7,7 @@ import { PRESET_SUBSYSTEMS } from "@/mocks/subsystems";
 type Props = { number: string; value: string[]; onChange: (ids: string[]) => void; active: boolean; options?: readonly { id: string; name: string }[]; disabled?: boolean };
 type Position = { top: number; left: number; width: number; maxHeight: number };
 export function SubsystemSelect({ number, value, onChange, active, options: catalogue = PRESET_SUBSYSTEMS, disabled = false }: Props) {
+  const { t: tr } = useI18n();
   const [open, setOpen] = useState(false), [query, setQuery] = useState("");
   const [position, setPosition] = useState<Position>({ top: 0, left: 0, width: 320, maxHeight: 420 });
   const trigger = useRef<HTMLButtonElement>(null), popup = useRef<HTMLDivElement>(null), search = useRef<HTMLInputElement>(null);
@@ -57,15 +59,15 @@ export function SubsystemSelect({ number, value, onChange, active, options: cata
     }
   }
   return <>
-    <button ref={trigger} disabled={disabled} type="button" className="subsystem-trigger" aria-label={number + " 子系统名称"} aria-haspopup="dialog" aria-expanded={open && active} aria-controls={open ? popupId : undefined} onClick={toggle} title={names.join("、") || "请选择子系统"}>
-      <span>{names.length ? names[0] + (names.length > 1 ? " 等 " + names.length + " 个" : "") : "请选择子系统"}</span><span aria-hidden="true">⌄</span>
+    <button ref={trigger} disabled={disabled} type="button" className="subsystem-trigger" aria-label={number + tr(" 子系统名称")} aria-haspopup="dialog" aria-expanded={open && active} aria-controls={open ? popupId : undefined} onClick={toggle} title={names.join("、") || tr("请选择子系统")}>
+      <span>{names.length ? names[0] + (names.length > 1 ? tr(" 等 ") + names.length + tr(" 个") : "") : tr("请选择子系统")}</span><span aria-hidden="true">⌄</span>
     </button>
-    {open && active && createPortal(<div id={popupId} ref={popup} className="subsystem-popup" style={position} role="dialog" aria-label={number + " 子系统选择"} onKeyDown={keys}>
-      <div className="subsystem-popup-title"><strong>{number}</strong><button type="button" aria-label="关闭子系统选择" onClick={() => close()}>×</button></div>
-      <div className="subsystem-search"><span aria-hidden="true">⌕</span><input ref={search} aria-label="搜索子系统名称" placeholder="搜索子系统名称…" value={query} onChange={e => setQuery(e.target.value)} />{query && <button type="button" aria-label="清空子系统搜索" onClick={() => { setQuery(""); search.current?.focus(); }}>×</button>}</div>
-      <p className="subsystem-caption" role="status">{normalized ? "搜索结果 · " + options.length + " 个子系统" : "系统预置 · 支持多选"}</p>
-      <div className="subsystem-options">{options.map(s => <label className="subsystem-option" key={s.id}><input type="checkbox" checked={value.includes(s.id)} onChange={() => onChange(value.includes(s.id) ? value.filter(id => id !== s.id) : [...value, s.id])} /><span>{s.name}</span></label>)}{!options.length && <div className="subsystem-empty"><strong>未找到匹配的子系统</strong><p>请换个关键词，或清空搜索查看全部。</p><small>此处不支持新建子系统。</small></div>}</div>
-      <div className="subsystem-footer"><span><span aria-live="polite">已选择 {value.length} 个子系统</span><small>勾选即更新当前行（本页内）</small></span><button type="button" className="button-secondary" onClick={() => close()}>完成</button></div>
+    {open && active && createPortal(<div id={popupId} ref={popup} className="subsystem-popup" style={position} role="dialog" aria-label={number + tr(" 子系统选择")} onKeyDown={keys}>
+      <div className="subsystem-popup-title"><strong>{number}</strong><button type="button" aria-label={tr("关闭子系统选择")} onClick={() => close()}>×</button></div>
+      <div className="subsystem-search"><span aria-hidden="true">⌕</span><input ref={search} aria-label={tr("搜索子系统名称")} placeholder={tr("搜索子系统名称…")} value={query} onChange={e => setQuery(e.target.value)} />{query && <button type="button" aria-label={tr("清空子系统搜索")} onClick={() => { setQuery(""); search.current?.focus(); }}>×</button>}</div>
+      <p className="subsystem-caption" role="status">{normalized ? tr("搜索结果 · ") + options.length + tr(" 个子系统") : tr("系统预置 · 支持多选")}</p>
+      <div className="subsystem-options">{options.map(s => <label className="subsystem-option" key={s.id}><input type="checkbox" checked={value.includes(s.id)} onChange={() => onChange(value.includes(s.id) ? value.filter(id => id !== s.id) : [...value, s.id])} /><span>{s.name}</span></label>)}{!options.length && <div className="subsystem-empty"><strong>{tr("未找到匹配的子系统")}</strong><p>{tr("请换个关键词，或清空搜索查看全部。")}</p><small>{tr("此处不支持新建子系统。")}</small></div>}</div>
+      <div className="subsystem-footer"><span><span aria-live="polite">{tr("已选择 ")}{value.length}{tr(" 个子系统")}</span><small>{tr("勾选即更新当前行（本页内）")}</small></span><button type="button" className="button-secondary" onClick={() => close()}>{tr("完成")}</button></div>
     </div>, document.body)}
   </>;
 }

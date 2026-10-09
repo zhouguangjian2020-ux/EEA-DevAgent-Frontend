@@ -833,3 +833,30 @@ body,
 .driving-login-experience .topbar::after { display: none; }
 
 .driving-login-experience .password-toggle { min-width: 32px; flex-shrink: 0; white-space: nowrap; text-align: center; }
+
+/* Confirmed UI polish: keep workspace column widths and row actions unchanged. */
+.brand-lockup { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; min-width: 0; }
+.brand-product-logo { width: 36px; height: 36px; object-fit: contain; }
+.brand-product-name { font-size: 19px; font-weight: 700; white-space: nowrap; color: var(--ee-text); }
+.brand-separator { height: 24px; width: 1px; background: var(--ee-border); margin: 0 4px; }
+.brand-company-logo { width: 74px; height: 38px; object-fit: contain; }
+.app-shell > .topbar { padding-right: 16px; }
+.app-shell > .topbar .breadcrumb { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-anchor { margin-left: auto; flex-shrink: 0; }
+.account-copy { min-width: 0; max-width: 180px; }
+.account-copy strong, .account-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-chevron-icon { display: inline-block; flex-shrink: 0; vertical-align: middle; transition: transform 180ms ease; }
+.folder-chevron-icon.is-expanded { transform: rotate(90deg); }
+.driving-login-experience .brand-lockup { position: relative; z-index: 2; }
+.driving-login-experience .bottom-bar { justify-content: space-between; }
+.driving-login-experience .home-footer-copy { margin: 0; transition: opacity 500ms ease, transform 500ms ease; }
+.driving-login-experience .home-footer-copy.is-away { opacity: 0; transform: translateY(8px); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .folder-chevron-icon, .driving-login-experience .home-footer-copy { transition: none; } }
+@media (max-width: 760px) { .brand-product-logo { width: 30px; height: 30px; } .brand-product-name { font-size: 16px; } .brand-company-logo { width: 59px; height: 31px; } .brand-lockup { gap: 6px; } }
+
+.language-options { display: grid; gap: 4px; padding: 4px 10px 8px 20px; }
+.language-options button { border: 0; border-radius: 6px; background: transparent; color: var(--ee-text); padding: 8px 10px; text-align: left; }
+.language-options button:hover, .language-options button[aria-pressed="true"] { background: var(--ee-primary-soft); color: var(--ee-primary); }
+
+/* Durable task duration: plain metadata at the top-left of Agent answers. */
+.conversation-message.assistant .agent-task-duration { display: block; margin: 0 0 6px; color: var(--ee-muted); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; text-align: left; }

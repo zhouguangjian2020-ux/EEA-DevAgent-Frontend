@@ -12,7 +12,7 @@ import { createFrOverviewSession, transitionFr, type FrSession, type FrOverviewS
 import { appendAttachments, type WorkspaceObject, type WorkspaceFolder, type WorkspaceNode } from "../workspace/tree";
 import type { UcGenerationCandidate } from "./uc-generation-api";
 
-export type BusinessFeature = { lockVersion?: string; canUpdate?: boolean; canDelete?: boolean; id: string; name: string; description: string; code?: string; acceptedPrdRevisionId?: string | null; acceptedUcs?: { uc_id: string; uc_revision_id: string; uc_code: string; uc_name: string }[] };
+export type BusinessFeature = { hasPrd?: boolean; lockVersion?: string; canUpdate?: boolean; canDelete?: boolean; id: string; name: string; description: string; code?: string; acceptedPrdRevisionId?: string | null; acceptedUcs?: { uc_id: string; uc_revision_id: string; uc_code: string; uc_name: string }[] };
 export type DatabaseWork = { artifactId: string; lockVersion: string; revisionId: string; acceptedRevisionId?: string | null; canUpdate: boolean; canAccept: boolean; canDelete: boolean };
 export type WorkBase = { id: string; featureId: string; featureName: string; attachments: WorkspaceObject[]; readOnly?: boolean; database?: DatabaseWork; saving?: boolean };
 export type PrdWork = WorkBase & { kind: "PRD"; prdGeneration?: PrdGeneration; session: PrdSession; ucTask: string | null; ucBatchSource?: PrdDocument; ucBatchComplete?: boolean; ucGenerationCandidates?: UcGenerationCandidate[] };
@@ -93,11 +93,11 @@ export type WorkbenchAction =
 export function createProjectWorks(): ProjectWorks { return { features: {}, conversation: createConversation(), works: {}, tabs: [], activeId: null, mru: [], closeRequest: null, notice: "" }; }
 export const EMPTY_PROJECT = createProjectWorks();
 export function normalizeFeatureName(name: string) { return name.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase(); }
-export function workLabel(w: ObjectWork) {
-  if (w.kind === "FEATURE_OVERVIEW") return `功能全景视图 · ${w.featureName}`;
-  if (isPanorama(w)) return `${panoramaTitle(w.kind)} · ${w.featureName}`;
-  if (w.kind === "PRD") return `${w.session.document ? "PRD" : "新建 PRD"} · ${w.featureName}`;
-  if (w.kind === "FR_OVERVIEW") return `FR全景视图 · ${w.featureName}`;
+export function workLabel(w: ObjectWork, ui: (value: string) => string = value => value) {
+  if (w.kind === "FEATURE_OVERVIEW") return `${ui("功能全景视图")} · ${w.featureName}`;
+  if (isPanorama(w)) return `${ui(panoramaTitle(w.kind))} · ${w.featureName}`;
+  if (w.kind === "PRD") return `${w.session.document ? "PRD" : ui("新建 PRD")} · ${w.featureName}`;
+  if (w.kind === "FR_OVERVIEW") return `${ui("FR全景视图")} · ${w.featureName}`;
   if (w.kind === "FR") return `${w.number} · ${w.originalName}`;
   return `${w.number} · ${w.session.document?.content.name ?? w.originalName}`;
 }

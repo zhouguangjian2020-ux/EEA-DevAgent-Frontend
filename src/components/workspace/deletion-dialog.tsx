@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/features/i18n/provider";
 import { useEffect, useRef, useState } from "react";
 import type { WorkspaceObject } from "@/features/workspace/tree";
 import type { DeletionBlocker, DeletionImpact, DeletionKind } from "@/lib/api/client";
@@ -41,6 +42,7 @@ function localImpact(projectId: string, target: DeletionTarget): DeletionImpact 
   };
 }
 export function DeletionDialog({ projectId, target, databaseMode, onClose, onDeleted }: Props) {
+  const { t: tr } = useI18n();
   const [impact, setImpact] = useState<DeletionImpact | null>(() => databaseMode ? null : localImpact(projectId, target));
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -77,27 +79,27 @@ export function DeletionDialog({ projectId, target, databaseMode, onClose, onDel
   return <WorkDialog title={title} onClose={deleting || attempt ? () => undefined : onClose}>
     <div className="deletion-dialog" aria-busy={loading || deleting}>
       <p><strong>{target.label}</strong></p>
-      {loading && <p role="status">正在检查引用和当前版本…</p>}
-      {!loading && error && <div role="alert" className="error-message">{error}</div>}
-      {attempt && !deleting && <p role="status">结果尚未核实。请重试原删除请求，操作标识和版本均保持不变；核实前暂不能关闭。</p>}
-      {!loading && !impact && <div className="dialog-actions"><button className="button-secondary" onClick={onClose}>关闭</button><button className="button-primary" onClick={() => { setError(""); setRetry(value => value + 1); }}>重新检查</button></div>}
+      {loading && <p role="status">{tr("正在检查引用和当前版本…")}</p>}
+      {!loading && error && <div role="alert" className="error-message">{tr(error)}</div>}
+      {attempt && !deleting && <p role="status">{tr("结果尚未核实。请重试原删除请求，操作标识和版本均保持不变；核实前暂不能关闭。")}</p>}
+      {!loading && !impact && <div className="dialog-actions"><button className="button-secondary" onClick={onClose}>{tr("关闭")}</button><button className="button-primary" onClick={() => { setError(""); setRetry(value => value + 1); }}>{tr("重新检查")}</button></div>}
       {!loading && impact && <>
         {impact.blocked ? <>
-          <p role="alert">该对象仍被其他活动对象引用，当前不能删除。请先处理下面的依赖对象。</p>
-          <ul className="deletion-blockers">{impact.blockers.map(blocker => <li key={`${blocker.kind}-${blocker.id}`}><strong>{blockerLabel(blocker)}</strong><span>{blocker.reason}{blocker.reference_versions.length ? `（${blocker.reference_versions.map(v => v === "head" ? "当前工作版" : v === "accepted" ? "当前确认版" : "对象关联").join("、")}）` : ""}</span></li>)}</ul>
-          {impact.blockers_truncated && <p className="form-hint">还有 {impact.blocker_count - impact.blockers.length} 个依赖未展开。</p>}
+          <p role="alert">{tr("该对象仍被其他活动对象引用，当前不能删除。请先处理下面的依赖对象。")}</p>
+          <ul className="deletion-blockers">{impact.blockers.map(blocker => <li key={`${blocker.kind}-${blocker.id}`}><strong>{blockerLabel(blocker)}</strong><span>{blocker.reason}{blocker.reference_versions.length ? tr("（{0}）", { "0": blocker.reference_versions.map(v => v === "head" ? "当前工作版" : v === "accepted" ? "当前确认版" : "对象关联").join("、") }) : ""}</span></li>)}</ul>
+          {impact.blockers_truncated && <p className="form-hint">{tr("还有 ")}{impact.blocker_count - impact.blockers.length}{tr(" 个依赖未展开。")}</p>}
         </> : <>
-          <p>删除后将从工作空间中移除这个活动对象，历史正文和审计记录保留，当前页面不提供恢复。</p>
-          {target.hasUnsavedChanges && <p className="deletion-warning" role="alert">当前对象有未保存输入，删除会一并丢弃这些输入。</p>}
-          {target.kind === "PRD" && <p>删除后可以为该功能新建一份全新的 PRD。</p>}
+          <p>{tr("删除后将从工作空间中移除这个活动对象，历史正文和审计记录保留，当前页面不提供恢复。")}</p>
+          {target.hasUnsavedChanges && <p className="deletion-warning" role="alert">{tr("当前对象有未保存输入，删除会一并丢弃这些输入。")}</p>}
+          {target.kind === "PRD" && <p>{tr("删除后可以为该功能新建一份全新的 PRD。")}</p>}
           {allocation && <>
-            <p>这只会删除 FR 分配对象，不会删除 FR，也不会删除项目子系统目录。</p>
-            {!!impact.allocation_targets.length && <ul className="deletion-targets">{impact.allocation_targets.map(item => <li key={`${item.subsystem_id}-${item.subsystem_name}`}>{item.subsystem_code} · {item.subsystem_name}{item.reference_versions.length ? `（${item.reference_versions.map(v => v === "head" ? "当前工作版" : "当前确认版").join("、")}）` : ""}</li>)}</ul>}
-            {!impact.allocation_targets.length && <p className="form-hint">该分配当前未选择子系统。</p>}
+            <p>{tr("这只会删除 FR 分配对象，不会删除 FR，也不会删除项目子系统目录。")}</p>
+            {!!impact.allocation_targets.length && <ul className="deletion-targets">{impact.allocation_targets.map(item => <li key={`${item.subsystem_id}-${item.subsystem_name}`}>{item.subsystem_code} · {item.subsystem_name}{item.reference_versions.length ? tr("（{0}）", { "0": item.reference_versions.map(v => v === "head" ? "当前工作版" : "当前确认版").join("、") }) : ""}</li>)}</ul>}
+            {!impact.allocation_targets.length && <p className="form-hint">{tr("该分配当前未选择子系统。")}</p>}
           </>}
         </>}
-        <div className="dialog-actions"><button type="button" className="button-secondary" disabled={deleting || Boolean(attempt)} onClick={onClose}>关闭</button>{!impact.blocked && <button type="button" className="button-danger" disabled={deleting || !impact.can_delete} title={!impact.can_delete ? "当前账号无删除权限或业务写入未启用" : ""} onClick={() => void remove()}>{deleting ? "删除中…" : attempt ? "重试原删除请求" : "确认删除"}</button>}</div>
-        {!impact.can_delete && <p className="form-hint">当前账号没有删除权限或业务写入尚未启用。</p>}
+        <div className="dialog-actions"><button type="button" className="button-secondary" disabled={deleting || Boolean(attempt)} onClick={onClose}>{tr("关闭")}</button>{!impact.blocked && <button type="button" className="button-danger" disabled={deleting || !impact.can_delete} title={!impact.can_delete ? tr("当前账号无删除权限或业务写入未启用") : ""} onClick={() => void remove()}>{deleting ? tr("删除中…") : attempt ? tr("重试原删除请求") : tr("确认删除")}</button>}</div>
+        {!impact.can_delete && <p className="form-hint">{tr("当前账号没有删除权限或业务写入尚未启用。")}</p>}
       </>}
     </div>
   </WorkDialog>;

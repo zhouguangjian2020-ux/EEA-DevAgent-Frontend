@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/features/i18n/provider";
+import { FolderChevron } from "@/components/icons/folder-chevron";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { WorkspaceNode, WorkspaceObject, WorkspaceFolder, WorkspaceDeletion } from "@/features/workspace/tree";
 
@@ -21,6 +23,7 @@ export type WorkspaceTreeProps = {
 };
 
 export function WorkspaceTree(props: WorkspaceTreeProps) {
+  const { t: tr } = useI18n();
   const [menuId, setMenuId] = useState<string | null>(null);
   const activeMenu = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -36,7 +39,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
     if (!props.deletionMode || !target) return null;
     const key = `${target.kind}:${target.id}`;
     return <input className="tree-delete-check" type="checkbox" checked={props.deletionSelectedIds?.includes(key) ?? false} disabled={!target.canDelete}
-      aria-label={`删除选择 ${node.name}`} onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()} onChange={() => props.onToggleDeletion?.(target)} />;
+      aria-label={tr("删除选择 {0}", { "0": node.name })} onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()} onChange={() => props.onToggleDeletion?.(target)} />;
   }
   function menu(object: WorkspaceObject | WorkspaceFolder, occurrence: string) {
     const deletion = object.deletion;
@@ -44,9 +47,9 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
     const id = occurrence;
     const label = deletion.kind === "function" ? "功能" : deletion.kind === "FR_ALLOCATION" ? "FR分配" : deletion.kind;
     return <div className="tree-row-menu-wrap" ref={menuId === id ? activeMenu : undefined} onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
-      <button type="button" className="tree-more" aria-label={`${object.name}更多操作`} aria-expanded={menuId === id} onClick={(event) => { event.stopPropagation(); setMenuId(menuId === id ? null : id); }}>⋯</button>
+      <button type="button" className="tree-more" aria-label={tr("{0}更多操作", { "0": object.name })} aria-expanded={menuId === id} onClick={(event) => { event.stopPropagation(); setMenuId(menuId === id ? null : id); }}>⋯</button>
       {menuId === id && <div className="tree-row-menu" role="menu" onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); setMenuId(null); } }}>
-        <button type="button" role="menuitem" disabled={!deletion.canDelete} title={!deletion.canDelete ? "当前账号无删除权限或业务写入未启用" : ""} onClick={() => { setMenuId(null); if (object.type === "folder") props.onFolderMenu?.(object); else props.onObjectMenu?.(object); }}>删除{label}</button>
+        <button type="button" role="menuitem" disabled={!deletion.canDelete} title={!deletion.canDelete ? tr("当前账号无删除权限或业务写入未启用") : ""} onClick={() => { setMenuId(null); if (object.type === "folder") props.onFolderMenu?.(object); else props.onObjectMenu?.(object); }}>{tr("删除")}{tr(label)}</button>
       </div>}
     </div>;
   }
@@ -60,13 +63,13 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
         return (
           <li key={node.id} data-folder-level={node.level} data-folder-id={node.id}>
             {node.panorama ? <div className={`tree-folder tree-folder-split${props.activeFolderId === node.id ? " current-panorama" : ""}`} style={style}>
-              {deleteCheck(node)}<button type="button" className="folder-open" aria-label={node.level === "function" ? `打开 ${node.name} 功能全景视图` : `打开 ${node.panorama.featureName} ${node.name}全景视图`} aria-current={props.activeFolderId === node.id ? "page" : undefined} onClick={() => props.onOpenFolder?.(node)}><span className="tree-label">{node.name}</span><span className="tree-count" aria-hidden="true">{node.children.length || ""}</span></button>
-              <button type="button" className="folder-drop" aria-label={`${open ? "收起" : "展开"} ${node.panorama.featureName} ${node.name} 文件夹`} aria-expanded={open} aria-controls={childId} disabled={props.searching} onClick={() => props.onToggleFolder(node.id)}><span aria-hidden="true">{open ? "⌄" : "›"}</span></button>
+              {deleteCheck(node)}<button type="button" className="folder-open" aria-label={node.level === "function" ? tr("打开 {0} 功能全景视图", { "0": node.name }) : tr("打开 {0} {1}全景视图", { "0": node.panorama.featureName, "1": node.name })} aria-current={props.activeFolderId === node.id ? "page" : undefined} onClick={() => props.onOpenFolder?.(node)}><span className="tree-label">{node.level === "function" ? node.name : tr(node.name)}</span><span className="tree-count" aria-hidden="true">{node.children.length || ""}</span></button>
+              <button type="button" className="folder-drop" aria-label={tr("{0} {1} {2} 文件夹", { "0": tr(open ? "收起" : "展开"), "1": node.panorama.featureName, "2": node.name })} aria-expanded={open} aria-controls={childId} disabled={props.searching} onClick={() => props.onToggleFolder(node.id)}><FolderChevron expanded={open} /></button>
               {menu(node, occurrence)}
             </div> : (<div className="tree-folder" style={style} role="button" tabIndex={0} aria-expanded={open} aria-controls={childId} onClick={() => { if (!props.searching) props.onToggleFolder(node.id); }} onKeyDown={event => { if ((event.key === "Enter" || event.key === " ") && !props.searching) { event.preventDefault(); props.onToggleFolder(node.id); } }}>
-              {deleteCheck(node)}<span className="folder-chevron" aria-hidden="true">{open ? "⌄" : "›"}</span>
+              {deleteCheck(node)}<FolderChevron expanded={open} />
               <svg className="tree-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M2.5 5.5h6l1.5 2h7.5v9h-15z" /><path d="M2.5 7.5h15" /></svg>
-              <span className="tree-label" title={node.name}>{node.name}</span>
+              <span className="tree-label" title={node.name}>{node.level === "function" ? node.name : tr(node.name)}</span>
               <span className="tree-count" aria-hidden="true">{node.children.length}</span>
               {menu(node, occurrence)}
             </div>)}
@@ -89,11 +92,11 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
       return (
         <li key={node.id} data-object-id={node.id} className={`tree-object-row${selected ? " selected" : ""}${props.previewId === node.id ? " previewing" : ""}`} style={style}>
           {deleteCheck(node)}
-          {!props.deletionMode && node.selectable !== false && <input type="checkbox" checked={selected} onChange={() => props.onToggleObject(node.id)} aria-label={`选择 ${node.functionName} ${node.name}`} />}
-          <button type="button" className="object-preview" onClick={() => props.onPreview(node)} aria-label={`打开 ${node.functionName} ${node.name}`}>
+          {!props.deletionMode && node.selectable !== false && <input type="checkbox" checked={selected} onChange={() => props.onToggleObject(node.id)} aria-label={tr("选择 {0} {1}", { "0": node.functionName, "1": node.name })} />}
+          <button type="button" className="object-preview" onClick={() => props.onPreview(node)} aria-label={tr("打开 {0} {1}", { "0": node.functionName, "1": node.name })}>
             <svg className="tree-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m10 2 6.5 3.75v7.5L10 17l-6.5-3.75v-7.5zM3.5 5.75 10 9.5l6.5-3.75M10 9.5V17" /></svg>
             <span className="tree-label" title={`${node.functionName} / ${node.kind} / ${node.name}`}>{node.kind === "UC" && node.name.includes(" · ") ? <><small className="tree-uc-number">{node.name.split(" · ")[0]}</small><span>{node.name.split(" · ").slice(1).join(" · ")}</span></> : node.name}</span>
-            {node.status && <span className={`tree-object-status ${node.status}`}>{node.status === "accepted" ? "已确认" : "待确认"}</span>}
+            {node.status && <span className={`tree-object-status ${node.status}`}>{node.status === "accepted" ? tr("已确认") : tr("待确认")}</span>}
           </button>
           {menu(node, occurrence)}
         </li>
@@ -101,7 +104,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
     });
   }
 
-  return <ul className="workspace-tree" aria-label="工作空间对象树">{renderNodes(props.nodes, 0)}</ul>;
+  return <ul className="workspace-tree" aria-label={tr("工作空间对象树")}>{renderNodes(props.nodes, 0)}</ul>;
 }
 
 

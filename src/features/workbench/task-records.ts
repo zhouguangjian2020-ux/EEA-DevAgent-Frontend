@@ -2,6 +2,8 @@ import { request } from '@/lib/api/client';
 import { projectPath, type Turn } from './workflow-api';
 
 export type TaskRecord = {
+  duration_ms?: number | null;
+  request_message?: string | null; request_error_code?: string | null;
   id: string; client_request_id: string; task_kind: 'PRD' | 'UC' | 'FR' | 'FR_ALLOCATION' | 'UC_DIAGRAM';
   stage: string; status: 'running' | 'waiting_choice' | 'preview' | 'succeeded' | 'empty' | 'failed' | 'needs_verification';
   function_id: string | null; result_count: number | null; result_available: boolean; unchanged: boolean;
@@ -21,9 +23,11 @@ export async function readTaskRecords(project: string, thread: string, signal: A
   return [...new Map(rows.map(row => [row.id, row])).values()];
 }
 export function taskLabel(t: TaskRecord): string {
+  if (t.request_error_code === 'function_name_conflict') return '该功能已存在，本次生成已终止，未复用或改名。';
+  if (t.request_error_code === 'prd_exists') return '该功能已有PRD，本次未生成或覆盖。';
   const kind = ({ PRD: 'PRD', UC: 'UC', FR: 'FR', FR_ALLOCATION: 'FR分配建议', UC_DIAGRAM: 'UC图' })[t.task_kind];
   if (t.status === 'running') return ({ planning: '正在分析功能定义', creating_function: '正在准备功能', saving: `正在保存${kind}` } as Record<string, string>)[t.stage] ?? `正在生成${kind}`;
-  if (t.status === 'waiting_choice') return '功能计划已就绪，等待选择新建或复用';
+  if (t.status === 'waiting_choice') return '功能计划已就绪，尚未生成PRD；请在输入区核对并继续原任务';
   if (t.status === 'succeeded') return t.result_count === null ? '任务已完成；结果当前不可访问' : t.task_kind === 'PRD' ? 'PRD已保存为待确认版本' : `已新增 ${t.result_count} 条待确认${kind}`;
   if (t.status === 'preview') {
     if (t.task_kind === 'UC_DIAGRAM') return t.unchanged ? '已确认UC未变化，沿用当前图' : 'UC图已生成；请在UC视图查看';
