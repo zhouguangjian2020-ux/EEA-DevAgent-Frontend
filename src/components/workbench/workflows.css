@@ -41,4 +41,47 @@
 .conversation-input-actions button, .conversation-input-actions select { font: inherit; font-size: 11px; padding: 5px 8px; border: 1px solid var(--ee-border); border-radius: 6px; color: var(--ee-text); background: var(--ee-surface); }
 .conversation-input-actions button:disabled { opacity: .5; cursor: not-allowed; }
 .conversation-input-actions select { max-width: 200px; }
-.conversation-composer-area .conversation-feature-inline { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+/* Keep the selected shortcut and its source selector on one row, even when docked. */
+.conversation-composer-area .conversation-shortcuts { flex-wrap: nowrap; min-width: 0; }
+.conversation-composer-area .conversation-feature-inline { display: flex; flex: 1 1 0; flex-wrap: nowrap; min-width: 0; gap: 6px; margin: 0; }
+.conversation-shortcuts .conversation-feature-inline > label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.conversation-shortcuts .conversation-feature-inline select { flex: 1 1 0; width: 100%; min-width: 0; max-width: 100%; }
+.conversation-shortcuts .conversation-feature-inline label select { display: block; font-size: 11px; }
+.conversation-task-recovery { position: relative; font-size: 12px; }
+.conversation-task-recovery summary { cursor: pointer; padding: 6px; }
+.conversation-task-recovery > .conversation-input-actions { position: absolute; right: 0; top: 100%; z-index: 10; width: min(320px, 70vw); padding: 10px; border: 1px solid var(--ee-border); border-radius: 8px; background: var(--ee-surface); box-shadow: 0 8px 24px var(--ee-border); }
+.conversation-task-recovery label { flex-basis: 100%; }
+
+/* User prompts remain bubbles; Agent responses are plain document content. */
+.live-project-conversation .conversation-message.assistant,
+.live-chat .conversation-message.assistant { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 2px 3px; }
+
+/* Compact history: a single clock trigger, no permanent session selector row. */
+.project-conversation.live-project-conversation { position: relative; grid-template-rows: minmax(0, 1fr) auto; }
+.live-project-conversation > .conversation-thread-toolbar { position: absolute; top: 10px; right: 14px; z-index: 20; padding: 0; border: 0; background: transparent; grid-row: auto; }
+.live-project-conversation > .conversation-output { grid-row: 1; margin-top: 44px; padding-top: 10px; }
+.live-project-conversation > .conversation-composer-area { grid-row: 2; }
+.conversation-history-root { position: relative; }
+.conversation-history-trigger { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: var(--ee-muted); background: var(--ee-surface); border: 1px solid var(--ee-border); border-radius: 9px; transition: color .15s, border-color .15s; }
+.conversation-history-trigger:hover, .conversation-history-trigger[aria-expanded="true"] { color: var(--ee-primary); border-color: var(--ee-primary); }
+.conversation-history-popover { position: absolute; top: calc(100% + 8px); right: 0; width: min(300px, calc(100vw - 64px)); max-height: min(65vh, 440px); overflow: auto; padding: 16px; border: 1px solid var(--ee-border); border-radius: 12px; background: var(--ee-surface); box-shadow: var(--ee-shadow); }
+.conversation-history-popover h2 { margin: 0 0 14px; color: var(--ee-text); font-size: 14px; font-weight: 600; }
+.live-project-conversation .conversation-history-popover .conversation-history-select { display: flex; flex-direction: column; align-items: stretch; gap: 8px; color: var(--ee-muted); font-size: 12px; }
+.live-project-conversation .conversation-history-popover select { max-width: 100%; width: 100%; padding: 9px; color: var(--ee-text); border-radius: 7px; font-size: 12px; }
+.conversation-history-more { padding: 10px 0 0; background: transparent; border: 0; color: var(--ee-primary); font-size: 12px; }
+.conversation-history-footer { border-top: 1px solid var(--ee-border); margin-top: 16px; padding-top: 12px; }
+.conversation-history-footer .button-secondary { width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; }
+.conversation-history-popover .conversation-task-recovery { margin-top: 10px; }
+.conversation-history-popover .conversation-task-recovery > .conversation-input-actions { position: static; width: 100%; box-shadow: none; margin-top: 6px; }
+.conversation-shortcut-divider { width: 1px; height: 19px; margin: 0 3px; background: var(--ee-border); flex: 0 0 1px; }
+.conversation-shortcuts .conversation-create-function { border-color: transparent; background: transparent; }
+.conversation-shortcuts .conversation-create-function:hover:not(:disabled) { color: var(--ee-primary); background: var(--ee-primary-soft); }
+
+/* Allocation results live in their subsystem directory, not in the FR list. */
+.allocation-review-heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.allocation-review-heading h2 { margin: 0; flex: 1 1 auto; font-size: 16px; }
+.allocation-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; margin-top: 16px; }
+.allocation-group-link { text-align: left; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--ee-border); border-radius: var(--ee-radius-sm); padding: 16px; color: var(--ee-text); background: var(--ee-surface); cursor: pointer; }
+.allocation-group-link:hover { border-color: var(--ee-primary); background: var(--ee-primary-soft); }
+.allocation-group-link span { color: var(--ee-muted); font-size: 12px; }
+.tree-object-status.unsaved { color: var(--ee-muted); background: var(--ee-canvas); }

@@ -1,95 +1,150 @@
 "use client";
+import { LoadingIllustration, LoadingIcon } from "@/components/feedback/loading";
 import { useI18n } from "@/features/i18n/provider";
-import { AppendFrPanel } from './append-fr-panel';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createUuid } from '@/lib/uuid';
-import { getProjectWorkspace, type WorkspaceFunction } from '@/lib/api/client';
-import { type WriteResult } from '@/features/workbench/manual-api';
-import { workflowPost, projectPath, type Generation, type FrCandidate, type AllocationCandidate } from '@/features/workbench/workflow-api';
-import { SubsystemSelect } from '../panorama/subsystem-select';
-import './workflows.css';
-type FrRow = FrCandidate & { selected: boolean; saved: boolean };
-type AllocRow = AllocationCandidate & { design: string; sourceVersion?: string; allocationId: string; base: string | null; savedRevision?: string; accepted?: boolean; dirty: boolean; mutation: string; acceptId: string };
-type Props = { getTaskThread?: () => string; blockedReason?: string; project: string; featureId: string; mode: 'fr' | 'allocation'; active: boolean; onSaved: () => Promise<unknown> };
-function LegacyAllocationPanel({ project, featureId, mode, active, onSaved, blockedReason, getTaskThread }: Props) {
+import { AppendFrPanel } from "./append-fr-panel";
+import { useCallback, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { createUuid } from "@/lib/uuid";
+import { startTaskFeedback } from "@/features/workbench/task-feedback";
+import type { AllocationSubsystem } from "@/features/workbench/model";
+import { getProjectWorkspace, type WorkspaceFunction } from "@/lib/api/client";
+import { confirmAllocationBatch } from "@/features/workbench/batch-review";
+import { workflowPost, projectPath, type Generation, type AllocationCandidate } from "@/features/workbench/workflow-api";
+import { allocationPreview, mergeSavedAllocationRows,
+  type AllocationRow, type AllocationPreview, type AllocationReviewTarget } from "@/features/workbench/allocation-review";
+import { AllocationReviewTable } from "../panorama/allocation-review-table";
+import "./workflows.css";
+
+type AllocationProps = {
+  mode: "allocation"; project: string; featureId: string; active: boolean; blockedReason?: string;
+  onSaved: () => Promise<Awaited<ReturnType<typeof getProjectWorkspace>>>; getTaskThread?: () => string; onGenerated?: (originThread?: string) => void;
+  onPreviewsChange?: (previews: AllocationPreview[], subsystems?: AllocationSubsystem[]) => void;
+  render?: (actions: ReactNode, content: (visible: boolean, subsystemId?: string) => ReactNode, feedback?: ReactNode) => ReactNode;
+};
+function AllocationPanel({ project, featureId, active, onSaved, blockedReason, getTaskThread, onGenerated,
+  onPreviewsChange, render }: AllocationProps) {
   const { t: tr } = useI18n();
-  const [sourceVersion, setSourceVersion] = useState("");
   const [feature, setFeature] = useState<WorkspaceFunction>(), [caps, setCaps] = useState<string[]>([]);
-  const [frs, setFrs] = useState<FrRow[]>([]), [allocations, setAllocations] = useState<AllocRow[]>([]);
-  const [generating,setGenerating]=useState(false);
-  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
+  const [allocations, setAllocations] = useState<AllocationRow[]>([]);
+  const [generating, setGenerating] = useState(false), [busy, setBusy] = useState(false);
+  const [error, setError] = useState(""), [notice, setNotice] = useState("");
   const controller = useRef<AbortController | null>(null), running = useRef(false);
-  const dirty = frs.some(r => !r.saved) || allocations.some(r => r.dirty);
-  const path = projectPath(project) + '/functions/' + featureId;
-  const reload = useCallback(async () => {
-    const ws = await getProjectWorkspace(project); const f = ws.functions.find(x => x.id === featureId);
-    setFeature(f); setCaps(f?.workflow_capabilities ?? ws.capabilities ?? []); return f;
-  }, [project, featureId]);
-  useEffect(() => { let alive=true;if(active)getProjectWorkspace(project).then(ws=>{if(alive){setFeature(ws.functions.find(f=>f.id===featureId));setCaps(ws.functions.find(f=>f.id===featureId)?.workflow_capabilities??ws.capabilities??[]);}}).catch(e=>{if(alive)setError(e.message);});return()=>{alive=false;}; }, [active,project,featureId]);
+  const previewsCallback = useRef(onPreviewsChange);
+  useEffect(() => { previewsCallback.current = onPreviewsChange; }, [onPreviewsChange]);
+  useEffect(() => {
+    // Allocation can initialize a legacy project's catalogue after the shell loaded.
+    // Publish its real labels together with previews, including catalogue-only updates.
+    const subsystems = feature?.subsystems.map(item => ({ id: item.id, code: item.code, name: item.name,
+      domainGroup: item.domain_group, isAllocatable: item.is_allocatable }));
+    previewsCallback.current?.(allocationPreview(allocations), subsystems);
+  }, [allocations, feature]);
+  const dirty = allocations.some(row => row.dirty);
+  const path = projectPath(project) + "/functions/" + featureId;
+  const applyWorkspace = useCallback((ws: Awaited<ReturnType<typeof getProjectWorkspace>>, discard = false) => {
+    const f = ws.functions.find(item => item.id === featureId);
+    setFeature(f); setCaps(f?.workflow_capabilities ?? ws.capabilities ?? []);
+    setAllocations(current => mergeSavedAllocationRows(discard ? [] : current, f?.fr_allocations ?? []));
+    return f;
+  }, [featureId]);
+  const reload = useCallback(async (discard = false) => applyWorkspace(await getProjectWorkspace(project), discard), [project, applyWorkspace]);
+  useEffect(() => {
+    let alive = true;
+    if (active) getProjectWorkspace(project).then(ws => { if (alive) applyWorkspace(ws); })
+      .catch(e => { if (alive) setError(e instanceof Error ? e.message : "操作失败"); });
+    return () => { alive = false; };
+  }, [active, project, applyWorkspace]);
   useEffect(() => () => controller.current?.abort(), []);
-  useEffect(()=>{const guard=(event:Event)=>{const e=event as CustomEvent<{project:string;featureId:string;mode:string}>;if(e.detail.project===project&&e.detail.featureId===featureId&&e.detail.mode===mode&&(dirty||busy)&&!window.confirm(tr(busy?'请求尚在进行，关闭会停止等待。继续？':'关闭将丢弃未保存候选，原业务内容不变。继续？')))event.preventDefault();};window.addEventListener('workflow-before-close',guard);return()=>window.removeEventListener('workflow-before-close',guard);},[project,featureId,mode,dirty,busy,tr]);
-  useEffect(() => { if (!dirty) return; const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; }; window.addEventListener('beforeunload', guard); return () => window.removeEventListener('beforeunload', guard); }, [dirty]);
-  async function task(operation: () => Promise<void>) {
-    if (running.current) return; running.current = true; setBusy(true); setError(''); setNotice('');
-    try { await operation(); } catch (e) { setError(e instanceof Error && e.name === 'AbortError' ? '已停止；原内容未改变。' : e instanceof Error ? e.message : '操作失败'); }
+  useEffect(() => {
+    const guard = (event: Event) => {
+      const e = event as CustomEvent<{ project: string; featureId: string; mode: string }>;
+      if (e.detail.project === project && e.detail.featureId === featureId && e.detail.mode === "allocation" && (dirty || busy)
+        && !window.confirm(tr(busy ? "请求尚在进行，关闭会停止等待。继续？" : "关闭将丢弃未保存候选，原业务内容不变。继续？"))) event.preventDefault();
+    };
+    window.addEventListener("workflow-before-close", guard);
+    return () => window.removeEventListener("workflow-before-close", guard);
+  }, [project, featureId, dirty, busy, tr]);
+  useEffect(() => {
+    if (!dirty && !busy) return;
+    const guard = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    window.addEventListener("beforeunload", guard); return () => window.removeEventListener("beforeunload", guard);
+  }, [dirty, busy]);
+  async function task<T>(operation: () => Promise<T>) {
+    if (running.current) return;
+    running.current = true; setBusy(true); setError(""); setNotice("");
+    try { return await operation(); }
+    catch (e) { setError(e instanceof Error && e.name === "AbortError" ? "已停止等待；已提交结果请读取已保存分配核对。" : e instanceof Error ? e.message : "操作失败"); }
     finally { running.current = false; setBusy(false); controller.current = null; setGenerating(false); }
   }
   function generate() {
-    if(blockedReason){setError(blockedReason);return;}
-    if (dirty && !window.confirm(tr('重新生成将替换本页未保存候选，已有正式内容不变。继续？'))) return;
+    if (blockedReason) { setError(blockedReason); return; }
+    if (dirty && !window.confirm(tr("重新生成将替换本页未保存候选，已有正式内容不变。继续？"))) return;
     void task(async () => {
       const c = new AbortController(); controller.current = c; setGenerating(true); const requestId = createUuid();
-      const result = await workflowPost<Generation<FrCandidate | AllocationCandidate>>(path + (mode === 'fr' ? '/fr-generations' : '/allocation-generations'), { client_request_id: requestId, thread_id: getTaskThread?.() }, c.signal);
-      if (c.signal.aborted) return;
-      if (result.generation_id !== requestId || !Array.isArray(result.candidates) || !result.candidates.length) throw new Error('候选结果身份异常');
-      const f = await reload();
-      if (c.signal.aborted) return;
-      setSourceVersion(result.source_version);
-      if (mode === 'fr') setFrs((result.candidates as FrCandidate[]).map(x => ({ ...x, selected: true, saved: false })));
-      else setAllocations((result.candidates as AllocationCandidate[]).map(x => { const previous = f?.fr_allocations.find(a => a.fr_id === x.fr_id); return { ...x, note: x.note || x.unmatched_reason, design: result.source.subsystems[0]?.design_version_id ?? "", sourceVersion: result.source_version, allocationId: previous?.id ?? createUuid(), base: previous?.revision.revision_id ?? null, dirty: true, mutation: createUuid(), acceptId: createUuid() }; }));
-      setNotice('已生成候选，尚未保存或确认。');
+      const originThread = getTaskThread?.();
+      const feedback = startTaskFeedback(project, originThread, requestId, "FR_ALLOCATION", featureId, feature?.name);
+      try {
+        const result = await workflowPost<Generation<AllocationCandidate>>(path + "/allocation-generations",
+          { client_request_id: requestId, thread_id: originThread }, c.signal);
+        if (c.signal.aborted) return;
+        if (result.generation_id !== requestId || !Array.isArray(result.candidates) || !result.candidates.length) throw new Error("候选结果身份异常");
+        feedback.complete(result.candidates.length);
+        const f = await reload();
+        if (c.signal.aborted) return;
+        const rows = result.candidates.map(row => {
+          const previous = f?.fr_allocations.find(item => item.fr_id === row.fr_id);
+          return { ...row, note: row.note || row.unmatched_reason, design: result.source.subsystems[0]?.design_version_id ?? "",
+            sourceVersion: result.source_version, allocationId: previous?.id ?? createUuid(), base: previous?.revision.revision_id ?? null,
+            dirty: true, mutation: createUuid(), acceptId: createUuid() };
+        });
+        setAllocations(mergeSavedAllocationRows(rows, f?.fr_allocations ?? []));
+        setNotice("分配建议已更新到FR分配全景表格；请审阅子系统后保存或批量确认。");
+        onGenerated?.(originThread);
+      } finally { feedback.unresolved(); }
     });
   }
-  function loadExisting() { void task(async () => {
-    if (dirty && !window.confirm(tr('放弃当前未保存候选并读取已保存分配？'))) return;
-    const f = await reload();
-    setAllocations((f?.fr_allocations ?? []).map(a => ({ candidate_id: a.id, design: a.design_version_id, fr_id: a.fr_id, fr_revision_id: a.fr_revision_id, targets: a.targets.map(t => ({ subsystem_id: t.subsystem_id, rationale: t.rationale ?? '' })), note: a.note ?? '', unmatched_reason: '', allocationId: a.id, base: a.revision.revision_id, savedRevision: a.revision.revision_id, accepted: a.revision.status === 'accepted', dirty: false, mutation: createUuid(), acceptId: createUuid() })));
-  }); }
-  const updateFr = (id: string, patch: Partial<FrRow>) => setFrs(rows => rows.map(r => r.candidate_id === id ? { ...r, ...patch } : r));
-  const updateAllocation = (id: string, patch: Partial<AllocRow>) => setAllocations(rows => rows.map(r => r.candidate_id === id ? { ...r, ...patch, dirty: true, accepted: false, mutation: createUuid() } : r));
-  const saveFrs = () => void task(async () => {
-    for (const row of frs.filter(r => r.selected && !r.saved)) {
-      await workflowPost(path + "/fr-candidates/adopt", { creation_id: row.candidate_id, source_version: sourceVersion, content: { kind: 'FR', description: row.description, acceptance_criteria: row.acceptance_criteria ?? '', sources: row.sources } });
-      updateFr(row.candidate_id, { saved: true });
-    }
-    setNotice('已选候选保存为待确认FR；确认仍为独立操作。'); await onSaved(); await reload();
+  function loadExisting() {
+    if (dirty && !window.confirm(tr("放弃当前未保存候选并读取已保存分配？"))) return;
+    void task(async () => { await reload(true); setNotice("已读取保存的分配。"); });
+  }
+  const updateAllocation = (id: string, patch: Partial<AllocationRow>) => setAllocations(rows => rows.map(row => row.candidate_id === id
+    ? { ...row, ...patch, dirty: true, accepted: false, mutation: createUuid() } : row));
+  async function refreshSaved() {
+    try { applyWorkspace(await onSaved()); }
+    catch { setError("提交结果已保留，但目录刷新失败；请读取已保存分配核对。"); }
+  }
+  const confirmAllocations = (targets: AllocationReviewTarget[]) => task(async () => {
+    const c = new AbortController(); controller.current = c;
+    const result = await confirmAllocationBatch(project, featureId, targets,
+      id => allocations.find(row => row.candidate_id === id), caps, (submitted, receipt) => {
+        if (!receipt.saved && !receipt.accepted) return;
+        setAllocations(rows => rows.map(row => row.candidate_id === submitted.candidate_id && row.mutation === submitted.mutation
+          ? { ...row, base: receipt.revision_id!, savedRevision: receipt.revision_id!, dirty: false, accepted: receipt.accepted } : row));
+      }, c.signal);
+    if (!c.signal.aborted) await refreshSaved();
+    return result;
   });
-  const saveAllocation = (row: AllocRow) => void task(async () => {
-    const design = row.design; if (!design) throw new Error('没有有效的项目子系统目录');
-    const r = await workflowPost<WriteResult>(path + '/allocations', { mutation_id: row.mutation, allocation_id: row.allocationId, base_revision_id: row.base, fr_id: row.fr_id, fr_revision_id: row.fr_revision_id, design_version_id: design, source_version: row.sourceVersion, targets: row.targets, note: row.note });
-    if (!r.revision_id) throw new Error('保存未返回修订');
-    setAllocations(rows => rows.map(x => x.candidate_id === row.candidate_id ? { ...x, base: r.revision_id, savedRevision: r.revision_id!, dirty: false, accepted: false, acceptId: createUuid() } : x));
-    setNotice('分配草稿已保存，尚未确认。'); await onSaved(); await reload();
-  });
-  const acceptAllocation = (row: AllocRow) => void task(async () => {
-    if (!row.savedRevision || row.dirty) throw new Error('请先保存当前修改');
-    await workflowPost(projectPath(project) + '/allocations/' + row.allocationId + '/accept', { mutation_id: row.acceptId, revision_id: row.savedRevision });
-    setAllocations(rows => rows.map(x => x.candidate_id === row.candidate_id ? { ...x, accepted: true } : x));
-    setNotice('分配已确认。'); await onSaved(); await reload();
-  });
-  const permitted = caps.includes(mode === 'fr' ? 'FR.create' : 'FR_ALLOCATION.create');
-  const sourceOptions = feature?.accepted_use_cases ?? [];
-  return <section className='workflow-panel' aria-label={mode === 'fr' ? tr("FR生成候选") : tr("FR分配建议与审阅")}>
-    <div className='workflow-toolbar'><strong>{mode === 'fr' ? tr("FR生成与人工采纳") : tr("FR分配与版本审阅")}</strong><button className='button-primary' disabled={busy || !permitted || Boolean(blockedReason)} title={blockedReason ? tr(blockedReason) : undefined} onClick={generate}>{busy ? tr("处理中…") : mode === 'fr' ? tr("一键生成FR") : tr("一键生成FR分配")}</button>{generating && <button className='button-secondary' onClick={() => controller.current?.abort()}>{tr("停止")}</button>}{mode === 'allocation' && <button className='button-secondary' disabled={busy} onClick={loadExisting}>{tr("读取已保存分配")}</button>}</div>
-    {blockedReason && <p role="status">{tr(blockedReason)}</p>}
+  const permitted = caps.includes("FR_ALLOCATION.create");
+  const actions = <div className="allocation-generation-actions">
+    <button type="button" className="button-primary" disabled={busy || !permitted || Boolean(blockedReason)}
+      onClick={generate}>{busy ? <><LoadingIcon />{tr("处理中…")}</> : tr("一键生成FR分配")}</button>
+    {generating && <button type="button" className="button-secondary" onClick={() => controller.current?.abort()}>{tr("停止等待")}</button>}
+  </div>;
+  const feedback = (!permitted || error || notice) ? <>
     {!permitted && <p>{tr("无生成权限或业务写入未启用；不会使用Mock替代真实结果。")}</p>}
-    {error && <p role='alert'>{tr(error)}{tr(" 原输入已保留；可核对后重试。")}</p>}{notice && <p role='status'>{tr(notice)}</p>}
-    {mode === 'fr' && frs.map((r, i) => <fieldset className='workflow-candidate' key={r.candidate_id} disabled={busy || r.saved}><legend><label><input type='checkbox' checked={r.selected} onChange={e => updateFr(r.candidate_id, { selected: e.target.checked })} />{tr("候选FR ")}{i + 1} {r.saved ? tr("已保存草稿") : tr("未保存")}</label></legend><label>{tr("需求描述")}<textarea aria-label={tr("需求描述")} value={r.description} onChange={e => updateFr(r.candidate_id, { description: e.target.value })} /></label><label>{tr("验收标准")}<textarea aria-label={tr("验收标准")} value={r.acceptance_criteria ?? ''} onChange={e => updateFr(r.candidate_id, { acceptance_criteria: e.target.value })} /></label><div>{tr("来源UC")}{sourceOptions.map(s => <label key={s.uc_id}><input type='checkbox' checked={r.sources.some(x => x.uc_id === s.uc_id && x.uc_revision_id === s.uc_revision_id)} onChange={e => updateFr(r.candidate_id, { sources: e.target.checked ? [...r.sources.filter(x => x.uc_id !== s.uc_id), { uc_id: s.uc_id, uc_revision_id: s.uc_revision_id }] : r.sources.filter(x => x.uc_id !== s.uc_id) })} />{s.uc_code} · {s.uc_name}</label>)}</div></fieldset>)}
-    {mode === 'fr' && frs.length > 0 && <button className='button-primary' disabled={busy || !frs.some(r => r.selected && !r.saved)} onClick={saveFrs}>{tr("保存所选为草稿")}</button>}
-    {mode === 'allocation' && allocations.map(r => <div key={r.candidate_id} className='workflow-candidate'><strong>{feature?.functional_requirements.find(f => f.id === r.fr_id)?.code ?? r.fr_id}</strong><p>{feature?.functional_requirements.find(f => f.id === r.fr_id)?.description}</p>{r.unmatched_reason && <p>{tr("未匹配：")}{r.unmatched_reason}</p>}<ul>{r.targets.map(t=><li key={t.subsystem_id}>{feature?.subsystems.find(s=>s.id===t.subsystem_id)?.name ?? t.subsystem_id}：{t.rationale || tr("人工选择，未填写依据")}</li>)}</ul><SubsystemSelect number={r.fr_id} value={r.targets.map(t => t.subsystem_id)} active={active && !busy} options={(feature?.subsystems ?? []).filter(s => s.is_allocatable)} disabled={busy} onChange={ids => updateAllocation(r.candidate_id, { targets: ids.map(id => r.targets.find(t => t.subsystem_id === id) ?? { subsystem_id: id, rationale: '' }) })} /><label>{tr("分配说明")}<textarea aria-label={tr("分配说明")} disabled={busy} value={r.note} onChange={e => updateAllocation(r.candidate_id, { note: e.target.value })} /></label><p>{r.dirty ? tr("未保存修改") : r.accepted ? tr("已确认") : tr("已保存，待确认")}</p><button className='button-secondary' disabled={busy || !r.dirty || !caps.includes(r.base ? 'FR_ALLOCATION.update' : 'FR_ALLOCATION.create')} onClick={() => saveAllocation(r)}>{tr("保存草稿")}</button><button className='button-primary' disabled={busy || r.dirty || r.accepted || !r.savedRevision || !r.targets.length || !caps.includes('FR_ALLOCATION.accept')} onClick={() => acceptAllocation(r)}>{tr("确认分配")}</button></div>)}
-  </section>;
-}
+    {error && <p role="alert">{tr(error)}{tr(" 原输入已保留；可核对后重试。")}</p>}
+    {notice && <p role="status">{tr(notice)}</p>}
+  </> : undefined;
+  const content = (visible: boolean, subsystemId?: string) => <>
+    {feedback && <div className="panorama-generation-feedback">{feedback}</div>}
+    {generating && !allocations.length ? <LoadingIllustration kind="allocation" /> : <AllocationReviewTable key={subsystemId ?? "all"} subsystemId={subsystemId} rows={allocations} feature={feature} capabilities={caps} active={active && visible} busy={busy}
+      onChangeTargets={(id, ids) => {
+        const row = allocations.find(item => item.candidate_id === id);
+        if (!row || busy || !caps.includes(row.base ? "FR_ALLOCATION.update" : "FR_ALLOCATION.create")) return;
+        updateAllocation(id, { unmatched_reason: ids.length ? "" : row.unmatched_reason, targets: ids.map(subsystem_id => row.targets.find(target => target.subsystem_id === subsystem_id) ?? { subsystem_id, rationale: "" }) });
+      }} onConfirm={confirmAllocations} onReload={loadExisting} />}
+  </>;
+  return render ? render(actions, content, feedback) : <>{actions}{content(active)}</>;
 
-export function WorkflowPanel(props:Props){
-  return props.mode==='fr'?<AppendFrPanel {...props}/>:<LegacyAllocationPanel {...props}/>;
+}
+export function WorkflowPanel(props: AllocationProps | (ComponentProps<typeof AppendFrPanel> & { mode: "fr" })) {
+  return props.mode === "fr" ? <AppendFrPanel {...props} /> : <AllocationPanel {...props} />;
 }

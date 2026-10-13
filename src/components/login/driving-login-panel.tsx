@@ -11,7 +11,7 @@ export default function DrivingLoginPanel({ active, onBack }: Props) {
   const { t: tr } = useI18n();
   const router = useRouter();
   const [username, setUsername] = useState("engineer01");
-  const [password, setPassword] = useState("change-me-before-demo");
+  const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +62,7 @@ export default function DrivingLoginPanel({ active, onBack }: Props) {
         <label htmlFor="driving-login-password">{tr("密码")}</label>
         <div className="input-wrap">
           <span className="input-icon lock-icon" aria-hidden="true">▣</span>
-          <input id="driving-login-password" name="password" type={visible ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setError(null); }} autoComplete="current-password" aria-invalid={Boolean(error)} />
+          <input id="driving-login-password" name="password" placeholder="" type={visible ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setError(null); }} autoComplete="current-password" aria-invalid={Boolean(error)} />
           <button type="button" className="password-toggle" aria-label={visible ? tr("隐藏密码") : tr("显示密码")} onClick={() => setVisible((current) => !current)}>{visible ? tr("隐藏") : tr("显示")}</button>
         </div>
         {submitted && <div className="saved-message login-saved-message">{tr("演示登录成功，正在进入工作空间。")}</div>}

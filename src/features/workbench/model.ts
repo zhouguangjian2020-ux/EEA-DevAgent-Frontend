@@ -15,7 +15,7 @@ import type { UcGenerationCandidate } from "./uc-generation-api";
 export type BusinessFeature = { hasPrd?: boolean; lockVersion?: string; canUpdate?: boolean; canDelete?: boolean; id: string; name: string; description: string; code?: string; acceptedPrdRevisionId?: string | null; acceptedUcs?: { uc_id: string; uc_revision_id: string; uc_code: string; uc_name: string }[] };
 export type DatabaseWork = { artifactId: string; lockVersion: string; revisionId: string; acceptedRevisionId?: string | null; canUpdate: boolean; canAccept: boolean; canDelete: boolean };
 export type WorkBase = { id: string; featureId: string; featureName: string; attachments: WorkspaceObject[]; readOnly?: boolean; database?: DatabaseWork; saving?: boolean };
-export type PrdWork = WorkBase & { kind: "PRD"; prdGeneration?: PrdGeneration; session: PrdSession; ucTask: string | null; ucBatchSource?: PrdDocument; ucBatchComplete?: boolean; ucGenerationCandidates?: UcGenerationCandidate[] };
+export type PrdWork = WorkBase & { kind: "PRD"; prdGeneration?: PrdGeneration; session: PrdSession; ucTask: string | null; ucRequestFeedback?: { requestId: string; featureName: string; message?: string }; ucBatchSource?: PrdDocument; ucBatchComplete?: boolean; ucGenerationCandidates?: UcGenerationCandidate[] };
 export type UcWork = WorkBase & { kind: "UC"; session: UcSession; objectId: string; number: string; originalName: string; sourcePrdWorkId: string };
 export type FrOverviewWork = WorkBase & { kind: "FR_OVERVIEW"; rows: FrContent[]; session: FrOverviewSession };
 export type FrWork = WorkBase & { kind: "FR"; session: FrSession; objectId: string; number: string; originalName: string; sourceOverviewId: string; sourceUcWorkId?: string };
@@ -34,7 +34,7 @@ export function createUcDiagramState(): UcDiagramState {
 }
 export type UcOverviewWork = WorkBase & { sourceMode?: "database"; kind: "UC_OVERVIEW"; session: FrOverviewSession; frBatch?: FrBatchRequest | null; frBatchComplete?: boolean; frValidationShown?: boolean; ucDiagram: UcDiagramState };
 export type AllocationSubsystem = { id: string; code: string; name: string; domainGroup: string | null; isAllocatable: boolean };
-export type FrAllocationWork = WorkBase & { kind: "FR_ALLOCATION_OVERVIEW"; session: FrOverviewSession; assignments: Record<string, string[]>; allocations: Record<string, WorkspaceAllocation>; subsystems: AllocationSubsystem[] };
+export type FrAllocationWork = WorkBase & { selectedAllocationId?: string; allocationPreviews?: import("./allocation-review").AllocationPreview[]; selectedSubsystemId?: string; kind: "FR_ALLOCATION_OVERVIEW"; session: FrOverviewSession; assignments: Record<string, string[]>; allocations: Record<string, WorkspaceAllocation>; subsystems: AllocationSubsystem[] };
 export type PanoramaWork = UcOverviewWork | FrAllocationWork;
 export type FeatureWork = WorkBase & { kind: "FEATURE_OVERVIEW"; session: FrOverviewSession; metadataDraft?: MetadataDraft; metadataAttempt?: MetadataAttempt<FunctionSummary>; metadataConflict?: boolean };
 export type ObjectWork = FeatureWork | PrdWork | UcWork | FrOverviewWork | FrWork | PanoramaWork;
@@ -64,7 +64,8 @@ export type WorkbenchAction =
   | { type: "replace-work"; work: ObjectWork }
   | { type: "conversation"; action: ConversationAction }
   | { type: "open-fr-overview"; featureId: string }
-  | { type: "open-panorama"; kind: PanoramaKind; featureId: string; featureName: string }
+  | { type: "open-panorama"; kind: PanoramaKind; featureId: string; featureName: string; subsystemId?: string; allocationId?: string }
+  | { type: "allocation-previews"; featureId: string; previews: import("./allocation-review").AllocationPreview[]; subsystems?: AllocationSubsystem[] }
   | { type: "panorama"; id: string; action: PanoramaAction }
   | { type: "assign-fr"; id: string; frId: string; subsystemIds: string[] }
   | { type: "new-prd"; id: string; featureId: string; name: string }
@@ -183,13 +184,25 @@ export function transitionWorkbench(p: ProjectWorks, a: WorkbenchAction): Projec
       const work: FrOverviewWork = { id, kind: "FR_OVERVIEW", featureId: source.featureId, featureName: source.featureName, attachments: [], rows: [], session: createFrOverviewSession(source.featureName) };
       return activate(update(p, work), id);
     }
+    case "allocation-previews": {
+      const id = panoramaId(a.featureId, "FR_ALLOCATION_OVERVIEW"), work = p.works[id];
+      if (work?.kind !== "FR_ALLOCATION_OVERVIEW") return p;
+      const deleted = new Set(p.deletedArtifactIds ?? []);
+      const previews = a.previews.filter(row => !deleted.has(row.allocationId) && !deleted.has(row.frId));
+      const subsystems = a.subsystems ?? work.subsystems;
+      if (JSON.stringify(work.allocationPreviews ?? []) === JSON.stringify(previews)
+        && JSON.stringify(work.subsystems) === JSON.stringify(subsystems)) return p;
+      return update(p, { ...work, allocationPreviews: previews, subsystems });
+    }
     case "open-panorama": {
       const f = projectFeatures(p).find(f => f.id === a.featureId);
       const source = f ? { featureId: f.id, featureName: f.name } : undefined;
       if (!source) return p;
       const id = panoramaId(a.featureId, a.kind);
-      if (p.works[id]) return activate(p, id);
-      const base = { id, featureId: source.featureId, featureName: source.featureName, attachments: [], session: createPanoramaSession(source.featureName, a.kind) };
+      const existing = p.works[id];
+      if (existing) return activate(existing.kind === "FR_ALLOCATION_OVERVIEW"
+        ? update(p, { ...existing, selectedSubsystemId: a.subsystemId, selectedAllocationId: a.allocationId }) : p, id);
+      const base = { selectedSubsystemId: a.subsystemId, selectedAllocationId: a.allocationId, id, featureId: source.featureId, featureName: source.featureName, attachments: [], session: createPanoramaSession(source.featureName, a.kind) };
       const work: PanoramaWork = a.kind === "UC_OVERVIEW" ? { ...base, kind: a.kind, ucDiagram: createUcDiagramState() } : { ...base, kind: a.kind, assignments: {}, allocations: {}, subsystems: [] };
       return activate(update(p, work), id);
     }
@@ -232,6 +245,8 @@ export function transitionWorkbench(p: ProjectWorks, a: WorkbenchAction): Projec
           // The diagram is a client-side cache. Keep it through a workspace refresh;
           // the next open/refresh request compares its source_version with accepted UC data.
           works[w.id] = { ...w, ucDiagram: previous.ucDiagram };
+        } else if (w.kind === "FR_ALLOCATION_OVERVIEW" && previous?.kind === "FR_ALLOCATION_OVERVIEW") {
+          works[w.id] = { ...w, selectedSubsystemId: previous.selectedSubsystemId, selectedAllocationId: previous.selectedAllocationId, allocationPreviews: previous.allocationPreviews };
         } else {
           works[w.id] = w;
         }
@@ -249,7 +264,7 @@ export function transitionWorkbench(p: ProjectWorks, a: WorkbenchAction): Projec
           const allocations = Object.fromEntries(Object.entries(w.allocations ?? {}).filter(([key, item]) => !removedArtifacts.has(key) && !removedArtifacts.has(item.fr_id)));
           const assignments: Record<string, string[]> = {};
           for (const item of Object.values(allocations)) assignments[`db-fr-${item.fr_id}`] = [...new Set([...(assignments[`db-fr-${item.fr_id}`] ?? []), ...item.targets.map(t => t.subsystem_id)])];
-          works[id] = { ...w, attachments: clean(w.attachments), allocations, assignments };
+          works[id] = { ...w, attachments: clean(w.attachments), allocations, assignments, allocationPreviews: w.allocationPreviews?.filter(row => !removedArtifacts.has(row.allocationId) && !removedArtifacts.has(row.frId)) };
         }
         if (w.kind === "FR_OVERVIEW" && removedArtifacts.size) {
           const codes = new Set(Object.values(works).filter((item): item is FrWork => item.kind === "FR" && item.featureId === w.featureId).map(item => item.number));
@@ -377,7 +392,7 @@ export function transitionWorkbench(p: ProjectWorks, a: WorkbenchAction): Projec
     }
     case "uc-start": {
       const w = p.works[a.id]; if (w?.kind !== "PRD" || !canGenerateUcBatch(w)) return p;
-      return update(p, { ...w, ucTask: a.taskId, ucBatchSource: { ...w.session.document! }, ucBatchComplete: false, ucGenerationCandidates: undefined, session: { ...w.session, notice: w.database ? "正在生成并保存待确认 UC…" : "正在基于已确认的 PRD 批量生成 UC（Mock）…" } });
+      return update(p, { ...w, ucTask: a.taskId, ucRequestFeedback: { requestId: a.taskId, featureName: w.featureName }, ucBatchSource: { ...w.session.document! }, ucBatchComplete: false, ucGenerationCandidates: undefined, session: { ...w.session, notice: w.database ? "正在生成并保存待确认 UC…" : "正在基于已确认的 PRD 批量生成 UC（Mock）…" } });
     }
     case "uc-candidates-ready": {
       const w = p.works[a.id]; if (w?.kind !== "PRD" || w.ucTask !== a.taskId) return p;
@@ -414,10 +429,10 @@ export function transitionWorkbench(p: ProjectWorks, a: WorkbenchAction): Projec
     case 'uc-appended': {
       const w=p.works[a.id];
       if(w?.kind!=='PRD'||w.ucTask!==a.taskId)return p;
-      const next=update(p,{...w,ucTask:null,ucGenerationCandidates:undefined,ucBatchComplete:false,session:{...w.session,notice:`已追加 ${a.count} 条待确认UC；左侧已定位需求工程UC目录，中间页面保持不变。`}});
+      const next=update(p,{...w,ucTask:null,ucGenerationCandidates:undefined,ucBatchComplete:false,session:{...w.session,notice:`已追加 ${a.count} 条待确认UC；即将展开需求工程UC目录并打开UC全景视图。`}});
       return {...next,ucBatchReveal:{workId:panoramaId(w.featureId,'UC_OVERVIEW'),requestId:a.taskId,sidebarOnly:true}};
     }
-    case "uc-failed": { const w = p.works[a.id]; return w?.kind === "PRD" && w.ucTask === a.taskId ? update(p, { ...w, ucTask: null, session: { ...w.session, notice: a.message } }) : p; }
+    case "uc-failed": { const w = p.works[a.id]; return w?.kind === "PRD" && w.ucTask === a.taskId ? update(p, { ...w, ucTask: null, ucRequestFeedback: { requestId: a.taskId, featureName: w.ucRequestFeedback?.featureName ?? w.featureName, message: a.message }, session: { ...w.session, notice: a.message } }) : p; }
     case "uc-diagram-start": {
       const w = p.works[a.id];
       if (w?.kind !== "UC_OVERVIEW" || w.ucDiagram.status === "loading") return p;
@@ -497,11 +512,23 @@ export function projectWorkspaceTree(p: ProjectWorks, module: import("../navigat
   });
 }
 
+// Resolve display labels from real project metadata, never from identifiers.
+export function allocationSubsystemName(work: FrAllocationWork, subsystemId: string, unavailableLabel = "子系统名称暂不可用"): string {
+  if (subsystemId === "__empty__") return "未选择子系统";
+  const current = work.subsystems.find(item => item.id === subsystemId)?.name.trim();
+  if (current) return current;
+  for (const allocation of Object.values(work.allocations ?? {})) {
+    const saved = allocation.targets.find(item => item.subsystem_id === subsystemId)?.subsystem_name?.trim();
+    if (saved) return saved;
+  }
+  return unavailableLabel;
+}
+
 function allocationTree(objects: ObjectWork[], featureId: string, featureName: string, databaseMode: boolean): WorkspaceNode[] {
   const allocation = objects.find((w): w is FrAllocationWork => w.kind === "FR_ALLOCATION_OVERVIEW");
   if (!allocation) return [];
   const frNames = new Map(objects.filter((w): w is FrWork => w.kind === "FR").map(fr => [fr.objectId, `${fr.number} · ${fr.originalName}`]));
-  const groups = new Map<string, { code: string; name: string; children: WorkspaceObject[] }>();
+  const groups = new Map<string, { name: string; children: WorkspaceObject[] }>();
   if (!databaseMode) {
     // Mock rows remain FR references, not pretend persisted allocation objects.
     return PRESET_SUBSYSTEMS.flatMap(subsystem => {
@@ -511,22 +538,31 @@ function allocationTree(objects: ObjectWork[], featureId: string, featureName: s
     });
   }
   const emptyKey = "__empty__";
-  for (const item of Object.values(allocation.allocations ?? {})) {
-    const targets = item.targets.length ? item.targets : [{ subsystem_id: emptyKey, subsystem_code: "", subsystem_name: "未选择子系统", domain_group: null, rationale: null }];
-    for (const target of targets) {
-      const key = target.subsystem_id;
-      if (!groups.has(key)) groups.set(key, { code: target.subsystem_code, name: target.subsystem_name, children: [] });
-      const group = groups.get(key)!;
-      if (!group.children.some(child => child.deletion?.id === item.id)) {
-        group.children.push({
-          id: item.id, type: "object", kind: "FR分配", name: frNames.get(item.fr_id) ?? `${item.fr_code} · 分配`, functionName: featureName,
-          summary: item.targets.length ? item.targets.map(targetItem => `${targetItem.subsystem_code} · ${targetItem.subsystem_name}`).join("、") : "未选择子系统",
-          interactive: false, selectable: false, featureId, deletion: { kind: "FR_ALLOCATION", id: item.id, lockVersion: item.lock_version, canDelete: item.can_delete, label: `${item.fr_code} · 分配`, featureId },
-        });
-      }
+  const saved = Object.values(allocation.allocations ?? {});
+  const previews = new Map((allocation.allocationPreviews ?? []).map(row => [row.allocationId, row]));
+  const ids = new Set([...saved.map(row => row.id), ...previews.keys()]);
+  for (const id of ids) {
+    const item = allocation.allocations[id], preview = previews.get(id);
+    const frId = preview?.frId ?? item?.fr_id;
+    if (!frId) continue;
+    const targets = preview?.targetIds ?? item?.targets.map(target => target.subsystem_id) ?? [];
+    for (const key of new Set(targets.length ? targets : [emptyKey])) {
+      const name = allocationSubsystemName(allocation, key);
+      if (!groups.has(key)) groups.set(key, { name, children: [] });
+      const dirty = preview?.dirty ?? false;
+      const status = dirty ? "unsaved" as const : (preview?.accepted ?? item?.revision.status === "accepted") ? "accepted" as const : "pending" as const;
+      groups.get(key)!.children.push({
+        id, type: "object", kind: "FR分配", name: frNames.get(frId) ?? `${item?.fr_code ?? frId} · 分配`,
+        functionName: featureName, summary: name, status, interactive: true, selectable: false, featureId,
+        allocation: { subsystemId: key, allocationId: id, frId },
+        deletion: item && !dirty ? { kind: "FR_ALLOCATION", id, lockVersion: item.lock_version,
+          canDelete: item.can_delete, label: `${item.fr_code} · 分配`, featureId } : undefined,
+      });
     }
   }
-  return [...groups].map(([key, group]) => ({ id: `${featureId}-allocation-${key}`, type: "folder" as const, level: "category" as const, name: group.code ? `${group.code} · ${group.name}` : group.name, children: group.children, panorama: undefined }));
+  return [...groups].map(([key, group]) => ({ id: `${featureId}-allocation-${key}`, type: "folder" as const,
+    level: "category" as const, name: group.name, children: group.children,
+    panorama: { featureId, featureName, kind: "FR_ALLOCATION_OVERVIEW" as const, subsystemId: key } }));
 }
 
 

@@ -2,14 +2,14 @@ export type PrimaryKey = "workbench" | "product" | "requirements" | "architectur
 export type ModuleKey = Exclude<PrimaryKey, "workbench">;
 export type SidebarView = "navigation" | "functions" | "workspace";
 
-export const primaryItems: { key: PrimaryKey; label: string; icon: string }[] = [
-  { key: "workbench", label: "工作台", icon: "⌂" },
-  { key: "product", label: "产品工程", icon: "▦" },
-  { key: "requirements", label: "需求工程", icon: "▤" },
-  { key: "architecture", label: "架构设计", icon: "⌘" },
-  { key: "development", label: "开发工程", icon: "⌁" },
-  { key: "test", label: "测试工程", icon: "✓" },
-  { key: "safety", label: "安全工程", icon: "◈" },
+export const primaryItems: { key: PrimaryKey; label: string }[] = [
+  { key: "workbench", label: "工作台" },
+  { key: "product", label: "产品工程" },
+  { key: "requirements", label: "需求工程" },
+  { key: "architecture", label: "架构设计" },
+  { key: "development", label: "开发工程" },
+  { key: "test", label: "测试工程" },
+  { key: "safety", label: "安全工程" },
 ];
 
 export const secondaryItems: Record<PrimaryKey, string[]> = {

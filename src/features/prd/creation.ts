@@ -2,7 +2,7 @@ import { ApiError } from '@/lib/api/client';
 import { createUuid } from '@/lib/uuid';
 import { prdCreationApi, type CreationChoice, type CreationInput, type PrdCreationIntent } from './creation-api';
 
-export const CREATION_WAIT_MS = 180_000;
+export const CREATION_WAIT_MS = 315_000;
 export type CreationState = { prompt: string; candidateName: string | null; input: CreationInput | null; intent: PrdCreationIntent | null; busy: boolean; phase: 'plan' | 'generate' | 'read' | null; uncertain: boolean; notFound: boolean; error: string; notice: string };
 export type CreationAnchor = { project: string; thread: string; epoch: number };
 export function canNavigateCreationResult(project: string, current: CreationAnchor, dialogProject: string | null, origin: CreationAnchor | null, automatic: boolean, aborted: boolean) {

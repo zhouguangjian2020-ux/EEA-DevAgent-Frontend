@@ -1,9 +1,13 @@
 "use client";
+import { assertSafeUcDiagram } from "../panorama/mermaid-safety";
 import { appendGenerated } from "./append-api";
+import { startTaskFeedback } from "./task-feedback";
+import { confirmArtifactBatch, REVIEW_LIMIT, REVIEW_LIMIT_MESSAGE, REVIEW_UNCERTAIN } from "./batch-review";
 
 import { buildConversationRequest, validateConversationRequest } from "../conversation/model";
 import { requestMockConversation } from "../../mocks/conversation";
-import { streamPrdExpansion } from "../conversation/api";
+import { requestPrdExpansion } from "../conversation/api";
+import { revealExpansion } from "../conversation/reveal";
 import { streamPrdGeneration } from "../prd/api";
 import { prdGenerationReason } from "../prd/generation";
 import { useEffect, useRef, useState } from "react";
@@ -23,13 +27,15 @@ import { createUuid } from "@/lib/uuid";
 import { metadataError, metadataInput } from "../metadata/model";
 import { createManualWork, saveManualRevision, acceptManualRevision, type ManualCreate, type WriteResult } from "./manual-api";
 import { acceptanceIssue, draftBody } from "./manual-model";
+import { reviewFrBatch, frReviewReason, frReviewRevision, type FrReviewTarget, type FrReviewResult } from "./fr-review";
+import { reviewUcBatch, ucReviewReason, ucReviewRevision, confirmedUcSignature, type UcReviewTarget, type UcReviewResult } from "./uc-review";
 import { mockManualWork } from "../../mocks/manual-work";
-import { featureOverviewId, projectFeatures, type ObjectWork } from "./model";
+import { featureOverviewId, projectFeatures, type ObjectWork, type UcWork, type FrWork } from "./model";
 import type { PrdAction } from "../prd/model";
 import type { UcAction } from "../uc/model";
 import type { FrAction } from "../fr/model";
 
-type Pending = { controller: AbortController; id: string; kind: "prd-generation" | "PRD" | "UC" | "FR" | "children" | "fr-batch" | "uc-diagram" | "conversation" };
+type Pending = { controller: AbortController; id: string; kind: "prd-generation" | "PRD" | "UC" | "FR" | "children" | "fr-batch" | "uc-diagram" | "uc-review" | "fr-review" | "conversation" };
 export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskThread?: (project: string) => string) {
   const deletedProjects = useRef(deletedProjectIds);
   const [store, setStore] = useState<WorkbenchStore>({});
@@ -204,6 +210,107 @@ export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskT
       if (current?.saving) act(project, { type: "replace-work", work: { ...current, saving: false } });
     }
   }
+  async function confirmDatabaseDocuments(project: string, featureId: string, kind: "UC" | "FR",
+    targets: UcReviewTarget[], signal: AbortSignal): Promise<UcReviewResult> {
+    const result: UcReviewResult = { accepted: [], failed: [] };
+    const pending: { work: UcWork | FrWork; key: string; mutation: string; revision: string }[] = [];
+    const unique = [...new Map(targets.map(target => [target.id, target])).values()];
+    if (unique.length > REVIEW_LIMIT) return { accepted: [], failed: unique.map(x => ({ id: x.id, reason: REVIEW_LIMIT_MESSAGE })) };
+    for (const target of unique) {
+      const work = state.current[project]?.works[target.id];
+      if (!work || work.kind !== kind || !work.database || work.featureId !== featureId || (work.kind !== "UC" && work.kind !== "FR")) {
+        result.failed.push({ id: target.id, reason: "对象已移除或不属于当前功能" }); continue;
+      }
+      const revision = work.kind === "UC" ? ucReviewRevision(work) : frReviewRevision(work);
+      const reason = signal.aborted ? REVIEW_UNCERTAIN : revision !== target.revisionId ? "对象版本已变化，请重新选择后确认"
+        : work.kind === "UC" ? ucReviewReason(work) : frReviewReason(work);
+      if (reason) { result.failed.push({ id: target.id, reason }); continue; }
+      const key = project + "/" + work.id + "/accept", signature = JSON.stringify({ revision_id: revision });
+      const previous = writes.current.get(key), attempt = previous?.signature === signature ? previous : { signature, id: createUuid() };
+      writes.current.set(key, attempt);
+      pending.push({ work, key, mutation: attempt.id, revision });
+      act(project, { type: "replace-work", work: { ...work, saving: true } });
+    }
+    if (!pending.length) return result;
+    try {
+      const receipt = await confirmArtifactBatch(project, featureId, kind, pending.map(item => ({ artifact_id: item.work.database!.artifactId,
+        revision_id: item.revision, mutation_id: item.mutation })), signal);
+      for (const item of pending) {
+        const saved = receipt.items.find(row => row.artifact_id === item.work.database!.artifactId)!;
+        const current = state.current[project]?.works[item.work.id];
+        if (saved.accepted) {
+          result.accepted.push(item.work.id); writes.current.delete(item.key);
+          if (current?.kind === kind && current.database?.revisionId === item.revision && (current.kind === "UC" || current.kind === "FR"))
+            act(project, { type: "replace-work", work: { ...current, saving: false,
+              database: { ...current.database, acceptedRevisionId: item.revision },
+              session: { ...current.session, selected: false, document: current.session.document ? { ...current.session.document, status: "accepted" } : null } } as ObjectWork });
+        } else {
+          result.failed.push({ id: item.work.id, reason: saved.error_message! });
+          workNotice(project, item.work.id, saved.error_message!);
+        }
+      }
+    } catch (error) {
+      const reason = error instanceof ApiError ? error.message : REVIEW_UNCERTAIN;
+      result.failed.push(...pending.map(item => ({ id: item.work.id, reason })));
+    } finally {
+      for (const item of pending) {
+        const current = state.current[project]?.works[item.work.id];
+        if (current?.saving) act(project, { type: "replace-work", work: { ...current, saving: false } });
+      }
+    }
+    // One workspace refresh for the entire response, including uncertain transport outcomes.
+    try { await seedDatabase(project, project, { initial: false }); }
+    catch { act(project, { type: "notice", message: "确认回执已保留，但目录刷新失败；请刷新核对。" }); }
+    return result;
+  }
+  async function confirmUcs(project: string, overviewId: string, targets: UcReviewTarget[]): Promise<UcReviewResult> {
+    const overview = state.current[project]?.works[overviewId], key = project + "/" + overviewId;
+    if (overview?.kind !== "UC_OVERVIEW" || overview.saving || operations.current.has(key)) throw new Error("请等待当前用例图或确认任务结束");
+    const controller = new AbortController(), requestId = createUuid();
+    operations.current.set(key, { controller, id: requestId, kind: "uc-review" });
+    act(project, { type: "replace-work", work: { ...overview, saving: true } });
+    try {
+      const databaseSelection = targets.some(target => Boolean(state.current[project]?.works[target.id]?.database));
+      const result = databaseSelection ? await confirmDatabaseDocuments(project, overview.featureId, "UC", targets, controller.signal) : await reviewUcBatch(targets, overview.featureId, id => {
+        const item = state.current[project]?.works[id]; return item?.kind === "UC" ? item : undefined;
+      }, async work => {
+        act(project, { type: "uc", id: work.id, action: { type: "select", selected: true } });
+        if (work.database) return persist(project, work.id, "accept");
+        act(project, { type: "uc", id: work.id, action: { type: "accept" } });
+        return true;
+      }, controller.signal);
+      act(project, { type: "notice", message: "已确认 " + result.accepted.length + " 条，未完成 " + result.failed.length + " 条。" });
+      return result;
+    } finally {
+      if (operations.current.get(key)?.id === requestId) operations.current.delete(key);
+      const current = state.current[project]?.works[overviewId];
+      if (current?.kind === "UC_OVERVIEW") act(project, { type: "replace-work", work: { ...current, saving: false } });
+    }
+  }
+  async function confirmFrs(project: string, overviewId: string, targets: FrReviewTarget[]): Promise<FrReviewResult> {
+    const overview = state.current[project]?.works[overviewId], key = project + "/" + overviewId;
+    if (overview?.kind !== "FR_OVERVIEW" || overview.saving || operations.current.has(key)) throw new Error("请等待当前FR生成或确认任务结束");
+    const controller = new AbortController(), requestId = createUuid();
+    operations.current.set(key, { controller, id: requestId, kind: "fr-review" });
+    act(project, { type: "replace-work", work: { ...overview, saving: true } });
+    try {
+      const databaseSelection = targets.some(target => Boolean(state.current[project]?.works[target.id]?.database));
+      const result = databaseSelection ? await confirmDatabaseDocuments(project, overview.featureId, "FR", targets, controller.signal) : await reviewFrBatch(targets, overview.featureId, id => {
+        const item = state.current[project]?.works[id]; return item?.kind === "FR" ? item : undefined;
+      }, async work => {
+        act(project, { type: "fr", id: work.id, action: { type: "select", selected: true } });
+        if (work.database) return persist(project, work.id, "accept");
+        act(project, { type: "fr", id: work.id, action: { type: "accept" } });
+        return true;
+      }, controller.signal);
+      act(project, { type: "notice", message: "已确认 " + result.accepted.length + " 条，未完成 " + result.failed.length + " 条。" });
+      return result;
+    } finally {
+      if (operations.current.get(key)?.id === requestId) operations.current.delete(key);
+      const current = state.current[project]?.works[overviewId];
+      if (current?.kind === "FR_OVERVIEW") act(project, { type: "replace-work", work: { ...current, saving: false } });
+    }
+  }
   function objectAction(project: string, id: string, action: PrdAction | UcAction | FrAction) {
     const w = state.current[project]?.works[id];
     if (!w || isWorkRunning(w) || (w.kind !== "PRD" && w.kind !== "UC" && w.kind !== "FR")) return;
@@ -312,12 +419,14 @@ export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskT
     const updated=state.current[project]?.works[workId];
     if(updated?.kind!=='PRD'||updated.ucTask!==id)return;
     const controller=new AbortController();operations.current.set(key,{controller,id,kind:'children'});
+    const feedback = updated.database ? startTaskFeedback(project, thread, id, 'UC', updated.featureId, updated.featureName) : undefined;
     try {
       if(updated.database){
         const revision=updated.database.acceptedRevisionId;
         if(!revision)throw new Error('请先确认当前PRD');
         const result=await appendGenerated(project,updated.featureId,'UC',{client_request_id:id,thread_id:thread,prd_id:updated.database.artifactId,prd_revision_id:revision},controller.signal);
         if(controller.signal.aborted)return;
+        feedback?.complete(result.items.length);
         try { await seedDatabase(project,project,{}); }
         catch { act(project,{type:'notice',message:'UC已保存，目录刷新失败；请刷新工作空间，不要重复生成。'}); }
         act(project,{type:'uc-appended',id:workId,taskId:id,count:result.items.length});
@@ -328,12 +437,17 @@ export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskT
       generationRetries.current.delete(key);
     } catch(error){
       if(!controller.signal.aborted)act(project,{type:'uc-failed',id:workId,taskId:id,message:(error instanceof Error?error.message:'生成失败')+'；可复用本次请求重试，若已保存不会重复创建。'});
-    } finally {if(operations.current.get(key)?.id===id)operations.current.delete(key);}
+    } finally {feedback?.unresolved();if(operations.current.get(key)?.id===id)operations.current.delete(key);}
   }
   async function generateUcDiagram(project: string, workId: string, force = false) {
     const key = `${project}/${workId}`;
     const w = state.current[project]?.works[workId];
-    if (w?.kind !== "UC_OVERVIEW" || w.sourceMode !== 'database'  || operations.current.has(key) || w.ucDiagram.status === "loading") return;
+    if (w?.kind !== "UC_OVERVIEW" || w.sourceMode !== 'database' || w.saving || operations.current.has(key) || w.ucDiagram.status === "loading") return;
+    const sourceSignature = confirmedUcSignature(Object.values(state.current[project]?.works ?? {}).filter((item): item is import("./model").UcWork => item.kind === "UC" && item.featureId === w.featureId));
+    if (!sourceSignature) {
+      act(project, { type: "replace-work", work: { ...w, ucDiagram: { status: "empty", requestId: null, sourceVersion: null, ucCount: 0, diagramFormat: null, diagramCode: null, message: "当前功能没有已确认的 UC。" } } });
+      return;
+    }
     const id = createUuid();
     act(project, { type: "uc-diagram-start", id: workId, taskId: id });
     const updated = state.current[project]?.works[workId];
@@ -355,9 +469,12 @@ export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskT
       if (result.status === "succeeded" && (result.diagram_format !== "mermaid" || !result.diagram_code?.trim())) {
         throw new Error("Agent未返回有效的Mermaid图代码，请重试。");
       }
+      if (result.status === "succeeded") assertSafeUcDiagram(result.diagram_code!);
       if (controller.signal.aborted) return;
       const current = state.current[project]?.works[workId];
       if (current?.kind !== "UC_OVERVIEW") return;
+      const latestSignature = confirmedUcSignature(Object.values(state.current[project]?.works ?? {}).filter((item): item is import("./model").UcWork => item.kind === "UC" && item.featureId === w.featureId));
+      if (latestSignature !== sourceSignature) throw new Error("用例确认版本已变化，正在重新核对图形来源。");
       const preservedCode = current.ucDiagram.diagramCode;
       const preservedFormat = current.ucDiagram.diagramFormat;
       const status = result.status;
@@ -411,10 +528,10 @@ export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskT
       const response = request.kind === "expand"
         ? await (async () => {
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            const result = await streamPrdExpansion(request.prompt, controller.signal, text => {
-              if (!reducedMotion) act(project, { type: "conversation", action: { type: "expansion-progress", id: request.id, text } });
-            });
-            if (reducedMotion) act(project, { type: "conversation", action: { type: "expansion-progress", id: request.id, text: result.text } });
+            const result = await requestPrdExpansion(request.prompt, controller.signal);
+            await revealExpansion(result.text, controller.signal, text => {
+              act(project, { type: "conversation", action: { type: "expansion-progress", id: request.id, text } });
+            }, reducedMotion);
             return { message: "Agent 扩写完成", expandedPrompt: result.text, expansionSource: "agent" as const };
           })()
         : await requestMockConversation(request, controller.signal, fail);
@@ -437,6 +554,7 @@ export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskT
     else if (pending.kind === "children") act(project, { type: "uc-failed", id: workId, taskId: pending.id, message: "已停止等待UC生成；后端可能仍完成保存。可重试同一请求核对回执，已有PRD和UC不被覆盖。" });
     else if (pending.kind === "PRD") act(project, { type: "prd", id: workId, action: { type: "cancel", id: pending.id } });
     else if (pending.kind === "UC") act(project, { type: "uc", id: workId, action: { type: "cancel", id: pending.id } });
+    else if (pending.kind === "uc-review" || pending.kind === "fr-review") { /* Finish the in-flight confirmation; abort subsequent items. */ }
     else if (pending.kind === "uc-diagram") act(project, { type: "uc-diagram-cancel", id: workId, taskId: pending.id, message: "UC图生成已停止，可点击刷新重试。" });
     else { const current = state.current[project]?.works[workId]; act(project, { type: current?.kind === "FR" ? "fr" : "fr-overview", id: workId, action: { type: "cancel", id: pending.id } }); }
   }
@@ -454,7 +572,7 @@ export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskT
     if (choice === "stop") cancel(project, id);
     act(project, { type: "resolve-close", id, choice });
   }
-  return { store, act, saveFeature, reloadFeature, createManual, objectAction, runConversation, cancelConversation, generatePrd, runPrd, runUc, runFr, generateUcs, generateUcDiagram, generateFrs, seedDatabase, refreshAfterDeletion, cancel, resolveClose };
+  return { store, act, confirmUcs, confirmFrs, saveFeature, reloadFeature, createManual, objectAction, runConversation, cancelConversation, generatePrd, runPrd, runUc, runFr, generateUcs, generateUcDiagram, generateFrs, seedDatabase, refreshAfterDeletion, cancel, resolveClose };
 }
 
 

@@ -1,5 +1,7 @@
 "use client";
+import { BackIcon } from "@/components/icons/action-icons";
 import { useI18n } from "@/features/i18n/provider";
+import { ModuleIcon } from "@/components/icons/module-icon";
 import { FolderChevron } from "@/components/icons/folder-chevron";
 import { primaryItems, secondaryItems, type NavigationAction, type NavigationState } from "@/features/navigation/model";
 import { WorkspaceTree, type WorkspaceTreeProps } from "@/components/workspace/workspace-tree";
@@ -34,7 +36,7 @@ export function AppSidebar(props: AppSidebarProps) {
                 <div className="navigation-group" key={item.key}>
                   <div className={`navigation-row${active ? " active" : ""}`}>
                     <button type="button" className="primary-item" aria-current={active ? "page" : undefined} onClick={() => onNavigate({ type: "enter", primary: item.key })}>
-                      <span className="nav-icon" aria-hidden="true">{item.icon}</span><span>{tr(item.label)}</span>
+                      <span className="nav-icon" aria-hidden="true"><ModuleIcon name={item.key} /></span><span>{tr(item.label)}</span>
                     </button>
                     {item.key !== "workbench" && (
                       <button type="button" className="nav-expand" aria-label={tr("{0}{1}", { "0": tr(expanded ? "收起" : "展开"), "1": tr(item.label) })} aria-expanded={expanded} aria-controls={`navigation-${item.key}`} onClick={() => { if (item.key !== "workbench") onNavigate({ type: "toggle-expanded", primary: item.key }); }}>
@@ -58,8 +60,8 @@ export function AppSidebar(props: AppSidebarProps) {
       ) : (
         <>
           <div className="module-sidebar-header">
-            <button type="button" className="back-to-navigation" onClick={() => onNavigate({ type: "back" })}><span aria-hidden="true">‹</span>{tr(" 返回全部功能")}</button>
-            <h2><span className="nav-icon" aria-hidden="true">{activeModule.icon}</span>{tr(activeModule.label)}</h2>
+            <button type="button" className="back-to-navigation" onClick={() => onNavigate({ type: "back" })}><BackIcon /><span>{tr("返回全部功能")}</span></button>
+            <h2><span className="nav-icon" aria-hidden="true"><ModuleIcon name={activeModule.key} /></span>{tr(activeModule.label)}</h2>
           </div>
           <div className="sidebar-tabs" data-active-tab={navigation.view} role="tablist" aria-label={tr("模块视图")} onKeyDown={(event) => {
             const tab = event.key === "ArrowLeft" || event.key === "Home" ? "functions" : event.key === "ArrowRight" || event.key === "End" ? "workspace" : null;

@@ -1,0 +1,13 @@
+.diagram-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 320px; padding: 24px 16px; text-align: center; color: var(--ee-primary); }
+.diagram-empty-art { display: block; width: min(100%, 280px); height: auto; margin-bottom: 12px; stroke-linecap: round; stroke-linejoin: round; }
+.diagram-empty-orbit { stroke: var(--ee-border); stroke-dasharray: 3 7; }
+.diagram-empty-grid { stroke: var(--ee-border); opacity: .45; stroke-width: .7; }
+.diagram-empty-paper { fill: var(--ee-surface); stroke: var(--ee-border); stroke-width: 1.4; }
+.diagram-empty-node { fill: var(--ee-primary-soft); stroke: currentColor; stroke-opacity: .55; stroke-width: 1.4; }
+.diagram-empty-line { stroke: currentColor; stroke-width: 2; }
+.diagram-empty-wire { stroke: currentColor; stroke-width: 1.5; opacity: .55; }
+.diagram-empty-detail { stroke: var(--ee-muted); stroke-width: 1.6; opacity: .5; }
+.diagram-empty-star { stroke: currentColor; stroke-width: 1.5; opacity: .4; }
+.diagram-empty-dot { fill: currentColor; opacity: .45; }
+.diagram-empty-state > strong { color: var(--ee-text); font-size: 14px; line-height: 1.6; font-weight: 600; }
+.diagram-empty-state > p { margin: 8px 0 0; color: var(--ee-muted); font-size: 12px; line-height: 1.7; }

@@ -3,8 +3,8 @@ import { useI18n } from "@/features/i18n/provider";
 import { useEffect, useRef, useState } from "react";
 import { isWorkDirty, isWorkRunning, workLabel, workBadge, type ProjectWorks } from "@/features/workbench/model";
 
-type Props = { project: string; state: ProjectWorks; onOpen: (id: string) => void; onClose: (id: string) => void; onHome: () => void; onNew: () => void; onReorder: (id: string, beforeId: string) => void };
-export function ObjectTabs({ project, state, onOpen, onClose, onHome, onReorder }: Props) {
+type Props = { loadingIds?: readonly string[]; project: string; state: ProjectWorks; onOpen: (id: string) => void; onClose: (id: string) => void; onHome: () => void; onNew: () => void; onReorder: (id: string, beforeId: string) => void };
+export function ObjectTabs({ project, state, onOpen, onClose, onHome, onReorder, loadingIds = [] }: Props) {
   const { t: tr } = useI18n();
   const list = useRef<HTMLDivElement>(null); const menu = useRef<HTMLDetailsElement>(null);
   const [query, setQuery] = useState("");
@@ -34,7 +34,7 @@ export function ObjectTabs({ project, state, onOpen, onClose, onHome, onReorder 
       <button id={`tab-${project}-home`} role="tab" aria-controls={`panel-${project}-home`} aria-selected={!state.activeId} tabIndex={state.activeId ? -1 : 0} className={`object-tab home-tab${!state.activeId ? " active" : ""}`} onClick={onHome}><span aria-hidden="true">⌂</span>{tr(" 工作台")}</button>
       {state.tabs.map(id => { const w = state.works[id]; const label = workLabel(w, tr); return <div key={id} className={`object-tab-wrap${state.activeId === id ? " active" : ""}`} role="presentation" draggable onDragStart={e => { e.dataTransfer.setData("application/x-ee-tab", id); e.dataTransfer.effectAllowed = "move"; }} onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }} onDrop={e => { e.preventDefault(); onReorder(e.dataTransfer.getData("application/x-ee-tab"), id); }}>
         <button id={`tab-${project}-${id}`} role="tab" aria-controls={`panel-${project}-${id}`} aria-selected={state.activeId === id} tabIndex={state.activeId === id ? 0 : -1} className="object-tab" title={tr("{0}{1}", { "0": label, "1": isWorkDirty(w) ? " · 未保存" : "" })} onClick={() => onOpen(id)}>
-          <span className={`tab-kind ${workBadge(w).toLowerCase()}`}>{tr(workBadge(w))}</span><span className="tab-label">{label}</span>{isWorkRunning(w) ? <span className="loading-icon" aria-label={tr("任务运行中")} /> : isWorkDirty(w) ? <span className="tab-dirty" aria-label={tr("未保存")}>●</span> : null}
+          <span className={`tab-kind ${workBadge(w).toLowerCase()}`}>{tr(workBadge(w))}</span><span className="tab-label">{label}</span>{isWorkRunning(w) || loadingIds.includes(id) ? <span className="loading-icon" aria-label={tr("任务运行中")} /> : isWorkDirty(w) ? <span className="tab-dirty" aria-label={tr("未保存")}>●</span> : null}
         </button><button type="button" className="tab-close" aria-label={tr("关闭标签 {0}", { "0": label })} title={tr("关闭标签，不删除对象")} onClick={() => onClose(id)}>×</button>
       </div>; })}
     </div>

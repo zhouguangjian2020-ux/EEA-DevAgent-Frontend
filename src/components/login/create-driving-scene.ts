@@ -31,6 +31,7 @@ function ribbonGeometry(curve: THREE.CatmullRomCurve3, width: number) {
 
 export function createDrivingScene(container: HTMLDivElement, options: SceneOptions): SceneController {
   let disposed=false, paused=options.paused, reduced=options.reducedMotion;
+  let modelPrepared=false, readyNotified=false;
   const abort = new AbortController();
   const scene = new THREE.Scene();
   const lightBackground = new THREE.Color('#f7f9fc'), darkBackground = new THREE.Color('#111923');
@@ -139,7 +140,7 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
       car.position.set(-center.x,-box.min.y+.028,-center.z);carGroup.add(car);
       container.dataset.model=car.uuid;container.dataset.modelSource='CarConcept';container.dataset.loadCount='1';container.dataset.headlightMaterials=String(frontMaterials.length);
       await renderer.compileAsync(scene,camera);
-      if(disposed)return;options.onProgress(100);options.onReady();
+      if(disposed)return;options.onProgress(100);modelPrepared=true;
     }catch(error){if(disposed || (error instanceof Error&&error.name==='AbortError'))return;console.error('Car scene failed',error);options.onError('模型加载失败，请刷新重试。登录演示不受影响。');}
   }
   void loadModel();
@@ -170,6 +171,7 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
     container.dataset.lightPhase=theme.phase;container.dataset.lamps=lamp.toFixed(3);container.dataset.environment=night.toFixed(3);container.dataset.cameraView=v.toFixed(3);container.dataset.parallaxX=motion.parallaxX.toFixed(3);container.dataset.parallaxY=motion.parallaxY.toFixed(3);
     if(lastPhase!==theme.phase||Math.abs(lastLamp-lamp)>.24){lastPhase=theme.phase;lastLamp=lamp;options.onPhase(theme.phase,lamp);}
     renderer.render(scene,camera);
+    if(modelPrepared&&!readyNotified){readyNotified=true;options.onReady();}
   };
   renderer.setAnimationLoop(frame);
   return {

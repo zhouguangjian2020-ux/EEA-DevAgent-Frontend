@@ -131,7 +131,7 @@ export function ProjectDialog({ open, currentProject, items, canCreate, hasMore,
         <p id="project-name-hint" className="project-field-hint">{tr("1～100个字符，允许重名；项目编号由系统自动生成。")}</p>
         <label className="field-label" htmlFor="project-description">{tr("项目简介")}<textarea id="project-description" rows={4} value={description} disabled={saving || Boolean(attempt)} onChange={event => setDescription(event.target.value)} aria-describedby="project-description-hint" /></label>
         <p id="project-description-hint" className="project-field-hint">{tr("选填，最多2000个字符。")}</p>
-        <p className="project-form-note">{tr("创建后进入空项目，并初始化空子系统方案。不会复制任何已有功能、需求或子系统数据。")}</p>
+        <p className="project-form-note">{tr("创建后自动初始化默认的43个子系统，目录来源于“测试项目1”。不会复制已有功能、需求或FR分配。")}</p>
         {error && <div role="alert" className="error-message">{tr(error)}</div>}
         {attempt && !saving && <p className="project-retry-note">{tr("原请求信息已保留。重试仅核对并完成同一次创建，不要刷新页面或另建一笔。")}</p>}
         <div className="dialog-actions"><button type="button" className="button-secondary" disabled={saving} onClick={() => setView("list")}>{tr("返回")}</button><button className="button-primary" disabled={saving || !canCreate} type="submit">{saving ? tr("创建中…") : attempt ? tr("重试并进入") : tr("创建并进入")}</button></div>

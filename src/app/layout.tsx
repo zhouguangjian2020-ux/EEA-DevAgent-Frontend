@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "@/components/feedback/loading.css";
 import { I18nProvider } from "@/features/i18n/provider";
 
 export const metadata: Metadata = {

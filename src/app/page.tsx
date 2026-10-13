@@ -14,6 +14,7 @@ import { initialMockAccounts } from "@/mocks/permissions";
 import { ObjectWorkbench } from "@/components/workbench/object-workbench";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { useTheme } from "@/features/theme/use-theme";
+import { LoadingIllustration } from "@/components/feedback/loading";
 import { useI18n } from "@/features/i18n/provider";
 
 const demoUser: User = {
@@ -177,7 +178,7 @@ export default function Home() {
   }
 
   if (!authReady) {
-    return <main className="login-page"><section className="login-card"><div className="eyebrow">{tr("研发工作空间")}</div><h1>{bootstrapError ? tr("项目列表加载失败") : tr("正在验证登录状态…")}</h1><p className="login-description" role={bootstrapError ? "alert" : "status"}>{bootstrapError || tr("请稍候。")}</p>{bootstrapError && <button className="button-primary" onClick={() => { setBootstrapError(""); setBootstrapRetry(value => value + 1); }}>{tr("重新加载")}</button>}</section></main>;
+    return <main className="login-page"><section className="login-card"><div className="eyebrow">{tr("研发工作空间")}</div><h1>{bootstrapError ? tr("项目列表加载失败") : tr("正在验证登录状态…")}</h1>{bootstrapError ? <p className="login-description" role="alert">{bootstrapError}</p> : <LoadingIllustration kind="workspace" />}{bootstrapError && <button className="button-primary" onClick={() => { setBootstrapError(""); setBootstrapRetry(value => value + 1); }}>{tr("重新加载")}</button>}</section></main>;
   }
 
   const user = authUser ?? demoUser;
@@ -193,7 +194,7 @@ export default function Home() {
       <header className="topbar">
         <BrandLockup />
         <button className="project-picker" onClick={() => { setProjectDialogOpen(true); }}>
-          <span className="project-mark">{USE_MOCKS ? project : currentProject?.code?.slice(0, 1) ?? "…"}</span><span>{USE_MOCKS ? tr("项目") + project : currentProject?.name ?? tr("选择或新建项目")}</span><span className="muted">⌄</span>
+          <span className="project-mark">{USE_MOCKS ? project : currentProject?.code?.slice(0, 1) ?? "…"}</span><span>{USE_MOCKS ? tr("项目") + project : currentProject?.name ?? tr("选择或新建项目")}</span>
         </button>
          {canManagePermissions && <button type="button" className="permission-topbar-button" onClick={() => setPermissionOpen(true)}>{tr("项目权限")}</button>}
         <div className="breadcrumb">{tr("研发工作空间 ")}<span>/</span> <strong>{workspaceContext}</strong></div>

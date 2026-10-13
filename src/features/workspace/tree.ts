@@ -21,7 +21,8 @@ export type WorkspaceObject = {
   kind: ObjectKind;
   functionName: string;
   summary: string;
-  status?: "pending" | "accepted";
+  status?: "pending" | "accepted" | "unsaved";
+  allocation?: { subsystemId: string; allocationId: string; frId?: string };
   interactive?: boolean;
   selectable?: boolean;
   featureId?: string;
@@ -36,7 +37,7 @@ export type WorkspaceFolder = {
   name: string;
   level: "function" | "category";
   children: WorkspaceNode[];
-  panorama?: { featureId: string; featureName: string; kind: "FEATURE_OVERVIEW" | "UC_OVERVIEW" | "FR_OVERVIEW" | "FR_ALLOCATION_OVERVIEW" };
+  panorama?: { featureId: string; featureName: string; kind: "FEATURE_OVERVIEW" | "UC_OVERVIEW" | "FR_OVERVIEW" | "FR_ALLOCATION_OVERVIEW"; subsystemId?: string };
   deletion?: WorkspaceDeletion;
 };
 

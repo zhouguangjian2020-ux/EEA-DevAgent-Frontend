@@ -2,6 +2,14 @@
 .panorama-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 320px; height: 100%; min-height: 0; min-width: 0; background: var(--ee-canvas); }
 .panorama-main { display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
 .panorama-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-shrink: 0; min-height: 84px; padding: 16px 24px; background: var(--ee-surface); }
+.panorama-toolbar-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.panorama-toolbar-actions .manual-toolbar-action { margin-left: 0; }
+.panorama-toolbar-actions > button { white-space: nowrap; }
+.allocation-generation-actions { display: inline-flex; align-items: center; flex-wrap: nowrap; flex-shrink: 0; gap: 8px; }
+.allocation-generation-actions > button { white-space: nowrap; flex-shrink: 0; }
+.panorama-generation-feedback { flex-shrink: 0; padding: 0 24px 12px; color: var(--ee-muted); font-size: 12px; }
+.panorama-generation-feedback p { margin: 4px 0; }
+.panorama-generation-feedback [role="alert"] { color: var(--ee-danger); }
 .panorama-toolbar h1 { margin: 0; font-size: 20px; line-height: 30px; font-weight: 600; color: var(--ee-text); }
 .panorama-toolbar p { margin: 4px 0 0; font-size: 11px; color: var(--ee-muted); }
 .panorama-readonly { flex-shrink: 0; border: 1px solid var(--ee-border); border-radius: 5px; padding: 8px 12px; color: var(--ee-muted); background: var(--ee-canvas); font-size: 11px; }
@@ -93,26 +101,87 @@
 @media (max-width: 860px) { .subsystem-directory ul { grid-template-columns: minmax(0, 1fr); } }
 
 /* Agent-backed UC diagram: code is shown as inert text until Mermaid rendering is intentionally enabled. */
-.uc-agent-diagram { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 12px; padding: 16px; border: 1px solid var(--ee-border); border-radius: 12px; background: var(--ee-surface); color: var(--ee-text); overflow: auto; }
+.uc-agent-diagram { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 12px; padding: 16px; border: 1px solid var(--ee-border); border-radius: 12px; background: var(--ee-surface); color: var(--ee-text); overflow: visible; }
 .uc-agent-diagram-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .uc-agent-diagram-header strong { font-size: 14px; }
 .uc-agent-diagram-header p { margin: 5px 0 0; color: var(--ee-muted); font-size: 11px; line-height: 18px; }
 .uc-agent-diagram-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .uc-agent-count { color: var(--ee-primary); font-size: 11px; white-space: nowrap; }
-.uc-agent-diagram-status { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--ee-border); border-radius: 8px; background: var(--ee-canvas); color: var(--ee-muted); font-size: 12px; line-height: 18px; }
-.uc-agent-diagram-status.is-succeeded { color: var(--ee-text); }
-.uc-agent-diagram-status.is-error { border-color: color-mix(in srgb, var(--ee-danger) 50%, var(--ee-border)); color: var(--ee-danger); }
-.uc-agent-diagram-status.is-empty { color: var(--ee-muted); }
-.uc-agent-diagram-status code { flex-shrink: 0; max-width: 100%; overflow-wrap: anywhere; color: var(--ee-muted); font-size: 10px; }
+.uc-agent-diagram-feedback { margin: 0; color: var(--ee-muted); font-size: 12px; line-height: 18px; }
+.uc-agent-diagram-feedback[role="alert"] { color: var(--ee-danger); }
 .uc-agent-code { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--ee-border); border-radius: 8px; overflow: hidden; background: var(--ee-canvas); }
 .uc-agent-code header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border-bottom: 1px solid var(--ee-border); }
 .uc-agent-code header strong { font-size: 12px; }
 .uc-agent-code header small { color: var(--ee-muted); font-size: 10px; }
 .uc-agent-code pre { min-height: 180px; max-height: 540px; margin: 0; padding: 14px; overflow: auto; color: var(--ee-text); font: 11px/1.65 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
 .uc-agent-no-code { display: grid; place-items: center; min-height: 180px; border: 1px dashed var(--ee-border); border-radius: 8px; color: var(--ee-muted); font-size: 12px; text-align: center; }
-@media (max-width: 860px) { .uc-agent-diagram-status { flex-direction: column; } .uc-agent-code header { align-items: flex-start; flex-direction: column; gap: 4px; } }
+@media (max-width: 860px) { .uc-agent-code header { align-items: flex-start; flex-direction: column; gap: 4px; } }
 
-.uc-mermaid-render { min-height:160px;overflow:auto;background:var(--ee-surface);border:1px solid var(--ee-border);border-radius:var(--ee-radius-sm);padding:16px; }
-.uc-mermaid-render img { display:block;width:100%;min-width:420px;height:auto; }
+.uc-mermaid-render { min-height:160px;overflow:visible;background:var(--ee-surface);border:1px solid var(--ee-border);border-radius:var(--ee-radius-sm);padding:16px; }
+.uc-mermaid-render img { display:block;width:100%;min-width:0;max-width:100%;height:auto; }
 .uc-agent-code summary { cursor:pointer;padding:10px;font-weight:600; }
 .uc-agent-code pre { white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto; }
+
+/* Confirmed-only graph and full UC inventory share one scrolling workspace. */
+.uc-review-layout { overflow-y: auto; overscroll-behavior: contain; }
+.uc-review-layout > .uc-agent-diagram, .uc-review-layout > .uc-diagram-scroll { flex: 0 0 auto; min-height: 260px; max-height: none; overflow: visible; }
+.uc-review-layout > .panorama-empty { flex: 0 0 auto; min-height: 220px; }
+.uc-review-card { flex-shrink: 0; min-width: 0; padding: 16px; border: 1px solid var(--ee-border); border-radius: 12px; background: var(--ee-surface); color: var(--ee-text); }
+.uc-review-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+.uc-review-header h2 { font-size: 14px; margin: 0; }
+.uc-review-header p, .uc-review-help { font-size: 11px; color: var(--ee-muted); margin: 6px 0 0; line-height: 18px; }
+.uc-review-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.uc-review-actions [aria-checked="true"] { color: var(--ee-primary); background: var(--ee-primary-soft); border-color: var(--ee-primary); }
+.uc-review-scroll { max-width: 100%; overflow: auto; margin-top: 12px; }
+.uc-review-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+.uc-review-table th, .uc-review-table td { border-bottom: 1px solid var(--ee-border); padding: 10px 12px; vertical-align: top; line-height: 20px; }
+.uc-review-table th { background: var(--ee-canvas); font-weight: 600; white-space: nowrap; }
+.uc-review-table td:last-child { min-width: 80px; }
+.uc-review-table td small { display: block; font-size: 10px; line-height: 16px; color: var(--ee-muted); }
+.uc-review-select { width: 58px; white-space: nowrap; }
+.uc-review-select label { display: flex; gap: 5px; align-items: center; }
+.uc-review-table input { accent-color: var(--ee-primary); }
+.uc-review-name { padding: 0; border: 0; background: none; color: inherit; text-align: left; font: inherit; overflow-wrap: anywhere; cursor: pointer; }
+.uc-review-name:hover { color: var(--ee-primary); }
+.uc-review-name:disabled { cursor: default; }
+.uc-review-pending { color: var(--ee-warning); white-space: nowrap; }
+.uc-review-accepted { color: var(--ee-success); white-space: nowrap; }
+.uc-review-card [role="alert"] { color: var(--ee-danger); font-size: 12px; }
+.uc-review-card [role="status"] { color: var(--ee-success); font-size: 12px; }
+
+/* Shared UC / FR / allocation toolbar. One title row, no legacy badges. */
+.panorama-toolbar-unified { min-height: 72px; padding: 16px 24px; gap: 16px; border-bottom: 1px solid var(--ee-border); }
+.panorama-heading { display: flex; align-items: baseline; gap: 16px; min-width: 0; }
+.panorama-heading h1 { flex-shrink: 0; white-space: nowrap; }
+.panorama-heading p { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fr-review-body { overflow-y: auto; }
+.uc-review-layout > .uc-agent-diagram { height: auto; flex: 0 0 auto; }
+.uc-review-layout .uc-mermaid-render { flex: 0 0 auto; max-height: none; }
+@media (max-width: 1100px) { .panorama-toolbar-unified { flex-wrap: wrap; gap: 10px; padding: 12px 16px; } .panorama-heading { flex: 1 1 auto; gap: 12px; } }
+
+/* Shared allocation review; subsystem views filter the same editable rows. */
+.allocation-review-layout { overflow-y: auto; }
+.allocation-review-layout > .uc-agent-diagram { flex: 0 0 auto; min-height: 260px; }
+.allocation-review-table { min-width: 960px; }
+.allocation-review-table .allocation-review-number { width: 108px; min-width: 108px; }
+.allocation-review-table .allocation-review-source { width: 180px; min-width: 180px; }
+.allocation-review-table .allocation-review-description { width: 30.6%; }
+.allocation-review-target { min-width: 160px; max-width: 210px; }
+.allocation-review-operations { min-width: 108px; }
+.allocation-review-operations button { width: 100%; margin-bottom: 6px; white-space: nowrap; }
+.allocation-review-table td { overflow-wrap: anywhere; }
+
+/* Consistent inert thumbnails; detailed inspection is in an accessible dialog. */
+.uc-mermaid-render .diagram-thumbnail { display: flex; flex-direction: column; width: 100%; height: 320px; padding: 14px; margin: 8px 0; align-items: center; gap: 10px; border: 1px solid var(--ee-border); border-radius: 12px; background: var(--ee-surface); cursor: zoom-in; overflow: hidden; }
+.uc-mermaid-render .diagram-thumbnail img { display: block; flex: 1; min-height: 0; width: 100%; height: 100%; max-width: 100%; object-fit: contain; }
+.diagram-thumbnail > span { flex: 0 0 auto; color: var(--ee-muted); font-size: 12px; }
+.diagram-thumbnail:focus-visible { outline: 2px solid var(--ee-primary); outline-offset: 2px; }
+.work-dialog.diagram-preview-dialog { width: min(1120px, calc(100vw - 48px)); max-width: calc(100vw - 32px); padding: 20px; }
+.diagram-preview-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.diagram-preview-toolbar output { min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+.diagram-preview-viewport { height: min(65vh, 760px); min-height: 200px; overflow: auto; border: 1px solid var(--ee-border); border-radius: 8px; background: var(--ee-surface); }
+.diagram-preview-canvas { margin-inline: auto; }
+.diagram-preview-canvas img { display: block; width: 100%; height: 100%; max-width: none; object-fit: contain; }
+
+/* Mermaid default/neutral ink stays legible inside either application theme. */
+.diagram-thumbnail img, .diagram-preview-viewport { background: var(--ee-diagram-paper); }

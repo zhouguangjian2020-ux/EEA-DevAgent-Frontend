@@ -1,4 +1,5 @@
 "use client";
+import { LoadingIllustration } from "@/components/feedback/loading";
 import { useI18n } from "@/features/i18n/provider";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,6 +28,8 @@ export default function DrivingLoginExperience() {
   const [theme, setTheme] = useTheme();
   const [view, setView] = useState<View>("home");
   const [homeSettled, setHomeSettled] = useState(true);
+  const [sceneReady, setSceneReady] = useState(false);
+  const onInitialized = useCallback(() => setSceneReady(true), []);
   const reducedMotion = useReducedMotion();
   const [slogan, setSlogan] = useState(0);
   const enter = useRef<HTMLButtonElement>(null);
@@ -38,12 +41,12 @@ export default function DrivingLoginExperience() {
   }, [theme]);
 
   useEffect(() => {
-    if (reducedMotion || view !== "home" || !homeSettled) return;
+    if (!sceneReady || reducedMotion || view !== "home" || !homeSettled) return;
     const timer = window.setInterval(() => {
       if (!document.hidden) setSlogan((current) => (current + 1) % slogans.length);
     }, 4800);
     return () => window.clearInterval(timer);
-  }, [homeSettled, reducedMotion, view]);
+  }, [sceneReady, homeSettled, reducedMotion, view]);
 
   const onViewSettled = useCallback((settled: View) => {
     if (settled !== "home") return;
@@ -55,7 +58,7 @@ export default function DrivingLoginExperience() {
     setHomeSettled(false);
     setView("home");
   };
-  const homeVisible = view === "home" && homeSettled;
+  const homeVisible = sceneReady && view === "home" && homeSettled;
   useEffect(() => {
     if (!homeVisible || !returningHome.current) return;
     returningHome.current = false;
@@ -63,9 +66,10 @@ export default function DrivingLoginExperience() {
   }, [homeVisible]);
 
   return (
-    <main className="driving-login-experience" data-theme={theme} data-view={view} data-reduced-motion={reducedMotion} data-home-settled={homeSettled}>
-      <CarStage theme={theme} view={view} paused={false} reducedMotion={reducedMotion} onViewSettled={onViewSettled} />
-      <header className="topbar">
+    <main className="driving-login-experience" data-theme={theme} data-view={view} data-reduced-motion={reducedMotion} data-home-settled={homeSettled} data-scene-ready={sceneReady} aria-busy={!sceneReady}>
+      <CarStage theme={theme} view={view} paused={false} reducedMotion={reducedMotion} onViewSettled={onViewSettled} onInitialized={onInitialized} />
+      {!sceneReady && <div className="login-loading-gate"><LoadingIllustration kind="orbit" label={tr("正在准备下一程")} /></div>}
+      <header className="topbar" inert={!sceneReady}>
         <BrandLockup />
         <div className="top-controls">
           <button type="button" className="theme-toggle" role="switch" aria-checked={theme === "dark"} aria-label={theme === "light" ? tr("切换为深色模式") : tr("切换为明亮模式")} onClick={() => setTheme(theme === "light" ? "dark" : "light")}><span className="theme-thumb" /><span aria-hidden="true">☼</span><span aria-hidden="true">☾</span></button>
@@ -82,10 +86,10 @@ export default function DrivingLoginExperience() {
         <div className="slogan-pagination" aria-label={tr("切换标语")}>{slogans.map((_, index) => <button type="button" key={index} aria-label={tr("第 ") + (index + 1) + tr(" 条标语")} aria-pressed={slogan === index} onClick={() => setSlogan(index)} className={index === slogan ? "active" : ""} />)}</div>
       </section>
 
-      <DrivingLoginPanel active={view === "login"} onBack={back} />
+      <DrivingLoginPanel active={sceneReady && view === "login"} onBack={back} />
       <div className={"entry-action" + (!homeVisible ? " is-away" : "")} aria-hidden={!homeVisible} inert={!homeVisible}><button type="button" ref={enter} className="primary-button enter-button" onClick={() => setView("login")}>{tr("前往工作区 ")}<span aria-hidden="true">→</span></button></div>
 
-      <footer className="bottom-bar"><span className={"entry-hint home-footer-copy" + (!homeVisible ? " is-away" : "")} aria-hidden={!homeVisible}>{tr("让下一程，从这里开始")}</span><span className="footer-caption">BUILT FOR WHAT&apos;S NEXT.</span></footer>
+      <footer className="bottom-bar" inert={!sceneReady}><span className="entry-hint home-footer-copy">{tr("让下一程，从这里开始")}</span><span className="footer-caption">BUILT FOR WHAT&apos;S NEXT.</span></footer>
       <span className="sr-only">3D model: Car Concept. <a href="/MODEL-LICENSE.txt" target="_blank" rel="noreferrer">Model source and license</a></span>
     </main>
   );

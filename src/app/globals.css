@@ -2,6 +2,7 @@
 
 :root {
   --ee-surface: #ffffff;
+  --ee-diagram-paper: #ffffff;
   --ee-canvas: #f7f8fa;
   --ee-sidebar: #fbfcfd;
   --ee-text: #20242b;
@@ -550,7 +551,8 @@ body,
 .object-layout .tree-object-row input { margin-top: 9px; }
 .object-layout .object-preview { align-items: flex-start; padding-top: 6px; padding-bottom: 6px; }
 .object-layout .object-preview .tree-icon { margin-top: 1px; }
-.object-layout .tree-object-status { margin-left: auto; font-size: 9px; padding-top: 2px; }
+.object-layout .tree-object-status { display: inline-block; margin-right: 5px; font-size: 9px; white-space: nowrap; vertical-align: baseline; }
+.object-layout .object-preview .tree-uc-number { display: inline; margin-right: 4px; }
 .object-layout .sidebar-view { flex: 1; min-height: 0; }
 .object-panel .prd-workspace.with-document, .uc-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 320px; height: 100%; min-height: 0; min-width: 0; }
 .object-panel .prd-workspace.with-document { grid-template-columns: minmax(0, 1fr) 412px; }
@@ -839,7 +841,8 @@ body,
 .brand-product-logo { width: 36px; height: 36px; object-fit: contain; }
 .brand-product-name { font-size: 19px; font-weight: 700; white-space: nowrap; color: var(--ee-text); }
 .brand-separator { height: 24px; width: 1px; background: var(--ee-border); margin: 0 4px; }
-.brand-company-logo { width: 74px; height: 38px; object-fit: contain; }
+/* Requested company-only vertical compression; preserve horizontal size at every breakpoint. */
+.brand-company-logo { width: 74px; height: auto; flex: 0 0 auto; object-fit: contain; transform: scaleY(0.7); transform-origin: center; }
 .app-shell > .topbar { padding-right: 16px; }
 .app-shell > .topbar .breadcrumb { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-anchor { margin-left: auto; flex-shrink: 0; }
@@ -849,14 +852,44 @@ body,
 .folder-chevron-icon.is-expanded { transform: rotate(90deg); }
 .driving-login-experience .brand-lockup { position: relative; z-index: 2; }
 .driving-login-experience .bottom-bar { justify-content: space-between; }
-.driving-login-experience .home-footer-copy { margin: 0; transition: opacity 500ms ease, transform 500ms ease; }
-.driving-login-experience .home-footer-copy.is-away { opacity: 0; transform: translateY(8px); pointer-events: none; }
+.driving-login-experience .home-footer-copy { margin: 0; font-size: clamp(14px, 1.2vw, 18px); }
+.driving-login-experience .bottom-bar { position: fixed; }
+.driving-login-experience .footer-caption { font-size: clamp(12px, 1vw, 15px); }
+.driving-login-experience .login-submit { margin-top: 24px; }
 @media (prefers-reduced-motion: reduce) { .folder-chevron-icon, .driving-login-experience .home-footer-copy { transition: none; } }
-@media (max-width: 760px) { .brand-product-logo { width: 30px; height: 30px; } .brand-product-name { font-size: 16px; } .brand-company-logo { width: 59px; height: 31px; } .brand-lockup { gap: 6px; } }
+@media (max-width: 760px) { .brand-product-logo { width: 30px; height: 30px; } .brand-product-name { font-size: 16px; } .brand-company-logo { width: 59px; height: auto; } .brand-lockup { gap: 6px; } }
 
 .language-options { display: grid; gap: 4px; padding: 4px 10px 8px 20px; }
-.language-options button { border: 0; border-radius: 6px; background: transparent; color: var(--ee-text); padding: 8px 10px; text-align: left; }
+.language-options button { font: inherit; font-size: 12px; line-height: 1.4; min-height: 32px; border: 0; border-radius: 6px; background: transparent; color: var(--ee-text); padding: 6px 10px; text-align: left; }
 .language-options button:hover, .language-options button[aria-pressed="true"] { background: var(--ee-primary-soft); color: var(--ee-primary); }
 
 /* Durable task duration: plain metadata at the top-left of Agent answers. */
 .conversation-message.assistant .agent-task-duration { display: block; margin: 0 0 6px; color: var(--ee-muted); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; text-align: left; }
+
+/* Keep native scrolling, reveal the thumb without changing its geometry. */
+.app-shell * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.app-shell *:hover, .app-shell *:focus-visible, .app-shell *:has(> :focus-visible) {
+  scrollbar-color: var(--ee-muted) transparent;
+}
+.app-shell *::-webkit-scrollbar { width: 8px; height: 8px; }
+.app-shell *::-webkit-scrollbar-track, .app-shell *::-webkit-scrollbar-corner { background: transparent; }
+.app-shell *::-webkit-scrollbar-thumb { background: transparent; border-radius: 8px; }
+.app-shell *:hover::-webkit-scrollbar-thumb, .app-shell *:focus-visible::-webkit-scrollbar-thumb {
+  background: var(--ee-muted);
+}
+.workspace-tree-scroll { scrollbar-gutter: stable; }
+.app-shell table th, .app-shell table td { vertical-align: middle; }
+/* Account settings belong above local conversation controls, below dialogs. */
+.topbar { position: relative; z-index: 30; }
+@media (hover: none), (forced-colors: active) {
+  .app-shell * { scrollbar-color: auto; }
+}
+
+/* Keep the WebGL canvas measurable while the initial star-orbit gate is visible. */
+.driving-login-experience[data-scene-ready="false"] > :not(.login-loading-gate):not(.car-stage) { visibility: hidden; pointer-events: none; }
+.driving-login-experience[data-scene-ready="false"] > .car-stage { opacity: 0; }
+.login-loading-gate { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--ee-canvas); }
+.login-loading-gate .loading-illustration { border: 0; background: transparent; }
+.send-button { display: inline-flex; align-items: center; justify-content: center; }
+.send-button svg { flex-shrink: 0; }
+.chat-turn-error { color: var(--ee-danger); }

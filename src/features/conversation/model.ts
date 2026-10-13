@@ -114,7 +114,7 @@ export function reduceProjectConversation(p: ProjectWorks, a: ConversationAction
       if (c.operation || !a.objects.length) return p;
       const attachments = new Map(c.attachments.map(o => [o.id, o]));
       for (const o of a.objects) attachments.set(o.id, { ...o });
-      return withConversation(p, { ...c, mode: null, featureId: null, attachments: [...attachments.values()], error: null, notice: "对象已加入项目对话；快捷生成已取消。未发送，也未切换标签。" });
+      return withConversation(p, { ...c, mode: null, featureId: null, attachments: [...attachments.values()], error: null, notice: "" });
     }
     case "remove-attachment": return c.operation ? p : withConversation(p, { ...c, attachments: c.attachments.filter(o => o.id !== a.objectId) });
     case "notice": return withConversation(p, { ...c, notice: a.message });
@@ -123,7 +123,7 @@ export function reduceProjectConversation(p: ProjectWorks, a: ConversationAction
       const message = validateConversationRequest(p, a.request);
       if (message) return withConversation(p, { ...c, notice: message });
       const r = a.request;
-      return withConversation(p, { ...c, operation: r, expansionPreview: null, error: null, notice: "", prompt: r.kind === "expand" || a.retry && c.prompt.trim() !== r.prompt ? c.prompt : "", prdNameHint: r.kind === "expand" || a.retry && c.prompt.trim() !== r.prompt ? c.prdNameHint : null, messages: r.kind === "expand" || a.retry ? c.messages : [...c.messages, {
+      return withConversation(p, { ...c, operation: r, expansionPreview: null, error: null, notice: "", attachments: r.kind === "send" && !a.retry ? c.attachments.filter(item => !r.references.some(ref => ref.id === item.id)) : c.attachments, prompt: r.kind === "expand" || a.retry && c.prompt.trim() !== r.prompt ? c.prompt : "", prdNameHint: r.kind === "expand" || a.retry && c.prompt.trim() !== r.prompt ? c.prdNameHint : null, messages: r.kind === "expand" || a.retry ? c.messages : [...c.messages, {
         id: `${r.id}-user`, role: "user", content: r.prompt,
         references: r.references.map(o => ({ id: o.id, name: `${o.functionName} / ${o.name}` })),
       }] });
@@ -143,7 +143,7 @@ export function reduceProjectConversation(p: ProjectWorks, a: ConversationAction
       if (conflict) return failed(p, r, conflict);
       if (r.kind === "expand") {
         if (!a.response.expandedPrompt?.trim()) return failed(p, r, "扩写结果为空，原输入已保留。");
-        return withConversation(p, { ...c, operation: null, expansionPreview: null, error: null, prompt: a.response.expandedPrompt, prdNameHint: r.mode === "PRD" ? r.featureName : null, notice: a.response.expansionSource === "agent" ? "扩写完成，已回填输入框，未自动发送。" : "提示词已模拟扩写，仅回填输入框，尚未提交。" });
+        return withConversation(p, { ...c, operation: null, expansionPreview: null, error: null, prompt: a.response.expandedPrompt, prdNameHint: r.mode === "PRD" ? r.featureName : null, notice: "" });
       }
       const work = a.response.work;
       if (r.mode && (!work || work.kind !== r.mode || work.featureId !== r.featureId || work.featureName !== r.featureName || !('document' in work.session) || !work.session.document)) return failed(p, r, "生成结果与本次功能信息不一致，没有创建对象。");

@@ -1,0 +1,25 @@
+.conversation-message.assistant { font-size: 13px; line-height: 1.85; }
+.conversation-message .agent-markdown { min-width: 0; font-size: 13px; line-height: 1.85; color: var(--ee-text); overflow-wrap: anywhere; }
+.conversation-message .agent-markdown :is(p, li, blockquote, td, th) { font-size: inherit; line-height: inherit; }
+.conversation-message .agent-markdown p { white-space: normal; margin: 0 0 .8em; }
+.conversation-message .agent-markdown :is(ul, ol) { padding-left: 1.5em; margin: .6em 0 .9em; list-style-position: outside; }
+.conversation-message .agent-markdown ul { list-style-type: disc; }
+.conversation-message .agent-markdown ol { list-style-type: decimal; }
+.conversation-message .agent-markdown li { margin: .3em 0; padding-left: .15em; }
+.conversation-message .agent-markdown li > p { margin: .2em 0; }
+.conversation-message .agent-markdown li > :is(ul, ol) { margin-block: .25em; }
+.conversation-message .agent-markdown :is(h1, h2, h3, h4, h5, h6) { font-size: 14px; line-height: 1.6; font-weight: 600; margin: 1em 0 .5em; }
+.conversation-message .agent-markdown strong { font-weight: 600; }
+.conversation-message .agent-markdown > :first-child { margin-top: 0; }
+.conversation-message .agent-markdown > :last-child { margin-bottom: 0; }
+.conversation-message .agent-markdown blockquote { margin: .8em 0; padding: .3em 1em; border-left: 3px solid var(--ee-border); color: var(--ee-muted); }
+.conversation-message .agent-markdown blockquote > p:last-child { margin-bottom: 0; }
+.conversation-message .agent-markdown a { color: var(--ee-primary); text-decoration: underline; text-underline-offset: 3px; }
+.conversation-message .agent-markdown code { font-size: .95em; padding: .1em .3em; background: var(--ee-canvas); border-radius: 4px; }
+.conversation-message .agent-markdown pre { max-width: 100%; overflow-x: auto; margin: .8em 0; padding: 12px; background: var(--ee-canvas); border: 1px solid var(--ee-border); border-radius: 8px; white-space: pre; }
+.conversation-message .agent-markdown pre > code { padding: 0; background: none; }
+.conversation-message .agent-markdown table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: .8em 0; }
+.conversation-message .agent-markdown :is(th, td) { padding: 7px 10px; border: 1px solid var(--ee-border); text-align: left; vertical-align: middle; }
+.conversation-message .agent-markdown th { background: var(--ee-canvas); font-weight: 600; }
+.conversation-message .agent-markdown img { max-width: 100%; height: auto; }
+.conversation-message .agent-markdown hr { border: 0; border-top: 1px solid var(--ee-border); margin: 1em 0; }

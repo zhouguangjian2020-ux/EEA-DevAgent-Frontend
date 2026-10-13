@@ -54,7 +54,13 @@
     "tmp/prd-creation-s3-next/types/**/*.ts",
     "tmp/prd-creation-s3-next/dev/types/**/*.ts",
     "tmp/prd-creation-s3-build/types/**/*.ts",
-    "tmp/prd-creation-s3-build/dev/types/**/*.ts"
+    "tmp/prd-creation-s3-build/dev/types/**/*.ts",
+    "tmp/allocation-directory-20261010/types/**/*.ts",
+    "tmp/allocation-directory-20261010/dev/types/**/*.ts",
+    "tmp/subsystem-names-20261010/types/**/*.ts",
+    "tmp/subsystem-names-20261010/dev/types/**/*.ts",
+    "tmp/local-acceptance-20261012/types/**/*.ts",
+    "tmp/local-acceptance-20261012/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

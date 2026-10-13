@@ -1,0 +1,46 @@
+/* PRD reading layout: presentation only, original Markdown remains unchanged. */
+.prd-reading-surface .prd-document .prd-paper {
+  padding: clamp(18px, 2.5vw, 32px);
+  background: var(--ee-canvas);
+  scroll-behavior: smooth;
+}
+.prd-reading-surface .prd-paper > article {
+  width: 100%; max-width: 860px; margin: 0 auto; padding: clamp(22px, 3vw, 42px);
+  border: 1px solid var(--ee-border); border-radius: 14px; background: var(--ee-surface); box-shadow: var(--ee-card-shadow);
+}
+.prd-reading-surface .prd-markdown { min-width: 0; color: var(--ee-reading-text); font-size: 14px; line-height: 1.9; overflow-wrap: anywhere; }
+.prd-reading-surface .prd-markdown :is(h1,h2,h3,h4,h5,h6) { color: var(--ee-text); font-weight: 650; line-height: 1.45; letter-spacing: -.02em; scroll-margin-top: 24px; }
+.prd-reading-surface .prd-markdown h1 { font-size: clamp(25px, 2.3vw, 31px); font-weight: 750; margin: 0 0 26px; padding-bottom: 20px; border-bottom: 1px solid var(--ee-border); }
+.prd-reading-surface .prd-markdown h2 { font-size: 21px; margin: 34px 0 16px; padding-bottom: 9px; border-bottom: 1px solid var(--ee-border); }
+.prd-reading-surface .prd-markdown h3 { font-size: 17px; margin: 24px 0 10px; }
+.prd-reading-surface .prd-markdown :is(h4,h5,h6) { font-size: 15px; margin: 20px 0 8px; }
+.prd-reading-surface .prd-markdown > :first-child { margin-top: 0; }
+.prd-reading-surface .prd-markdown > :last-child { margin-bottom: 0; }
+.prd-reading-surface .prd-markdown :is(p,ul,ol) { margin: 0 0 16px; font-size: 14px; line-height: 1.9; color: inherit; white-space: normal; }
+.prd-reading-surface .prd-markdown :is(ul,ol) { padding-left: 24px; }
+.prd-reading-surface .prd-markdown ul { list-style: disc; }
+.prd-reading-surface .prd-markdown ol { list-style: decimal; }
+.prd-reading-surface .prd-markdown li { padding-left: 3px; margin: 6px 0; }
+.prd-reading-surface .prd-markdown li::marker { color: var(--ee-muted); }
+.prd-reading-surface .prd-markdown li > :is(ul,ol,p) { margin-top: 6px; margin-bottom: 6px; }
+.prd-reading-surface .prd-markdown .contains-task-list { list-style: none; padding-left: 0; }
+.prd-reading-surface .prd-markdown .task-list-item input { accent-color: var(--ee-primary); margin-right: 8px; }
+.prd-reading-surface .prd-markdown blockquote { margin: 20px 0; padding: 14px 18px; border-left: 3px solid var(--ee-primary); border-radius: 0 8px 8px 0; background: var(--ee-primary-soft); color: var(--ee-reading-text); }
+.prd-reading-surface .prd-markdown blockquote > :last-child { margin-bottom: 0; }
+.prd-reading-surface .prd-markdown strong { color: var(--ee-text); font-weight: 650; }
+.prd-reading-surface .prd-markdown a { color: var(--ee-primary); text-underline-offset: 3px; text-decoration: underline; }
+.prd-reading-surface .prd-markdown hr { height: 0; border: 0; border-top: 1px solid var(--ee-border); margin: 28px 0; }
+.prd-reading-surface .prd-markdown code { border-radius: 4px; padding: 2px 5px; background: var(--ee-canvas); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; }
+.prd-reading-surface .prd-markdown pre { max-width: 100%; overflow: auto; margin: 20px 0; padding: 18px; border: 1px solid var(--ee-border); border-radius: 9px; background: var(--ee-canvas); white-space: pre; line-height: 1.7; }
+.prd-reading-surface .prd-markdown pre code { padding: 0; border-radius: 0; background: transparent; white-space: pre; }
+.prd-reading-surface .prd-table-scroll { max-width: 100%; overflow: auto; margin: 20px 0; border: 1px solid var(--ee-border); border-radius: 9px; scrollbar-width: thin; }
+.prd-reading-surface .prd-table-scroll:focus-visible { outline: 2px solid var(--ee-primary); outline-offset: 3px; }
+.prd-reading-surface .prd-markdown table { width: 100%; min-width: 420px; margin: 0; border-collapse: separate; border-spacing: 0; font-size: 13px; line-height: 1.7; }
+.prd-reading-surface .prd-markdown :is(th,td) { border: 0; border-bottom: 1px solid var(--ee-border); padding: 11px 14px; text-align: left; vertical-align: middle; }
+.prd-reading-surface .prd-markdown th { color: var(--ee-text); background: var(--ee-canvas); font-weight: 650; white-space: nowrap; }
+.prd-reading-surface .prd-markdown tbody tr:nth-child(even) { background: color-mix(in srgb, var(--ee-canvas) 45%, var(--ee-surface)); }
+.prd-reading-surface .prd-markdown tbody tr:last-child td { border-bottom: 0; }
+.prd-reading-surface .prd-markdown td :is(p,ul,ol) { font-size: inherit; margin-bottom: 4px; }
+.prd-reading-surface .markdown-edit-preview { padding: 24px; margin-top: 18px; border: 1px solid var(--ee-border); border-radius: 12px; background: var(--ee-surface); }
+@media (prefers-reduced-motion: reduce) { .prd-reading-surface .prd-document .prd-paper { scroll-behavior: auto; } }
+@media (max-width: 1000px) { .prd-reading-surface .prd-document .prd-paper { padding: 16px; } .prd-reading-surface .prd-paper > article { padding: 22px; } }
