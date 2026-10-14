@@ -6,7 +6,7 @@ import { ThemeTransition, type Theme, type LightPhase } from './theme-transition
 
 export type View = 'home' | 'login';
 export interface SceneOptions { theme: Theme; view: View; reducedMotion: boolean; paused: boolean; onReady: () => void; onViewSettled: (view: View) => void; onProgress: (value: number) => void; onError: (message: string) => void; onPhase: (phase: LightPhase, lamps: number) => void; }
-export interface SceneController { setTheme: (theme: Theme) => void; setView: (view: View) => void; setPaused: (paused: boolean) => void; setReducedMotion: (reduced: boolean) => void; dispose: () => void; }
+export interface SceneController { setTheme: (theme: Theme) => void; setStoryProgress: (progress: number) => void; setView: (view: View) => void; setPaused: (paused: boolean) => void; setReducedMotion: (reduced: boolean) => void; dispose: () => void; }
 
 function radialTexture() {
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 128;
@@ -17,7 +17,7 @@ function radialTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
-function ribbonGeometry(curve: THREE.CatmullRomCurve3, width: number) {
+function ribbonGeometry(curve: THREE.Curve<THREE.Vector3>, width: number) {
   const samples = 320, vertices: number[] = [], uvs: number[] = [], indices: number[] = [];
   for (let i=0; i<=samples; i++) {
     const t=i/samples, point=curve.getPointAt(t), tangent=curve.getTangentAt(t);
@@ -31,6 +31,8 @@ function ribbonGeometry(curve: THREE.CatmullRomCurve3, width: number) {
 
 export function createDrivingScene(container: HTMLDivElement, options: SceneOptions): SceneController {
   let disposed=false, paused=options.paused, reduced=options.reducedMotion;
+  // Approved production composition: left-front wheel close-up.
+  const frontWheelView=true;
   let modelPrepared=false, readyNotified=false;
   const abort = new AbortController();
   const scene = new THREE.Scene();
@@ -42,8 +44,7 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
   renderer.shadowMap.enabled = true; renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.08;
   renderer.outputColorSpace=THREE.SRGBColorSpace;
-  renderer.domElement.setAttribute('aria-label', '同一辆 3D 概念车，流动轨道与延迟灯光');
-  renderer.domElement.setAttribute('role', 'img'); container.appendChild(renderer.domElement);
+  renderer.domElement.setAttribute('aria-hidden', 'true'); container.appendChild(renderer.domElement);
   const environment = new RoomEnvironment();
   const pmrem = new THREE.PMREMGenerator(renderer);
   const environmentTarget = pmrem.fromScene(environment,.025);
@@ -61,7 +62,7 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
   const carGroup=new THREE.Group(); carGroup.name='PersistentCar'; scene.add(carGroup);
   const frontMaterials: THREE.MeshStandardMaterial[] = [], rearMaterials: THREE.MeshStandardMaterial[] = [];
   const wheels: THREE.Object3D[] = [];
-  const wheelAxis=new THREE.Vector3(1,0,0);
+
   const glowTexture=radialTexture();
   const contactShadowMaterial=new THREE.MeshBasicMaterial({color:'#172031',map:glowTexture,transparent:true,opacity:.3,depthWrite:false,toneMapped:false});
   const contactShadow=new THREE.Mesh(new THREE.PlaneGeometry(3.8,6.5),contactShadowMaterial);contactShadow.rotation.x=-Math.PI/2;contactShadow.position.set(0,.008,0);scene.add(contactShadow);
@@ -71,15 +72,109 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
   const stripMaterial=new THREE.MeshBasicMaterial({color:'#3f9fff',transparent:true,opacity:0,depthWrite:false,toneMapped:false});
   for (const x of [-.87,.87]) { const strip=new THREE.Mesh(new THREE.BoxGeometry(.024,.02,2.5),stripMaterial); strip.position.set(x,.12,-.04); carGroup.add(strip); }
   const headSpots: THREE.SpotLight[]=[];
-  const pools: THREE.MeshBasicMaterial[]=[];
-  for (const x of [-.7,.7]) {
-    const head=new THREE.SpotLight('#d7e9ff',0,11,.33,.9,1.4); head.position.set(x,.55,2.03); head.target.position.set(x*1.3,.02,7.2); carGroup.add(head,head.target); headSpots.push(head);
-    const mat=new THREE.MeshBasicMaterial({color:'#c2deff',map:glowTexture,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
-    const pool=new THREE.Mesh(new THREE.PlaneGeometry(1.8,5.2),mat); pool.rotation.x=-Math.PI/2; pool.position.set(x,.019,4.35); carGroup.add(pool); pools.push(mat);
+  const headBeams: THREE.Mesh<THREE.CylinderGeometry,THREE.ShaderMaterial>[]=[];
+  const headHalos: THREE.Mesh<THREE.PlaneGeometry,THREE.MeshBasicMaterial>[]=[];
+  const headOrigins=[new THREE.Vector3(),new THREE.Vector3()];
+  const headDirections=[new THREE.Vector3(),new THREE.Vector3()];
+  const headlightStrength={value:0};
+  // Project the same light cones onto the ground, using the actual lamp origins.
+  const headGroundMaterial=new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+    uniforms:{uLamp:headlightStrength,uOrigins:{value:headOrigins},uDirections:{value:headDirections}},
+    vertexShader:
+      'varying vec3 vWorldPosition;void main(){vec4 world=modelMatrix*vec4(position,1.);vWorldPosition=world.xyz;gl_Position=projectionMatrix*viewMatrix*world;}',
+    fragmentShader:
+      'varying vec3 vWorldPosition;uniform float uLamp;uniform vec3 uOrigins[2];uniform vec3 uDirections[2];void main(){float light=0.;for(int i=0;i<2;i++){vec3 ray=vWorldPosition-uOrigins[i];float d=max(length(ray),.001);float cone=smoothstep(cos(.20),cos(.12),dot(ray/d,uDirections[i]));light+=cone*(1.-smoothstep(4.,10.,d))*3./(1.+.6*d*d);}gl_FragColor=vec4(.66,.82,1.,min(light,.38)*uLamp);}'
+  });
+  const headGround=new THREE.Mesh(new THREE.PlaneGeometry(40,40),headGroundMaterial);
+  headGround.name='Headlight ground projection';headGround.rotation.x=-Math.PI/2;headGround.position.set(0,.020,4);carGroup.add(headGround);
+
+  function attachHeadlights(car:THREE.Object3D){
+    const lampNode=car.getObjectByName('BodyHeadlights');
+    if(!(lampNode instanceof THREE.Mesh))return;
+    const positions=lampNode.geometry.getAttribute('position'),indices=lampNode.geometry.index;
+    const bounds=[new THREE.Box3(),new THREE.Box3()];
+    const lampSurfaces:THREE.Triangle[][]=[[],[]];
+    for(let i=0;i<(indices?.count??positions.count);i+=3){
+      const vertices=[0,1,2].map(offset=>{
+        const point=new THREE.Vector3().fromBufferAttribute(positions,indices?indices.getX(i+offset):i+offset);
+        return carGroup.worldToLocal(point.applyMatrix4(lampNode.matrixWorld));
+      });
+      const triangle=new THREE.Triangle(vertices[0],vertices[1],vertices[2]);
+      const side=triangle.getMidpoint(new THREE.Vector3()).x<0?0:1;
+      if(triangle.getArea()<=1e-10)continue;
+      lampSurfaces[side].push(triangle);vertices.forEach(vertex=>bounds[side].expandByPoint(vertex));
+    }
+    if(lampSurfaces.some(triangles=>triangles.length===0))return;
+    bounds.forEach((box,i)=>{
+      // The lamps slope back along the body: a bounding-box front plane floats
+      // in front of the lens. Use its area-weighted centre, projected onto the lens.
+      const centroid=new THREE.Vector3(),closest=new THREE.Vector3();let totalArea=0;
+      for(const triangle of lampSurfaces[i]){
+        const area=triangle.getArea();totalArea+=area;
+        centroid.addScaledVector(triangle.getMidpoint(new THREE.Vector3()),area);
+      }
+      centroid.divideScalar(totalArea);
+      // Bias slightly toward the lower-central lens area marked in the preview.
+      centroid.y-=(box.max.y-box.min.y)*.12;
+      const origin=headOrigins[i],lensNormal=new THREE.Vector3();let closestDistance=Infinity;
+      for(const triangle of lampSurfaces[i]){
+        triangle.closestPointToPoint(centroid,closest);
+        const distance=closest.distanceToSquared(centroid);
+        if(distance<closestDistance){closestDistance=distance;origin.copy(closest);triangle.getNormal(lensNormal);}
+      }
+      // Offset only along the actual lens surface, not the front plane of the body.
+      if(lensNormal.z<0)lensNormal.negate();
+      origin.addScaledVector(lensNormal,.003);
+      const target=origin.clone().add(new THREE.Vector3(i===0?-.18:.18,0,5.8));target.y=.020;
+      const direction=headDirections[i].copy(target).sub(origin).normalize();
+      const spot=new THREE.SpotLight('#d7e9ff',0,12,.20,.4,2);
+      spot.position.copy(origin);spot.target.position.copy(target);carGroup.add(spot,spot.target);headSpots.push(spot);
+
+      const beamGeometry=new THREE.CylinderGeometry(1,.025,1,48,16,true);
+      beamGeometry.translate(0,.5,0);beamGeometry.rotateX(Math.PI/2);
+      // Nested soft volumes add visible depth without a hard outer surface.
+      for(const [spread,density] of [[1,.62],[1.12,.30],[1.25,.16]]){
+      const beamMaterial=new THREE.ShaderMaterial({
+        transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
+        uniforms:{uLamp:headlightStrength,uDensity:{value:density}},
+        vertexShader:
+          'varying float vDistance;varying vec3 vNormal;varying vec3 vToEye;void main(){vDistance=position.z;mat3 orientation=mat3(normalize(modelViewMatrix[0].xyz),normalize(modelViewMatrix[1].xyz),normalize(modelViewMatrix[2].xyz));vNormal=normalize(orientation*normal);vec4 view=modelViewMatrix*vec4(position,1.);vToEye=-view.xyz;gl_Position=projectionMatrix*view;}',
+        fragmentShader:
+          'varying float vDistance;varying vec3 vNormal;varying vec3 vToEye;uniform float uLamp;uniform float uDensity;void main(){float side=pow(abs(dot(normalize(vNormal),normalize(vToEye))),2.);float fade=pow(max(0.,1.-vDistance),1.7)*smoothstep(0.,.001,vDistance);gl_FragColor=vec4(.65,.81,1.,uLamp*uDensity*.18*side*fade);}'
+      });
+      const beam=new THREE.Mesh(beamGeometry,beamMaterial);
+      beam.name=i===0?'Right headlight beam':'Left headlight beam';
+      beam.position.copy(origin);beam.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),direction);
+      beam.scale.set(1.02*spread,.52*spread,origin.distanceTo(target));carGroup.add(beam);headBeams.push(beam);
+      }
+      // The glow is lens-aligned rather than a camera-facing sprite that clips into the bonnet.
+      const halo=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:glowTexture,color:'#d7eaff',transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}));
+      halo.position.copy(origin);halo.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),lensNormal);
+      halo.scale.set((box.max.x-box.min.x)*.75,.075,1);carGroup.add(halo);headHalos.push(halo);
+    });
+    container.dataset.headlightEmitters=String(headSpots.length);
+    container.dataset.headlightBeamLayers=String(headBeams.length);
+    container.dataset.headlightAnchorSource='BodyHeadlights';
+    container.dataset.headlightOrigins=JSON.stringify(headOrigins.map(origin=>origin.toArray()));
+    container.dataset.headlightAnchorMethod='area-centroid-on-lens-surface';
+    container.dataset.headlightAttachmentError=Math.max(...headOrigins.map((origin,i)=>
+      Math.min(...lampSurfaces[i].map(triangle=>triangle.closestPointToPoint(origin,new THREE.Vector3()).distanceTo(origin)))
+    )).toFixed(4);
   }
   const underLight=new THREE.PointLight('#1379ff',0,4,2); underLight.position.set(0,.25,0); carGroup.add(underLight);
 
-  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(-7,.028,-23),new THREE.Vector3(-2.4,.028,-13),new THREE.Vector3(-.12,.028,-4),new THREE.Vector3(.02,.028,3),new THREE.Vector3(1.5,.028,10),new THREE.Vector3(7,.028,22)]);
+  // A straight driving section through the car, with tangent-matched bends only in the distance.
+  const curve=new THREE.CurvePath<THREE.Vector3>();
+  curve.add(new THREE.CubicBezierCurve3(
+    new THREE.Vector3(-4.2,.028,-26),new THREE.Vector3(-2.7,.028,-13),
+    new THREE.Vector3(0,.028,-8),new THREE.Vector3(0,.028,-4)
+  ));
+  curve.add(new THREE.LineCurve3(new THREE.Vector3(0,.028,-4),new THREE.Vector3(0,.028,9)));
+  curve.add(new THREE.CubicBezierCurve3(
+    new THREE.Vector3(0,.028,9),new THREE.Vector3(0,.028,15),
+    new THREE.Vector3(.45,.028,20),new THREE.Vector3(2.1,.028,26)
+  ));
   const trackMaterial=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{uTime:{value:0},uDark:{value:0}},vertexShader:
     'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:
     'varying vec2 vUv; uniform float uTime; uniform float uDark; void main(){float p=fract(vUv.x*62.+uTime*1.9);float dash=1.-smoothstep(.32,.4,p);float focus=pow(max(0.,sin(vUv.x*18.-uTime*.18)),14.);vec3 base=mix(vec3(.47,.51,.57),vec3(.055,.33,.72),uDark);vec3 col=mix(base,vec3(.075,.38,.96),focus*.85);float edge=1.-smoothstep(.25,.5,abs(vUv.y-.5));float fade=smoothstep(0.,.06,vUv.x)*(1.-smoothstep(.93,1.,vUv.x));gl_FragColor=vec4(col,(.12+dash*.6+focus*.12)*edge*fade);}'
@@ -91,17 +186,41 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
   scene.add(new THREE.Mesh(ribbonGeometry(curve,.45),trackGlowMaterial));
 
   const motion={view:options.view==='login'?1:0,parallaxX:0,parallaxY:0};
+  let storyTarget=0,story=0,viewTarget:View=options.view;
+  const radar=new THREE.Group();radar.name='Corner radar pulses';carGroup.add(radar);
+  const radarPulses:{mesh:THREE.Mesh;phase:number}[]=[];
+  const radarMaterials:THREE.MeshBasicMaterial[]=[];
+  for(const x of [-.88,.88])for(const z of [-1.8,1.8]){
+    const node=new THREE.Mesh(new THREE.SphereGeometry(.028,12,12),new THREE.MeshBasicMaterial({color:'#2682ff',transparent:true,opacity:0,toneMapped:false}));
+    node.position.set(x,.05,z);radar.add(node);radarMaterials.push(node.material);
+    for(let i=0;i<4;i++){
+      const mat=new THREE.MeshBasicMaterial({color:'#388fff',transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
+      const ring=new THREE.Mesh(new THREE.RingGeometry(.98,1,112),mat);
+      ring.rotation.x=-Math.PI/2;ring.position.set(x,.025,z);radar.add(ring);radarPulses.push({mesh:ring,phase:i/4});
+    }
+  }
+  const rearDetail=new THREE.Group();rearDetail.name='Layered rear light optics';carGroup.add(rearDetail);
+  const rearGlowMaterials:THREE.MeshBasicMaterial[]=[];
+  const tempCamera=new THREE.PerspectiveCamera();
+  const upDefault=new THREE.Vector3(0,1,0),upOverhead=new THREE.Vector3(0,0,1);
+  const qHome=new THREE.Quaternion(),qTop=new THREE.Quaternion(),qRear=new THREE.Quaternion(),qLogin=new THREE.Quaternion();
+  function aimQuaternion(position:THREE.Vector3,target:THREE.Vector3,up:THREE.Vector3,output:THREE.Quaternion){tempCamera.position.copy(position);tempCamera.up.copy(up);tempCamera.lookAt(target);output.copy(tempCamera.quaternion);}
+  const homePosition=new THREE.Vector3(),topPosition=new THREE.Vector3(),rearPosition=new THREE.Vector3(),loginPosition=new THREE.Vector3();
+  const originLook=new THREE.Vector3(0,.42,0),topLook=new THREE.Vector3(0,0,0),rearLook=new THREE.Vector3(.48,.70,-2.20);
+  const frontWheelLook=new THREE.Vector3(1,.42,1.4),rearWheelCenter=new THREE.Vector3(1,.42,-1.4);
+  const projectedFocusWheel=new THREE.Vector3(),projectedOtherWheel=new THREE.Vector3();
+  const composedPosition=new THREE.Vector3(),composedQuaternion=new THREE.Quaternion();
+
   const themes=new ThemeTransition(options.theme,reduced);
   let width=1,height=1,driveTime=0,prev=performance.now(), lastPhase='',lastLamp=-1;
-  const framePosition=new THREE.Vector3(), frameLook=new THREE.Vector3();
   const colors=new THREE.Color();
   const resize=()=>{ const size=container.getBoundingClientRect(); width=Math.max(1,size.width);height=Math.max(1,size.height);renderer.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix(); };
   const observer=new ResizeObserver(resize); observer.observe(container);resize();
-  const onPointer=(e:PointerEvent)=>{if(reduced)return;const x=(e.clientX/window.innerWidth-.5),y=(e.clientY/window.innerHeight-.5);gsap.to(motion,{parallaxX:x*.7,parallaxY:y*.28,duration:1.2,overwrite:'auto',ease:'power2.out'});};
+  const onPointer=(e:PointerEvent)=>{if(reduced||story>.2||viewTarget==='login')return;const x=(e.clientX/window.innerWidth-.5),y=(e.clientY/window.innerHeight-.5);gsap.to(motion,{parallaxX:x*.7,parallaxY:y*.28,duration:1.2,overwrite:'auto',ease:'power2.out'});};
   window.addEventListener('pointermove',onPointer,{passive:true});
   const resetPointer=()=>gsap.to(motion,{parallaxX:0,parallaxY:0,duration:1.2,ease:'power2.out',overwrite:'auto'});
   document.documentElement.addEventListener('pointerleave',resetPointer);
-  const onLost=(e:Event)=>{e.preventDefault(); if(!disposed)options.onError('3D 场景暂时不可用；登录演示仍可使用。请刷新重试。');};
+  const onLost=(e:Event)=>{e.preventDefault(); if(!disposed)options.onError('3D 场景暂时不可用；仍可登录。请刷新重试。');};
   renderer.domElement.addEventListener('webglcontextlost',onLost);
 
   async function loadModel() {
@@ -138,10 +257,40 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
       car.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(car); const size=box.getSize(new THREE.Vector3()); const length=Math.max(size.z,size.x);
       car.scale.multiplyScalar(4.9/length);car.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(car);const center=box.getCenter(new THREE.Vector3());
       car.position.set(-center.x,-box.min.y+.028,-center.z);carGroup.add(car);
+      carGroup.updateMatrixWorld(true);
+      // Anchor the close-up to the real left-front wheel; the same car remains in the scene.
+      car.getObjectByName('WheelFrontL')?.getWorldPosition(frontWheelLook);
+      car.getObjectByName('WheelRearL')?.getWorldPosition(rearWheelCenter);
+      attachHeadlights(car);
+      // Physical optics follow the existing lamp's actual bounds, not a replacement car.
+      const lampNode=car.getObjectByName('BodyTaillights');
+      if(lampNode){
+        const lampBox=new THREE.Box3().setFromObject(lampNode);
+        const lampCenter=lampBox.getCenter(new THREE.Vector3());
+        rearLook.set(lampBox.max.x*.65,lampCenter.y,lampBox.min.z);
+        const rearZ=lampBox.min.z-.014;
+        for(const side of [-1,1]){
+          const lampWidth=(lampBox.max.x-lampBox.min.x)*.37;
+          const housing=new THREE.Mesh(new THREE.BoxGeometry(lampWidth,.14,.032),new THREE.MeshPhysicalMaterial({color:'#180b15',metalness:.48,roughness:.20,clearcoat:1,clearcoatRoughness:.09}));
+          housing.position.set(side*(lampWidth*.56+.085),lampCenter.y,rearZ);rearDetail.add(housing);
+          for(let row=0;row<2;row++){
+            const glow=new THREE.MeshBasicMaterial({color:row?'#ff363d':'#ff4a52',toneMapped:false});rearGlowMaterials.push(glow);
+            const strip=new THREE.Mesh(new THREE.BoxGeometry(lampWidth*.92,.012,.014),glow);
+            strip.position.set(housing.position.x,lampCenter.y+(row?-.039:.038),rearZ-.025);rearDetail.add(strip);
+          }
+          for(let k=0;k<19;k++){
+            const fin=new THREE.Mesh(new THREE.BoxGeometry(.008,.061,.013),new THREE.MeshStandardMaterial({color:'#9e151f',metalness:.55,roughness:.23,emissive:'#ef1830',emissiveIntensity:.36}));
+            fin.position.set(housing.position.x-lampWidth*.44+k*lampWidth*.88/18,lampCenter.y,rearZ-.025);fin.rotation.z=-.25*side;rearDetail.add(fin);
+          }
+          const haloMat=new THREE.MeshBasicMaterial({color:'#ff203b',map:glowTexture,transparent:true,opacity:.16,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
+          const halo=new THREE.Mesh(new THREE.PlaneGeometry(lampWidth*1.3,.34),haloMat);halo.rotation.y=Math.PI;halo.position.set(housing.position.x,lampCenter.y,rearZ-.04);rearDetail.add(halo);
+        }
+      }
+
       container.dataset.model=car.uuid;container.dataset.modelSource='CarConcept';container.dataset.loadCount='1';container.dataset.headlightMaterials=String(frontMaterials.length);
       await renderer.compileAsync(scene,camera);
       if(disposed)return;options.onProgress(100);modelPrepared=true;
-    }catch(error){if(disposed || (error instanceof Error&&error.name==='AbortError'))return;console.error('Car scene failed',error);options.onError('模型加载失败，请刷新重试。登录演示不受影响。');}
+    }catch(error){if(disposed || (error instanceof Error&&error.name==='AbortError'))return;console.error('Car scene failed',error);options.onError('模型加载失败，请刷新重试。登录不受影响。');}
   }
   void loadModel();
 
@@ -149,25 +298,89 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
     if(disposed)return;
     const delta=Math.min((now-prev)/1000,.045);prev=now;
     if(document.hidden)return;
-    if(!paused&&!reduced){driveTime+=delta;wheels.forEach(w=>w.rotateOnWorldAxis(wheelAxis,delta*1.2));}
+    if(!paused&&!reduced)driveTime+=delta;
+    // All three views share the same drive clock; rotating around each wheel's
+    // local axle preserves its hub position and pauses with reduced motion.
+    for(const wheel of wheels){
+      wheel.rotation.x=driveTime*3.2;
+      // In the wheel close-up, the rim/disc rotate but the brake caliper stays fixed.
+      if(frontWheelView)for(const part of wheel.children){
+        if(part.name.endsWith('BrakePad'))part.rotation.x=-wheel.rotation.x;
+      }
+    }
     const theme=themes.sample(now);const night=theme.environment;
     colors.copy(lightBackground).lerp(darkBackground,night);(scene.background as THREE.Color).copy(colors);(scene.fog as THREE.Fog).color.copy(colors);groundMaterial.color.copy(colors);
     ambient.intensity=THREE.MathUtils.lerp(2.2,.62,night);key.intensity=THREE.MathUtils.lerp(3.2,1.55,night);rim.intensity=THREE.MathUtils.lerp(2,2.3,night);fill.intensity=THREE.MathUtils.lerp(1.4,.8,night);
     scene.environmentIntensity=THREE.MathUtils.lerp(1.0,.48,night);
     const lamp=theme.lamps;contactShadowMaterial.opacity=THREE.MathUtils.lerp(.3,.6,night);
-    frontMaterials.forEach(m=>m.emissiveIntensity=lamp*9);rearMaterials.forEach(m=>m.emissiveIntensity=lamp*.7);
-    headSpots.forEach(s=>s.intensity=lamp*54);pools.forEach(m=>m.opacity=lamp*.24);underGlowMaterial.opacity=lamp*.58;stripMaterial.opacity=lamp;underLight.intensity=lamp*1.7;
+    frontMaterials.forEach(m=>m.emissiveIntensity=.7+lamp*9);rearMaterials.forEach(m=>m.emissiveIntensity=.85+lamp*.7);
+    headlightStrength.value=lamp;
+    headSpots.forEach(s=>s.intensity=lamp*70);headHalos.forEach(s=>s.material.opacity=lamp*.6);
+    headBeams.forEach(beam=>beam.visible=lamp>.001);headGround.visible=lamp>.001;
+    underGlowMaterial.opacity=lamp*.58;stripMaterial.opacity=lamp;underLight.intensity=lamp*1.7;
     trackMaterial.uniforms.uTime.value=driveTime;trackMaterial.uniforms.uDark.value=night;
-    carGroup.position.y=(reduced?0:Math.sin(driveTime*2.2)*.004);carGroup.rotation.z=reduced?0:Math.sin(driveTime*.72)*.0009;
+    if(viewTarget==='home')story=reduced?storyTarget:THREE.MathUtils.damp(story,storyTarget,6,delta);
     const v=motion.view,mobile=width<760;
-    const zoom = mobile ? 1.7 : (width/height<1.4 ? 1.13 : 1);
-    framePosition.set(THREE.MathUtils.lerp(6.4,6.9,v),THREE.MathUtils.lerp(7.3,3.9,v),THREE.MathUtils.lerp(8.4,8.7,v)).multiplyScalar(zoom);
-    framePosition.x+=motion.parallaxX;framePosition.y+=motion.parallaxY;
-    frameLook.set(0,.42,0);camera.position.copy(framePosition);camera.lookAt(frameLook);camera.updateProjectionMatrix();
-    // Off-axis composition changes position on screen without swapping or stretching the car.
-    camera.projectionMatrix.elements[8]=mobile?0:THREE.MathUtils.lerp(-.43,.4,v);
-    camera.projectionMatrix.elements[9]=mobile?THREE.MathUtils.lerp(.36,-.58,v):-.015;
+    const firstMix=THREE.MathUtils.smoothstep(story,.08,.94);
+    const secondMix=THREE.MathUtils.smoothstep(story,1.06,1.96);
+    const overview=(1-secondMix)*firstMix*(1-v);
+    const macro=secondMix*(1-v);
+    const parallax=(1-firstMix)*(1-v);
+    carGroup.position.y=0;carGroup.rotation.z=0;
+    const zoom=mobile?1.7:(width/height<1.4?1.13:1);
+    homePosition.set(6.4,7.3,8.4).multiplyScalar(zoom);
+    homePosition.x+=motion.parallaxX*parallax;homePosition.y+=motion.parallaxY*parallax;
+    // Raise the overhead camera to make the vehicle approximately 20% smaller.
+    topPosition.set(0,(mobile?18.4:13.6)/.8,.001);
+    // The trial focuses on the left-front wheel; the original taillight view remains available.
+    if(frontWheelView){
+      // Approach from the left and slightly ahead to include the front fender and nose.
+      rearPosition.set(frontWheelLook.x+(mobile?5.0:3.6),frontWheelLook.y+.38,frontWheelLook.z+1.0);
+    }else{
+      rearPosition.set(rearLook.x+.30,rearLook.y+.30,rearLook.z-(mobile?3.3:2.65));
+    }
+    loginPosition.set(6.9,3.9,8.7).multiplyScalar(zoom);
+    aimQuaternion(homePosition,originLook,upDefault,qHome);
+    aimQuaternion(topPosition,topLook,upOverhead,qTop);
+    aimQuaternion(rearPosition,frontWheelView?frontWheelLook:rearLook,upDefault,qRear);
+    aimQuaternion(loginPosition,originLook,upDefault,qLogin);
+    if(story<=1){composedPosition.copy(homePosition).lerp(topPosition,firstMix);composedQuaternion.copy(qHome).slerp(qTop,firstMix);}
+    else{composedPosition.copy(topPosition).lerp(rearPosition,secondMix);composedQuaternion.copy(qTop).slerp(qRear,secondMix);}
+    camera.position.copy(composedPosition.lerp(loginPosition,v));
+    camera.quaternion.copy(composedQuaternion.slerp(qLogin,v));
+    camera.fov=32;camera.updateProjectionMatrix();
+    const homeOffset=mobile?0:-.43;
+    const topOffset=mobile?0:.43;
+    // Keep the wheel framing clear of copy; preserve the previous rear offsets
+    // exactly for the comparison view without moving or scaling the model.
+    const rearOffset=frontWheelView?(mobile?0:-.48):(mobile?-.15:-.63)+.2;
+    const storyOffset=story<=1?THREE.MathUtils.lerp(homeOffset,topOffset,firstMix):THREE.MathUtils.lerp(topOffset,rearOffset,secondMix);
+    camera.projectionMatrix.elements[8]=THREE.MathUtils.lerp(storyOffset,mobile?0:.4,v);
+    const homeY=mobile?.25:-.015,topY=mobile?.33:-.015,rearY=frontWheelView?(mobile?.54:.28):(mobile?.25:-.015)+.4;
+    const storyY=story<=1?THREE.MathUtils.lerp(homeY,topY,firstMix):THREE.MathUtils.lerp(topY,rearY,secondMix);
+    camera.projectionMatrix.elements[9]=THREE.MathUtils.lerp(storyY,mobile?-.65:-.015,v);
     camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+    camera.updateMatrixWorld();
+    projectedFocusWheel.copy(frontWheelLook).project(camera);
+    projectedOtherWheel.copy(rearWheelCenter).project(camera);
+    container.dataset.thirdView=frontWheelView?'front-left-wheel':'taillight';
+    container.dataset.frontWheelScreenX=((projectedFocusWheel.x+1)/2).toFixed(3);
+    container.dataset.frontWheelScreenY=((1-projectedFocusWheel.y)/2).toFixed(3);
+    container.dataset.rearWheelScreenX=((projectedOtherWheel.x+1)/2).toFixed(3);
+    radar.visible=overview>.002;
+    radarMaterials.forEach(m=>m.opacity=overview*.9);
+    for(const pulse of radarPulses){
+      const p=(driveTime*.30+pulse.phase)%1;
+      const radius=.10+p*1.2;
+      pulse.mesh.scale.setScalar(radius);
+      (pulse.mesh.material as THREE.MeshBasicMaterial).opacity=overview*Math.sin(p*Math.PI)*.4;
+    }
+    // The road belongs to the driving scene, not just the hero camera.
+    trackMaterial.visible=true;trackGlowMaterial.visible=true;
+    rearDetail.visible=true;
+    rearGlowMaterials.forEach(m=>m.color.setRGB(1,.04+macro*.035,.06+macro*.035));
+    container.dataset.wheelCount=String(wheels.length);container.dataset.wheelAngle=(wheels[0]?.rotation.x??0).toFixed(3);container.dataset.roadTime=driveTime.toFixed(3);container.dataset.roadVisible=String(trackMaterial.visible);
+    container.dataset.storyProgress=story.toFixed(3);container.dataset.radarOpacity=overview.toFixed(3);container.dataset.macro=macro.toFixed(3);
     container.dataset.lightPhase=theme.phase;container.dataset.lamps=lamp.toFixed(3);container.dataset.environment=night.toFixed(3);container.dataset.cameraView=v.toFixed(3);container.dataset.parallaxX=motion.parallaxX.toFixed(3);container.dataset.parallaxY=motion.parallaxY.toFixed(3);
     if(lastPhase!==theme.phase||Math.abs(lastLamp-lamp)>.24){lastPhase=theme.phase;lastLamp=lamp;options.onPhase(theme.phase,lamp);}
     renderer.render(scene,camera);
@@ -176,7 +389,8 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
   renderer.setAnimationLoop(frame);
   return {
     setTheme(theme){themes.setTarget(theme,performance.now());},
-    setView(view){gsap.to(motion,{view:view==='login'?1:0,duration:reduced?.12:1.65,ease:'power3.inOut',overwrite:'auto',onComplete:()=>{if(!disposed)options.onViewSettled(view);}});},
+    setStoryProgress(value){storyTarget=THREE.MathUtils.clamp(value,0,2);},
+    setView(view){viewTarget=view;gsap.to(motion,{view:view==='login'?1:0,duration:reduced?.12:1.65,ease:'power3.inOut',overwrite:'auto',onComplete:()=>{if(!disposed)options.onViewSettled(view);}});},
     setPaused(value){paused=value;},
     setReducedMotion(value){reduced=value;themes.setReducedMotion(value);if(value){gsap.set(motion,{parallaxX:0,parallaxY:0});}},
     dispose(){if(disposed)return;disposed=true;abort.abort();gsap.killTweensOf(motion);observer.disconnect();window.removeEventListener('pointermove',onPointer);document.documentElement.removeEventListener('pointerleave',resetPointer);renderer.domElement.removeEventListener('webglcontextlost',onLost);renderer.setAnimationLoop(null);disposeTree(scene);environmentTarget.dispose();glowTexture.dispose();renderer.dispose();renderer.domElement.remove();},
@@ -185,7 +399,7 @@ export function createDrivingScene(container: HTMLDivElement, options: SceneOpti
 
 function disposeTree(root:THREE.Object3D){
   const materials=new Set<THREE.Material>(),textures=new Set<THREE.Texture>(),geometries=new Set<THREE.BufferGeometry>();
-  root.traverse(object=>{if(!(object instanceof THREE.Mesh))return;geometries.add(object.geometry);(Array.isArray(object.material)?object.material:[object.material]).forEach(m=>materials.add(m));});
+  root.traverse(object=>{if(object instanceof THREE.Sprite){materials.add(object.material);return;}if(!(object instanceof THREE.Mesh))return;geometries.add(object.geometry);(Array.isArray(object.material)?object.material:[object.material]).forEach(m=>materials.add(m));});
   materials.forEach(material=>{Object.values(material).forEach(value=>{if(value instanceof THREE.Texture)textures.add(value);});material.dispose();});
   geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());
 }

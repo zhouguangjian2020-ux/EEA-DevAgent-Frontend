@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { LoadingIllustration, LoadingIcon } from "@/components/feedback/loading";
+import { LoadingIllustration } from "@/components/feedback/loading";
 import { useI18n } from "@/features/i18n/provider";
 import { requestRequirementDiagram, type RequirementDiagramResult } from "@/features/workbench/requirement-diagram-api";
 import { createUuid } from "@/lib/uuid";
@@ -42,16 +42,16 @@ export function RequirementDiagram({ projectId, functionId, subsystemId, active,
     pending.current?.abort(); pending.current = null; completed.current = key;
     setBusy(false); setError("已停止等待需求图；已发出的Agent推理不保证随之取消。");
   }
-  if (!hasConfirmedAllocations) return <section className="uc-agent-diagram" aria-label={tr("子系统需求图")}><header className="uc-agent-diagram-header"><strong>{tr("子系统需求图")}</strong></header><DiagramEmptyState kind="requirement" /></section>;
-  return <section className="uc-agent-diagram" aria-label={tr("子系统需求图")}>
-    <header className="uc-agent-diagram-header"><div><strong>{tr("子系统需求图")}{result ? ` · ${result.source.subsystem_name}` : ""}</strong>
+  if (!hasConfirmedAllocations) return <section className="workspace-card uc-agent-diagram" aria-label={tr("子系统需求图")}><header className="workspace-card-header uc-agent-diagram-header"><h2 className="workspace-card-title">{tr("子系统需求图")}</h2></header><DiagramEmptyState kind="requirement" /></section>;
+  return <section className="workspace-card uc-agent-diagram" aria-label={tr("子系统需求图")}>
+    <header className="workspace-card-header uc-agent-diagram-header"><div><h2 className="workspace-card-title">{tr("子系统需求图")}{result ? ` · ${result.source.subsystem_name}` : ""}</h2>
       <p>{tr("只读取所选子系统的已保存分配和对应FR版本；待确认分配不会被自动确认。")}</p></div>
       <div className="uc-agent-diagram-actions"><button type="button" className="button-secondary" disabled={busy || !active} onClick={() => setAttempt(value => value + 1)}>{tr(result ? "刷新需求图" : "重试生成")}</button>
         {busy && <button type="button" className="button-danger" onClick={stop}>{tr("停止")}</button>}</div>
     </header>
-    <div role="status" aria-live="polite" className="uc-agent-diagram-status">
-      {busy && <LoadingIcon />}{busy ? tr("正在请求Agent生成子系统需求图…") : result?.status === "empty" ? tr("此子系统在当前功能下没有已保存的FR分配。") : result ? tr("已生成需求图：{0}条FR，{1}条分配", { "0": result.source.fr_count, "1": result.source.allocation_count }) : tr("尚未取得需求图")}
-    </div>
+    {!busy && <div role="status" aria-live="polite" className="uc-agent-diagram-status">
+      {result?.status === "empty" ? tr("此子系统在当前功能下没有已保存的FR分配。") : result ? tr("已生成需求图：{0}条FR，{1}条分配", { "0": result.source.fr_count, "1": result.source.allocation_count }) : tr("尚未取得需求图")}
+    </div>}
     {error && <p role="alert">{tr(error)}{result?.diagram_code && tr("当前保留上次成功图，不代表最新结果。")}</p>}
     {busy && !result?.diagram_code && <LoadingIllustration kind="allocation" label={tr("正在请求Agent生成子系统需求图…")} compact />}
     {result?.diagram_code && <MermaidDiagram kind="requirement" code={result.diagram_code} attemptId={busy ? null : result.generation_id} label="子系统需求图" />}

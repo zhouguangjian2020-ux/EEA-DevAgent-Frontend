@@ -70,7 +70,7 @@ export function PrdWorkspace({ session, onAction, featureName, onGenerateUcs, uc
         {showPreview ? <span className="object-status document-toolbar-status pending" role="status" aria-label={tr("文档状态")}>{generating ? tr("生成中") : tr("未保存")}</span> : <DocumentStatus status={doc?.status} editing={editing} />}
         <span className="document-toolbar-spacer" aria-hidden="true" />
         {!readOnly && !showPreview && !generating && <>
-          <button type="button" className="button-primary" disabled={!canGenerateUcs} aria-busy={ucGenerating} onClick={onGenerateUcs}>{ucGenerating ? <><span className="loading-icon" aria-hidden="true" />{tr("正在生成 UC…")}</> : ucGenerated ? tr("已生成 UC") : tr("生成 UC")}</button>
+          <button type="button" className="button-primary" disabled={!canGenerateUcs} aria-busy={ucGenerating} onClick={onGenerateUcs}>{ucGenerating ? tr("正在生成 UC…") : ucGenerated ? tr("已生成 UC") : tr("生成 UC")}</button>
           {ucGenerating && <button type="button" className="button-secondary" onClick={onStopUcs}>{tr("停止")}</button>}
         </>}
         {generating && generation && <button type="button" className="button-secondary" onClick={generation.onStop}>{tr("停止生成")}</button>}
@@ -90,9 +90,9 @@ export function PrdWorkspace({ session, onAction, featureName, onGenerateUcs, uc
       {state?.status === "failed" && <p className="prd-generation-message error" role="alert">{tr(state.error ?? "")}</p>}
       {state?.status === "cancelled" && <p className="prd-generation-message" role="status">{tr("已停止接收，原 PRD 未修改。远端 Agent 推理不保证同时取消。")}</p>}
       <div className={"prd-paper" + (editing && !showPreview ? " is-editing" : "")} ref={paper} onScroll={e => { const el = e.currentTarget; stick.current = el.scrollHeight - el.clientHeight - el.scrollTop < 80; }}>
-        {showPreview ? <article aria-label={tr("PRD 生成预览")} aria-busy={generating}>
+        {showPreview ? <article className="workspace-card prd-content-card" aria-label={tr("PRD 生成预览")} aria-busy={generating}>
           {state.text ? <MarkdownPreview content={state.text} /> : <>{generating ? doc?.content ? <MarkdownPreview content={doc.content} /> : <LoadingIllustration kind="prd" /> : <p role="status">{tr("暂无生成内容")}</p>}</>}
-        </article> : doc ? editing ? <><label className="document-feedback"><input type="checkbox" checked={livePreview} onChange={e => setLivePreview(e.target.checked)} />{tr(" 显示 Markdown 实时预览")}</label><textarea className="prd-editor" aria-label={tr("编辑 PRD 正文")} disabled={persistence?.saving} value={session.editDraft!} onChange={e => onAction({ type: "edit-text", value: e.target.value })} />{livePreview && <div className="markdown-edit-preview"><MarkdownPreview content={session.editDraft!} /></div>}</> : <article aria-label={tr("PRD 正文预览")}><MarkdownPreview content={doc.content} /></article> : <div className="work-empty"><h2>{tr("PRD 草稿已放弃")}</h2><p>{tr("功能目录和项目对话保留，可从工作台重新生成。")}</p></div>}
+        </article> : doc ? editing ? <><label className="document-feedback"><input type="checkbox" checked={livePreview} onChange={e => setLivePreview(e.target.checked)} />{tr(" 显示 Markdown 实时预览")}</label><textarea className="prd-editor" aria-label={tr("编辑 PRD 正文")} disabled={persistence?.saving} value={session.editDraft!} onChange={e => onAction({ type: "edit-text", value: e.target.value })} />{livePreview && <div className="markdown-edit-preview"><MarkdownPreview content={session.editDraft!} /></div>}</> : <article className="workspace-card prd-content-card" aria-label={tr("PRD 正文预览")}><MarkdownPreview content={doc.content} /></article> : <div className="work-empty"><h2>{tr("PRD 草稿已放弃")}</h2><p>{tr("功能目录和项目对话保留，可从工作台重新生成。")}</p></div>}
       </div>
       {showPreview && <p className="prd-generation-message">{tr("生成预览仅保留在当前页面，刷新后丢失；不会覆盖原 PRD，也不会自动保存或确认。")}</p>}
       {!showPreview && session.notice && <p className="document-feedback" role="status">{tr(session.notice)}</p>}

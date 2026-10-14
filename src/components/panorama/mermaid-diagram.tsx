@@ -4,6 +4,8 @@ import { useI18n } from "@/features/i18n/provider";
 import { useEffect, useState } from "react";
 import { createUuid } from "@/lib/uuid";
 import { prepareUcDiagrams, assertSafeRequirementDiagram } from "@/features/panorama/mermaid-safety";
+import { requirementDiagramLayout } from "@/features/panorama/requirement-layout";
+import { DiagramViewport } from "./diagram-viewport";
 import { WorkDialog } from "@/components/workbench/work-dialog";
 import { LoadingIcon } from "@/components/feedback/loading";
 
@@ -16,7 +18,6 @@ export function MermaidDiagram({ code, attemptId, label = "UC图形", kind = "uc
   const [image, setImage] = useState<DiagramImage | null>(null);
   const [failure, setFailure] = useState<{ code: string; attemptId?: string | null; message: string } | null>(null);
   const [preview, setPreview] = useState<number | null>(null);
-  const [zoom, setZoom] = useState(1);
   useEffect(() => image ? () => image.urls.forEach(url => URL.revokeObjectURL(url)) : undefined, [image]);
   useEffect(() => {
     if (attemptId === null) return;
@@ -31,7 +32,8 @@ export function MermaidDiagram({ code, attemptId, label = "UC图形", kind = "uc
         mermaid.initialize({ startOnLoad: false, securityLevel: "strict", suppressErrorRendering: true,
           maxTextSize: 100000, maxEdges: 500, htmlLabels: false, flowchart: { htmlLabels: false },
           theme: kind === "uc" ? "default" : "neutral", look: "classic",
-          themeCSS: kind === "uc" ? ".usecase-element .label text { text-anchor: middle; }" : "" });
+          themeCSS: ".usecase-element .label text { text-anchor: middle; }",
+          ...(kind === "requirement" ? requirementDiagramLayout(documents[0]) : {}) });
         for (const documentText of documents) {
           if (cancelled) return;
           const host = document.createElement("div");
@@ -59,20 +61,15 @@ export function MermaidDiagram({ code, attemptId, label = "UC图形", kind = "uc
   return <div className="uc-mermaid-render" aria-label={tr(label)}>
     {currentFailure && <p role="alert">{tr("图形渲染失败：")}{tr(currentFailure.message)}。{image ? tr("仍显示上次成功的图，当前图并非最新结果。") : tr("请重新生成图形或核对输入；不会执行图中的交互。")}</p>}
     {rendering && <p role="status" className="task-progress"><LoadingIcon />{tr(image ? "正在绘制新版图形，当前保留上次成功结果。" : "正在绘制图形…")}</p>}
-    {image?.urls.map((url, index) => <button key={url} type="button" className="diagram-thumbnail" aria-label={`${tr("预览图形")} · ${tr(label)} ${index + 1}`} onClick={() => { setZoom(1); setPreview(index); }}>
+    {image?.urls.map((url, index) => <button key={url} type="button" className="diagram-thumbnail" aria-label={`${tr("预览图形")} · ${tr(label)} ${index + 1}`} onClick={() => setPreview(index)}>
       <img src={url} alt={image.urls.length === 1 ? tr(label) : `${tr(label)} ${index + 1}/${image.urls.length}`} />
       <span>{tr("点击预览与缩放")}</span>
     </button>)}
     {image && previewIndex !== null && <WorkDialog title={tr(label)} className="diagram-preview-dialog" onClose={() => setPreview(null)}>
-      <div className="diagram-preview-toolbar">
-        <button type="button" className="button-secondary" aria-label={tr("缩小")} disabled={zoom <= .25} onClick={() => setZoom(value => Math.max(.25, value - .25))}>−</button>
-        <output aria-live="polite">{Math.round(zoom * 100)}%</output>
-        <button type="button" className="button-secondary" aria-label={tr("放大")} disabled={zoom >= 4} onClick={() => setZoom(value => Math.min(4, value + .25))}>+</button>
-        <button type="button" className="button-secondary" onClick={() => setZoom(1)}>{tr("适应窗口")}</button>
-        {image.urls.length > 1 && <><button type="button" className="button-secondary" disabled={previewIndex === 0} onClick={() => { setPreview(previewIndex - 1); setZoom(1); }}>{tr("上一张")}</button><span>{previewIndex + 1}/{image.urls.length}</span><button type="button" className="button-secondary" disabled={previewIndex === image.urls.length - 1} onClick={() => { setPreview(previewIndex + 1); setZoom(1); }}>{tr("下一张")}</button></>}
-      </div>
       {currentFailure && <p role="status">{tr("仍显示上次成功的图，当前图并非最新结果。")}</p>}
-      <div className="diagram-preview-viewport" tabIndex={0} aria-label={tr("图形预览滚动区域")}><div className="diagram-preview-canvas" style={{ width: `${zoom * 100}%`, height: `${zoom * 100}%` }}><img src={image.urls[previewIndex]} alt={tr(label)} /></div></div>
+      <DiagramViewport key={image.urls[previewIndex]} src={image.urls[previewIndex]} label={tr(label)}>
+        {image.urls.length > 1 && <><button type="button" className="button-secondary" disabled={previewIndex === 0} onClick={() => setPreview(previewIndex - 1)}>{tr("上一张")}</button><span>{previewIndex + 1}/{image.urls.length}</span><button type="button" className="button-secondary" disabled={previewIndex === image.urls.length - 1} onClick={() => setPreview(previewIndex + 1)}>{tr("下一张")}</button></>}
+      </DiagramViewport>
     </WorkDialog>}
   </div>;
 }

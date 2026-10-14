@@ -1,5 +1,4 @@
 'use client';
-import { LoadingIcon } from "@/components/feedback/loading";
 import { useI18n } from "@/features/i18n/provider";
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { getProjectWorkspace } from '@/lib/api/client';
@@ -37,7 +36,7 @@ export function AppendFrPanel({project,featureId,featureName,onSaved,blockedReas
     finally{feedback.unresolved();running.current=false;controller.current=null;if(alive.current)setBusy(false);}
   }
   const actions = <>
-    <button type="button" className="button-primary" disabled={busy || !canCreate || Boolean(blockedReason)} title={!canCreate ? tr("当前账号无创建权限或业务写入未启用") : undefined} onClick={() => void generate()}>{busy ? <><LoadingIcon />{tr("正在生成并保存…")}</> : error ? tr("重试本次FR生成") : tr("生成 FR")}</button>
+    <button type="button" className="button-primary" disabled={busy || !canCreate || Boolean(blockedReason)} title={!canCreate ? tr("当前账号无创建权限或业务写入未启用") : undefined} onClick={() => void generate()}>{busy ? tr("正在生成并保存…") : error ? tr("重试本次FR生成") : tr("生成 FR")}</button>
     {busy && <button type="button" className="button-secondary" onClick={() => controller.current?.abort()}>{tr("停止等待")}</button>}
   </>;
   const feedback = (notice || error) ? <div className="panorama-generation-feedback">

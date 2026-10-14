@@ -287,7 +287,20 @@ export function ObjectWorkbench({ project, projectLabel, deletedProjectIds = NO_
     if (action.type === "enter" && action.primary === "workbench") bench.act(project, { type: "home" });
     const secondary = action.type === "enter" || action.type === "select-secondary" ? action.secondary : null;
     if (!secondary) return;
-    if (secondary === "PRD生成" || secondary === "用例生成") { selectMode(secondary === "PRD生成" ? "PRD" : "UC"); return; }
+    if (secondary === "PRD生成") { selectMode("PRD"); return; }
+    if (secondary === "用例生成") {
+      const features = projectFeatures(p);
+      const feature = features.find(item => item.id === active?.featureId)
+        ?? features.find(item => item.id === p.conversation.featureId) ?? features[0];
+      selectMode("UC", feature?.id);
+      if (!feature) {
+        chat({ type: "notice", message: "尚未创建业务功能，请先从工作台生成 PRD。" });
+        return;
+      }
+      bench.act(project, { type: "open-panorama", kind: "UC_OVERVIEW", featureId: feature.id, featureName: feature.name });
+      if (databaseMode) void bench.generateUcDiagram(project, panoramaId(feature.id, "UC_OVERVIEW"));
+      return;
+    }
     if (secondary === "功能设计" || secondary === "功能分配") {
       const source = active ?? Object.values(p.works).find(w => w.kind === "PRD");
       if (!source) { bench.act(project, { type: "notice", message: "尚未创建业务功能，请先从工作台生成 PRD。" }); return; }
@@ -426,7 +439,7 @@ export function ObjectWorkbench({ project, projectLabel, deletedProjectIds = NO_
     bench.act(project, { type: "close", id });
   }
   function renderFrOverview(projectKey: string, ps: ProjectWorks, w: Extract<ObjectWork, { kind: "FR_OVERVIEW" }>, actions?: ReactNode, feedback?: ReactNode) {
-    return <FrOverviewWorkspace generating={visualGenerating(projectKey, w.featureId, "FR")} reviewContent={<FrReviewTable works={featureFrs(ps, w.featureId)} busy={Boolean(w.saving)} onOpen={id => open(id)} onOpenSource={id => open(id)} onConfirm={items => bench.confirmFrs(projectKey, w.id, items)} />} headerActions={<>{createButton(projectKey, w.featureId, "FR")}{actions}</>} workflowFeedback={feedback} readOnly={Boolean(w.readOnly)} featureName={w.featureName} rows={featureFrs(ps, w.featureId).map(fr => ({ ...fr.session.document!.content, sourceWorkId: fr.sourceUcWorkId }))} onOpenSource={id => open(id)} onOpenFr={id => { const target = Object.values(ps.works).find(item => item.kind === "FR" && item.featureId === w.featureId && (item.objectId === id || item.number === id)); if (target) open(target.id); }} />;
+    return <FrOverviewWorkspace generating={visualGenerating(projectKey, w.featureId, "FR")} reviewContent={<FrReviewTable works={featureFrs(ps, w.featureId)} sourceLabels={Object.fromEntries(Object.values(ps.works).filter(item => item.kind === "UC").map(item => [item.database?.artifactId ?? item.objectId, `${item.number} · ${item.session.document?.content.name ?? ""}`]))} busy={Boolean(w.saving)} onOpen={id => open(id)} onOpenSource={openObject} onConfirm={items => bench.confirmFrs(projectKey, w.id, items)} />} headerActions={<>{createButton(projectKey, w.featureId, "FR")}{actions}</>} workflowFeedback={feedback} readOnly={Boolean(w.readOnly)} featureName={w.featureName} rows={featureFrs(ps, w.featureId).map(fr => ({ ...fr.session.document!.content, sourceWorkId: fr.sourceUcWorkId }))} onOpenSource={id => open(id)} onOpenFr={id => { const target = Object.values(ps.works).find(item => item.kind === "FR" && item.featureId === w.featureId && (item.objectId === id || item.number === id)); if (target) open(target.id); }} />;
   }
   function renderAllocationWorkspaces(projectKey: string, ps: ProjectWorks, featureId: string) {
     const works = Object.values(ps.works).filter(w => w.featureId === featureId && (w.kind === "FR_OVERVIEW" || w.kind === "FR_ALLOCATION_OVERVIEW"));
@@ -435,7 +448,7 @@ export function ObjectWorkbench({ project, projectLabel, deletedProjectIds = NO_
       ? tr("来源对象正在编辑或处理，请先保存、确认并结束操作。") : undefined;
     // One owner per project/function keeps candidates alive across FR and allocation tabs.
     return <WorkflowPanel key={`${projectKey}/${featureId}/allocation`} project={projectKey} featureId={featureId} mode="allocation"
-      active={projectKey === project && works.some(w => w.id === p.activeId)} blockedReason={blockedReason}
+      active={projectKey === project && works.some(w => w.id === p.activeId)} blockedReason={blockedReason} onOpenObject={openObject}
       onPreviewsChange={(previews, subsystems) => bench.act(projectKey, { type: "allocation-previews", featureId, previews, subsystems })}
       getTaskThread={() => taskThread(projectKey)} onSaved={() => bench.seedDatabase(projectKey, projectKey, {})}
       onGenerated={originThread => {

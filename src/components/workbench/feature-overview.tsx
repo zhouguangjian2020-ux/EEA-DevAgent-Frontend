@@ -13,8 +13,8 @@ export function FeatureOverview({ feature, work, databaseMode, hasPrd, canCreate
   }
   return <section className="feature-overview" data-testid="feature-overview" aria-busy={work.saving}>
     <header className="panorama-toolbar"><div><h1>{tr("功能全景视图")}</h1><p>{tr("各工作空间共用同一功能信息")}</p></div><button className="button-primary" disabled={hasPrd || !canCreate} title={hasPrd ? tr("该功能已有 PRD，不可重复创建") : !canCreate ? tr("当前账号无创建权限或业务写入未启用") : ""} onClick={onCreatePrd}>{tr("手动创建 PRD")}</button></header>
-    <section className="feature-metadata" aria-label={tr("功能资料")}>
-      <div className="metadata-heading"><h2>{tr("功能资料")}</h2><div className="metadata-actions">
+    <section className="workspace-card feature-metadata" aria-label={tr("功能资料")}>
+      <div className="workspace-card-header metadata-heading"><h2 className="workspace-card-title">{tr("功能资料")}</h2><div className="metadata-actions">
         {databaseMode && <button className="button-secondary" disabled={locked} onClick={reload}>{tr("重新读取")}</button>}
         {!draft && <button className="button-secondary" disabled={!canEdit || work.saving} title={!canEdit ? tr("当前账号无编辑权限或业务写入未启用") : ""} onClick={onEdit}>{tr("编辑功能资料")}</button>}
       </div></div>

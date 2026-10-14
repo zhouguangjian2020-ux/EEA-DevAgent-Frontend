@@ -841,7 +841,7 @@ body,
 .brand-product-logo { width: 36px; height: 36px; object-fit: contain; }
 .brand-product-name { font-size: 19px; font-weight: 700; white-space: nowrap; color: var(--ee-text); }
 .brand-separator { height: 24px; width: 1px; background: var(--ee-border); margin: 0 4px; }
-/* Requested company-only vertical compression; preserve horizontal size at every breakpoint. */
+/* User-approved company logo: preserve width and display at 70% vertical scale. */
 .brand-company-logo { width: 74px; height: auto; flex: 0 0 auto; object-fit: contain; transform: scaleY(0.7); transform-origin: center; }
 .app-shell > .topbar { padding-right: 16px; }
 .app-shell > .topbar .breadcrumb { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -893,3 +893,37 @@ body,
 .send-button { display: inline-flex; align-items: center; justify-content: center; }
 .send-button svg { flex-shrink: 0; }
 .chat-turn-error { color: var(--ee-danger); }
+
+/* Shared object-workspace cards: all overview and detail headers share hierarchy. */
+.workspace-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--ee-border);
+  border-radius: 12px;
+  background: var(--ee-surface);
+  color: var(--ee-text);
+}
+.workspace-card > .workspace-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--ee-border);
+}
+.workspace-card .workspace-card-title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--ee-text);
+}
+.workspace-card-header > span { color: var(--ee-muted); font-size: 11px; }
+.uc-detail-card { overflow-x: auto; }
+.fr-detail-card.workspace-card { padding: 16px; }
+.fr-detail-card.workspace-card .fr-detail-row { padding: 16px 4px; }
+
+.prd-content-card { flex: 0 0 auto; }
+.feature-metadata.workspace-card { padding: 16px; border-radius: 12px; }

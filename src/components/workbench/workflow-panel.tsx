@@ -1,5 +1,5 @@
 "use client";
-import { LoadingIllustration, LoadingIcon } from "@/components/feedback/loading";
+import { LoadingIllustration } from "@/components/feedback/loading";
 import { useI18n } from "@/features/i18n/provider";
 import { AppendFrPanel } from "./append-fr-panel";
 import { useCallback, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
@@ -18,10 +18,11 @@ type AllocationProps = {
   mode: "allocation"; project: string; featureId: string; active: boolean; blockedReason?: string;
   onSaved: () => Promise<Awaited<ReturnType<typeof getProjectWorkspace>>>; getTaskThread?: () => string; onGenerated?: (originThread?: string) => void;
   onPreviewsChange?: (previews: AllocationPreview[], subsystems?: AllocationSubsystem[]) => void;
+  onOpenObject?: (id: string) => void;
   render?: (actions: ReactNode, content: (visible: boolean, subsystemId?: string) => ReactNode, feedback?: ReactNode) => ReactNode;
 };
 function AllocationPanel({ project, featureId, active, onSaved, blockedReason, getTaskThread, onGenerated,
-  onPreviewsChange, render }: AllocationProps) {
+  onPreviewsChange, onOpenObject, render }: AllocationProps) {
   const { t: tr } = useI18n();
   const [feature, setFeature] = useState<WorkspaceFunction>(), [caps, setCaps] = useState<string[]>([]);
   const [allocations, setAllocations] = useState<AllocationRow[]>([]);
@@ -125,7 +126,7 @@ function AllocationPanel({ project, featureId, active, onSaved, blockedReason, g
   const permitted = caps.includes("FR_ALLOCATION.create");
   const actions = <div className="allocation-generation-actions">
     <button type="button" className="button-primary" disabled={busy || !permitted || Boolean(blockedReason)}
-      onClick={generate}>{busy ? <><LoadingIcon />{tr("处理中…")}</> : tr("一键生成FR分配")}</button>
+      onClick={generate}>{busy ? tr("处理中…") : tr("一键生成FR分配")}</button>
     {generating && <button type="button" className="button-secondary" onClick={() => controller.current?.abort()}>{tr("停止等待")}</button>}
   </div>;
   const feedback = (!permitted || error || notice) ? <>
@@ -135,7 +136,7 @@ function AllocationPanel({ project, featureId, active, onSaved, blockedReason, g
   </> : undefined;
   const content = (visible: boolean, subsystemId?: string) => <>
     {feedback && <div className="panorama-generation-feedback">{feedback}</div>}
-    {generating && !allocations.length ? <LoadingIllustration kind="allocation" /> : <AllocationReviewTable key={subsystemId ?? "all"} subsystemId={subsystemId} rows={allocations} feature={feature} capabilities={caps} active={active && visible} busy={busy}
+    {generating && !allocations.length ? <LoadingIllustration kind="allocation" /> : <AllocationReviewTable key={subsystemId ?? "all"} subsystemId={subsystemId} rows={allocations} feature={feature} capabilities={caps} active={active && visible} busy={busy} onOpenObject={onOpenObject}
       onChangeTargets={(id, ids) => {
         const row = allocations.find(item => item.candidate_id === id);
         if (!row || busy || !caps.includes(row.base ? "FR_ALLOCATION.update" : "FR_ALLOCATION.create")) return;

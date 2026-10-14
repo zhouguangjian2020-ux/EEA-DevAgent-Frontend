@@ -2,7 +2,7 @@
 import { assertSafeUcDiagram } from "../panorama/mermaid-safety";
 import { appendGenerated } from "./append-api";
 import { startTaskFeedback } from "./task-feedback";
-import { confirmArtifactBatch, REVIEW_LIMIT, REVIEW_LIMIT_MESSAGE, REVIEW_UNCERTAIN } from "./batch-review";
+import { confirmArtifactBatch, REVIEW_LIMITS, reviewLimitMessage, REVIEW_UNCERTAIN } from "./batch-review";
 
 import { buildConversationRequest, validateConversationRequest } from "../conversation/model";
 import { requestMockConversation } from "../../mocks/conversation";
@@ -215,7 +215,7 @@ export function useWorkbenchStore(deletedProjectIds: readonly string[], getTaskT
     const result: UcReviewResult = { accepted: [], failed: [] };
     const pending: { work: UcWork | FrWork; key: string; mutation: string; revision: string }[] = [];
     const unique = [...new Map(targets.map(target => [target.id, target])).values()];
-    if (unique.length > REVIEW_LIMIT) return { accepted: [], failed: unique.map(x => ({ id: x.id, reason: REVIEW_LIMIT_MESSAGE })) };
+    if (unique.length > REVIEW_LIMITS[kind]) return { accepted: [], failed: unique.map(x => ({ id: x.id, reason: reviewLimitMessage(kind) })) };
     for (const target of unique) {
       const work = state.current[project]?.works[target.id];
       if (!work || work.kind !== kind || !work.database || work.featureId !== featureId || (work.kind !== "UC" && work.kind !== "FR")) {

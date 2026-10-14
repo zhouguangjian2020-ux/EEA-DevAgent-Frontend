@@ -10,7 +10,7 @@ export function UcFrGeneration({ work, projectState, onGenerate, onStop, onOpenU
   const gate = frGenerationGate(projectState, work.featureId), busy = Boolean(work.frBatch);
   const feedback = work.frValidationShown ? gate.reason || "全部 UC 已确认，可以点击一键生成 FR。" : work.session.notice;
   const actions = <>
-      <button type="button" className="button-primary" disabled={busy || work.frBatchComplete} onClick={onGenerate}>{busy ? <><span className="loading-icon" aria-hidden="true" />{tr("正在生成 FR…")}</> : work.frBatchComplete ? tr("已生成 FR") : tr("生成 FR")}</button>
+      <button type="button" className="button-primary" disabled={busy || work.frBatchComplete} onClick={onGenerate}>{busy ? tr("正在生成 FR…") : work.frBatchComplete ? tr("已生成 FR") : tr("生成 FR")}</button>
       {busy && <button type="button" className="button-secondary" onClick={onStop}>{tr("停止 FR 生成")}</button>}
       {work.frBatchComplete && <button type="button" className="button-secondary" onClick={onOpenFr}>{tr("查看 FR 全景")}</button>}
   </>;

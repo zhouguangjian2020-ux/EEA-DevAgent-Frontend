@@ -52,7 +52,7 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
   const taskHistory = useTaskRecords(project, thread, visible);
   const timeline = conversationTimeline(turns, taskHistory.tasks);
   const [recoveryRequest,setRecoveryRequest]=useState('');
-  const [changes,setChanges]=useState<Modification[]>([]),[retry,setRetry]=useState<ChatInput>();
+  const [changes,setChanges]=useState<Modification[]>([]);
   const controller=useRef<AbortController|null>(null), running=useRef(false), epoch=useRef(0), createId=useRef(createUuid()), output=useRef<HTMLDivElement>(null), stick=useRef(true);
   const drafts=useRef(new Map<string,{prompt:string;attachments:typeof c.attachments}>());
   const initialThread=useRef<Promise<ConversationHistory>|null>(null),initialized=useRef(false);
@@ -97,7 +97,7 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
       c.attachments.forEach(a=>onAction({type:'remove-attachment',objectId:a.id}));
       if(draft?.attachments.length)onAction({type:'attach',objects:draft.attachments});
       onAction({type:'prompt',value:draft?.prompt??''});
-      setRecoveryRequest('');onMode?.(null);onThreadChange?.(id);setThread(id);setTurns(r.turns);setChanges([]);setRetry(undefined);setNotice('');
+      setRecoveryRequest('');onMode?.(null);onThreadChange?.(id);setThread(id);setTurns(r.turns);setChanges([]);setNotice('');
     } catch(e){setError(e instanceof Error?e.message:'读取会话失败');}
     finally{if(version===epoch.current)setLoading(false);}
   }
@@ -108,7 +108,7 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
     try {
       const t=await workflowPost<Thread>(path,{client_request_id:createId.current,title:'新会话'});
       initialized.current=true;createId.current=createUuid();drafts.current.set(thread,{prompt:c.prompt,attachments:c.attachments});
-      setRecoveryRequest('');onMode?.(null);onThreadChange?.(t.id);setThread(t.id);setTurns([]);setChanges([]);setRetry(undefined);setNotice('新会话已建立，历史按用户与项目隔离。');
+      setRecoveryRequest('');onMode?.(null);onThreadChange?.(t.id);setThread(t.id);setTurns([]);setChanges([]);setNotice('新会话已建立，历史按用户与项目隔离。');
       // Preserve newly supplied workspace attachments for the first thread only.
       if(thread){c.attachments.forEach(a=>onAction({type:'remove-attachment',objectId:a.id}));onAction({type:'prompt',value:''});}
       await list();
@@ -172,9 +172,9 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
         if(event.type==='done'){setTurnMessage('');patch({status:'completed',duration_ms:validDurationMs(event.duration_ms)});}
         if(event.type==='error')patch({duration_ms:validDurationMs(event.duration_ms)});
       });
-      if(version===epoch.current){setRetry(undefined);await list().catch(() => { if(version===epoch.current)setNotice("回复已完成；会话列表暂时未刷新，可稍后重读。"); });}
+      if(version===epoch.current){await list().catch(() => { if(version===epoch.current)setNotice("回复已完成；会话列表暂时未刷新，可稍后重读。"); });}
     }catch(e){
-      if(version===epoch.current){setNotice('');patch({status:ac.signal.aborted?'interrupted':'failed'});setChanges([]);setRetry(input);setTurnMessage(ac.signal.aborted?'已停止，当前回复未完成。':e instanceof Error?e.message:'对话失败');}
+      if(version===epoch.current){setNotice('');patch({status:ac.signal.aborted?'interrupted':'failed'});setChanges([]);setTurnMessage(ac.signal.aborted?'已停止，当前回复未完成。':e instanceof Error?e.message:'对话失败');}
     }finally{if(version===epoch.current){controller.current=null;running.current=false;setBusy(false);}}
   }
   async function apply(change:Modification){
@@ -237,7 +237,6 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
       </div>}
       </div>
       <div className='conversation-input-actions' aria-label={tr("输入区任务操作")}>
-        {retry&&<button disabled={contentLocked} onClick={()=>void send(retry)}>{tr("重试原对话请求")}</button>}
         {c.error&&<button disabled={contentLocked} onClick={()=>props.onSend('expand',true)}>{tr("重试自动扩写")}</button>}
         {changes.map((change,index)=><div key={change.candidate_id}><span>{tr("修改建议 ")}{index+1} · {change.content.kind}</span><button disabled={contentLocked} onClick={()=>void apply(change)}>{tr("应用为待确认版本")}</button><button disabled={contentLocked} onClick={()=>setChanges(old=>old.filter(c=>c.candidate_id!==change.candidate_id))}>{tr("丢弃建议")}</button></div>)}
       </div>

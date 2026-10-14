@@ -43,10 +43,10 @@ function RemoteUcDiagram({ state, onRefresh, onStop, disabled }: { disabled?: bo
   const statusText = state.status === "loading" ? "正在读取已确认 UC 并请求 Agent 生成图代码…"
     : state.status === "error" ? (state.message ?? "UC 图生成失败，可重试。")
     : null;
-  return <section className="uc-agent-diagram" aria-label={tr("UC 全景图")}>
-    <header className="uc-agent-diagram-header">
-      <div><strong>{tr("UC 全景图")}</strong><p>{tr("后端只发送当前功能下已确认的 UC；草稿和未确认候选不会进入图请求。")}</p></div>
-      <div className="uc-agent-diagram-actions"><span className="uc-agent-count">{count}{tr(" 已确认 UC")}</span><button className="button-secondary" type="button" onClick={onRefresh} disabled={disabled || state.status === "loading" || state.status === "empty"}>{state.status === "loading" ? <><LoadingIcon />{tr("生成中…")}</> : tr(actionLabel)}</button>{state.status === "loading" && onStop && <button className="button-danger" type="button" onClick={onStop}>{tr("停止")}</button>}</div>
+  return <section className="workspace-card uc-agent-diagram" aria-label={tr("UC 全景图")}>
+    <header className="workspace-card-header uc-agent-diagram-header">
+      <div><h2 className="workspace-card-title">{tr("UC 全景图")}</h2><p>{tr("后端只发送当前功能下已确认的 UC；草稿和未确认候选不会进入图请求。")}</p></div>
+      <div className="uc-agent-diagram-actions"><span className="uc-agent-count">{count}{tr(" 已确认 UC")}</span><button className="button-secondary" type="button" onClick={onRefresh} disabled={disabled || state.status === "loading" || state.status === "empty"}>{state.status === "loading" ? tr("生成中…") : tr(actionLabel)}</button>{state.status === "loading" && onStop && <button className="button-danger" type="button" onClick={onStop}>{tr("停止")}</button>}</div>
     </header>
     {statusText && (state.status !== "loading" || state.diagramCode) && <p className="uc-agent-diagram-feedback" role={state.status === "error" ? "alert" : "status"}>{state.status === "loading" && <LoadingIcon />}{tr(statusText)}</p>}
     {state.status === "loading" && !state.diagramCode && <LoadingIllustration kind="uc" label={tr(statusText!)} compact />}

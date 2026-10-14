@@ -30,7 +30,7 @@ export function taskLabel(t: TaskRecord): string {
   const kind = ({ PRD: 'PRD', UC: 'UC', FR: 'FR', FR_ALLOCATION: 'FR分配建议', UC_DIAGRAM: 'UC图' })[t.task_kind];
   if (t.status === 'running') return ({ planning: '正在分析功能定义', creating_function: '正在准备功能', saving: `正在保存${kind}` } as Record<string, string>)[t.stage] ?? `正在生成${kind}`;
   if (t.status === 'waiting_choice') return '功能计划已就绪，尚未生成PRD；请在顶部任务恢复中核对并继续原任务';
-  if (t.status === 'succeeded') return t.result_count === null ? '任务已完成；结果当前不可访问' : t.task_kind === 'PRD' ? 'PRD已保存为待确认版本' : `已新增 ${t.result_count} 条待确认${kind}`;
+  if (t.status === 'succeeded') return t.result_count === null ? '任务已完成；结果当前不可访问' : t.task_kind === 'PRD' ? 'PRD已保存为待确认版本' : `已生成并保存 ${t.result_count} 条${kind}，待确认`;
   if (t.status === 'preview') {
     if (t.task_kind === 'UC_DIAGRAM') return t.unchanged ? '已确认UC未变化，沿用当前图' : 'UC图已生成；请在UC视图查看';
     if (t.task_kind === 'FR_ALLOCATION') return t.result_count === null ? '分配建议已返回，当前无权读取结果' : `已生成 ${t.result_count} 条分配建议，尚未保存或确认`;

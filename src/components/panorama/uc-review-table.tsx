@@ -28,8 +28,8 @@ export function UcReviewTable({ works, busy = false, onOpen, onConfirm }: Props)
     } catch (e) { if (alive.current) setError(e instanceof Error ? e.message : tr("确认失败，请重试")); }
     finally { running.current = false; if (alive.current) setSubmitting(false); }
   }
-  return <section className="uc-review-card" aria-label={tr("功能用例清单")} aria-busy={locked}>
-    <header className="uc-review-header"><div><h2>{tr("功能用例清单")}</h2><p>{tr("共 {total} 条 · 已确认 {accepted} 条 · 待确认 {pending} 条", { total: rows.length, accepted, pending: rows.length - accepted })}</p></div>
+  return <section className="workspace-card uc-review-card" aria-label={tr("功能用例清单")} aria-busy={locked}>
+    <header className="workspace-card-header uc-review-header"><div><h2 className="workspace-card-title">{tr("功能用例清单")}</h2><p>{tr("共 {total} 条 · 已确认 {accepted} 条 · 待确认 {pending} 条", { total: rows.length, accepted, pending: rows.length - accepted })}</p></div>
       <div className="uc-review-actions"><button type="button" role="switch" aria-checked={batchMode} className="button-secondary" disabled={locked} onClick={() => { setBatchMode(!batchMode); setSelected([]); setResult(null); setError(""); }}>{tr("批量确认UC")}</button>
       {batchMode && <button type="button" className="button-primary" disabled={locked || !selectedNow.length} onClick={() => void confirm()}>{submitting ? tr("正在确认…") : tr("确认所选（{count}）", { count: selectedNow.length })}</button>}</div>
     </header>
@@ -42,7 +42,7 @@ export function UcReviewTable({ works, busy = false, onOpen, onConfirm }: Props)
       <th scope="col">{tr("用例编号")}</th><th scope="col">{tr("用例名称")}</th><th scope="col">{tr("确认状态")}</th></tr></thead>
       <tbody>{rows.map(work => { const reason = ucReviewReason(work), isAccepted = work.session.document!.status === "accepted"; return <tr key={work.id}>
         {batchMode && <td className="uc-review-select"><input type="checkbox" aria-label={tr("选择用例 {number}", { number: work.number })} checked={selectedNow.some(s => s.id === work.id)} disabled={locked || Boolean(reason)} title={reason ? tr(reason) : undefined} onChange={e => setSelected(old => e.target.checked ? [...old.filter(s => s.id !== work.id), { id: work.id, revisionId: ucReviewRevision(work) }] : old.filter(s => s.id !== work.id))} /></td>}
-        <td>{work.number}</td><td><button type="button" className="uc-review-name" disabled={locked} onClick={() => onOpen(work.id)}>{work.session.document!.content.name}</button></td>
+        <td className="review-number"><button type="button" className="uc-review-name" disabled={locked} onClick={() => onOpen(work.id)}>{work.number}</button></td><td>{work.session.document!.content.name}</td>
         <td><span className={isAccepted ? "uc-review-accepted" : "uc-review-pending"}>{tr(isAccepted ? "已确认" : "待确认")}</span></td>
       </tr>; })}{!rows.length && <tr><td colSpan={batchMode ? 4 : 3}>{tr("当前功能暂无用例")}</td></tr>}</tbody></table></div>
   </section>;

@@ -12,8 +12,9 @@ type Props = {
   subsystemId?: string;
   onConfirm: (targets: AllocationReviewTarget[]) => Promise<AllocationReviewResult | undefined>;
   onReload: () => void;
+  onOpenObject?: (id: string) => void;
 };
-export function AllocationReviewTable({ rows, feature, capabilities, active, busy, onChangeTargets, subsystemId, onConfirm, onReload }: Props) {
+export function AllocationReviewTable({ rows, feature, capabilities, active, busy, onChangeTargets, subsystemId, onConfirm, onReload, onOpenObject }: Props) {
   const { t: tr } = useI18n();
   const [batchMode, setBatchMode] = useState(false), [selected, setSelected] = useState<AllocationReviewTarget[]>([]);
   const [result, setResult] = useState<AllocationReviewResult>(), [submitting, setSubmitting] = useState(false);
@@ -41,8 +42,8 @@ export function AllocationReviewTable({ rows, feature, capabilities, active, bus
   const visible = frs.map(fr => ({ fr, row: scopedRows.find(row => row.fr_id === fr.id) }))
     .filter(item => !subsystemId || Boolean(item.row));
   const unallocated = visible.filter(item => !item.row).length;
-  return <section className="uc-review-card allocation-review-card" aria-label={tr("FR分配清单")} aria-busy={locked}>
-    <header className="uc-review-header"><div><h2>{tr("FR分配清单")}</h2><p>{tr("共 {total} 条 · 已确认 {accepted} 条 · 待确认 {pending} 条", { total: visible.length, accepted, pending: visible.length - accepted })}</p>{unallocated > 0 && <p>{tr("其中 {count} 条尚未生成分配", { count: unallocated })}</p>}</div>
+  return <section className="workspace-card uc-review-card allocation-review-card" aria-label={tr("FR分配清单")} aria-busy={locked}>
+    <header className="workspace-card-header uc-review-header"><div><h2 className="workspace-card-title">{tr("FR分配清单")}</h2><p>{tr("共 {total} 条 · 已确认 {accepted} 条 · 待确认 {pending} 条", { total: visible.length, accepted, pending: visible.length - accepted })}</p>{unallocated > 0 && <p>{tr("其中 {count} 条尚未生成分配", { count: unallocated })}</p>}</div>
       <div className="uc-review-actions"><button type="button" className="button-secondary" disabled={locked} onClick={onReload}>{tr("读取已保存分配")}</button>
         <button type="button" role="switch" aria-checked={batchMode} className="button-secondary" disabled={locked} onClick={() => { setBatchMode(!batchMode); setSelected([]); setResult(undefined); }}>{tr("批量确认分配")}</button>
         {batchMode && <button type="button" className="button-primary" disabled={locked || !selectedNow.length} onClick={() => void confirm(selectedNow)}>{submitting ? tr("正在确认…") : tr("确认所选（{count}）", { count: selectedNow.length })}</button>}
@@ -61,7 +62,7 @@ export function AllocationReviewTable({ rows, feature, capabilities, active, bus
       const canSave = Boolean(row && capabilities.includes(row.base ? "FR_ALLOCATION.update" : "FR_ALLOCATION.create"));
       return <tr key={fr.id} data-fr-id={fr.id} data-allocation-id={row?.allocationId}>
         {batchMode && <td className="uc-review-select"><input type="checkbox" aria-label={tr("选择分配 {number}", { number: fr.code })} checked={Boolean(row && selectedNow.some(item => item.id === row.candidate_id))} disabled={locked || Boolean(reason)} title={reason ? tr(reason) : undefined} onChange={e => row && setSelected(old => e.target.checked ? [...old.filter(item => item.id !== row.candidate_id), target(row)] : old.filter(item => item.id !== row.candidate_id))} /></td>}
-        <td>{fr.code}</td><td>{fr.sources.map(source => source.uc_code + " · " + source.uc_name).join("、") || "—"}</td><td>{fr.description}{row?.unmatched_reason && <small>{tr("未匹配：")}{row.unmatched_reason}</small>}</td>
+        <td className="review-number"><button type="button" className="uc-review-name" disabled={locked || !onOpenObject} onClick={() => onOpenObject?.(fr.id)}>{fr.code}</button></td><td className="review-source">{fr.sources.length ? fr.sources.map(source => <button key={source.uc_id} type="button" className="uc-review-name review-source-link" disabled={locked || !onOpenObject} onClick={() => onOpenObject?.(source.uc_id)}>{source.uc_code} · {source.uc_name}</button>) : "—"}</td><td>{fr.description}{row?.unmatched_reason && <small>{tr("未匹配：")}{row.unmatched_reason}</small>}</td>
         <td className="allocation-review-target"><SubsystemSelect number={fr.code} value={row?.targets.map(item => item.subsystem_id) ?? []} options={(feature?.subsystems ?? []).filter(item => item.is_allocatable || row?.targets.some(target => target.subsystem_id === item.id))} active={active && !locked} disabled={locked || !canSave || !row} onChange={ids => row && onChangeTargets(row.candidate_id, ids)} /></td>
         <td><span className={isAccepted ? "uc-review-accepted" : "uc-review-pending"}>{tr(!row ? "尚未生成分配" : isAccepted ? "已确认" : "待确认")}</span></td>
         <td className="allocation-review-operations">{row && <><button type="button" className="button-primary" disabled={locked || Boolean(reason)} onClick={() => void confirm([target(row)])}>{tr(row.dirty ? "保存并确认" : "确认分配")}</button></>}</td>

@@ -185,3 +185,25 @@
 
 /* Mermaid default/neutral ink stays legible inside either application theme. */
 .diagram-thumbnail img, .diagram-preview-viewport { background: var(--ee-diagram-paper); }
+
+/* Stable ID/source columns across FR and allocation lists. */
+.fr-review-table { table-layout: auto; min-width: 660px; }
+.fr-review-table .review-number { width: 172px; min-width: 172px; }
+.fr-review-table .review-source { width: 164px; max-width: 180px; }
+.fr-review-table th:last-child { width: 104px; }
+.uc-review-table .review-number { white-space: nowrap; overflow-wrap: normal; }
+.uc-review-table .review-number .uc-review-name { white-space: nowrap; overflow-wrap: normal; }
+.uc-review-table .review-description, .uc-review-table .review-source { overflow-wrap: anywhere; }
+.review-source-link { display: block; margin-bottom: 4px; }
+.uc-review-name { color: var(--ee-primary); }
+.uc-review-name:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
+.uc-review-name:focus-visible { outline: 2px solid var(--ee-primary); outline-offset: 3px; border-radius: 2px; }
+.allocation-review-table .allocation-review-number { width: 172px; min-width: 172px; }
+.allocation-review-table .allocation-review-source { width: 164px; min-width: 140px; }
+/* Drag/zoom stays inside the dialog; each new picture starts fitted and centered. */
+.diagram-preview-viewport { position: relative; overflow: hidden; cursor: grab; touch-action: none; user-select: none; overscroll-behavior: contain; }
+.diagram-preview-viewport.is-dragging { cursor: grabbing; }
+.diagram-preview-viewport:focus-visible { outline: 2px solid var(--ee-primary); outline-offset: 2px; }
+.diagram-preview-canvas { position: absolute; inset: 0; margin: 0; transform-origin: center; will-change: transform; pointer-events: none; }
+.diagram-preview-canvas img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; user-select: none; }
+.diagram-preview-help { margin-left: auto; color: var(--ee-muted); font-size: 11px; }

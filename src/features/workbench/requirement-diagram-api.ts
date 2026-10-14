@@ -1,3 +1,4 @@
+import { FR_BATCH_LIMIT } from "./batch-limits";
 import { request } from "../../lib/api/client";
 import { assertSafeRequirementDiagram } from "../panorama/mermaid-safety";
 
@@ -19,7 +20,7 @@ export function validateRequirementDiagram(value: RequirementDiagramResult, inpu
       || value.source?.project_id !== input.projectId || value.source?.function_id !== input.functionId
       || value.source?.subsystem_id !== input.subsystemId || !/^[a-f0-9]{64}$/.test(value.source_version)
       || typeof value.source.subsystem_name !== "string"
-      || ![value.source.fr_count, value.source.allocation_count].every(n => Number.isInteger(n) && n >= 0 && n <= 100))
+      || ![value.source.fr_count, value.source.allocation_count].every(n => Number.isInteger(n) && n >= 0 && n <= FR_BATCH_LIMIT))
     throw new Error("需求图结果与当前项目、功能或子系统不匹配，未应用结果");
   if (value.status === "empty") {
     if (value.source.fr_count !== 0 || value.source.allocation_count !== 0 || value.diagram_code || value.markdown)
