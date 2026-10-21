@@ -30,8 +30,8 @@ export function FrReviewTable({ works, sourceLabels = {}, busy = false, onOpen, 
   }
   return <section className="workspace-card uc-review-card" aria-label={tr("功能需求清单")} aria-busy={locked}>
     <header className="workspace-card-header uc-review-header"><div><h2 className="workspace-card-title">{tr("功能需求清单")}</h2><p>{tr("共 {total} 条 · 已确认 {accepted} 条 · 待确认 {pending} 条", { total: rows.length, accepted, pending: rows.length - accepted })}</p></div>
-      <div className="uc-review-actions"><button type="button" role="switch" aria-checked={batchMode} className="button-secondary" disabled={locked} onClick={() => { setBatchMode(!batchMode); setSelected([]); setResult(null); setError(""); }}>{tr("批量确认FR")}</button>
-      {batchMode && <button type="button" className="button-primary" disabled={locked || !selectedNow.length} onClick={() => void confirm()}>{submitting ? tr("正在确认…") : tr("确认所选（{count}）", { count: selectedNow.length })}</button>}</div>
+      <div className="uc-review-actions"><button type="button" role="switch" aria-checked={batchMode} className="button-primary batch-review-action batch-review-toggle" disabled={locked} onClick={() => { setBatchMode(!batchMode); setSelected([]); setResult(null); setError(""); }}>{tr("批量确认FR")}</button>
+      {batchMode && <button type="button" className="button-primary batch-review-action" disabled={locked || !selectedNow.length} onClick={() => void confirm()}>{submitting ? tr("正在确认…") : tr("确认所选（{count}）", { count: selectedNow.length })}</button>}</div>
     </header>
     {batchMode && <p className="uc-review-help">{tr("仅选择可确认的待确认需求；批量提交，成功项保留，失败项可重试。")}</p>}
     {error && <p role="alert">{error}</p>}

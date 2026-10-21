@@ -10,7 +10,7 @@ export function zoomDiagram(view: DiagramView, scale: number, anchor = { x: 0, y
   return { scale: next, x: anchor.x - (anchor.x - view.x) * ratio, y: anchor.y - (anchor.y - view.y) * ratio };
 }
 
-/** Viewport gestures transform only an inert SVG image, never execute diagram content. */
+/** Resize the inert SVG image at each zoom level so it is repainted at the displayed size. */
 export function DiagramViewport({ src, label, children }: { src: string; label: string; children?: ReactNode }) {
   const { t: tr } = useI18n();
   const helpId = useId();
@@ -72,7 +72,11 @@ export function DiagramViewport({ src, label, children }: { src: string; label: 
           event.preventDefault(); setView(old => zoomDiagram(old, old.scale + (event.key === "-" ? -.25 : .25)));
         } else if (event.key === "Home" || event.key === "0") { event.preventDefault(); reset(); }
       }}>
-      <div className="diagram-preview-canvas" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}>
+      <div className="diagram-preview-canvas" style={{
+        width: `${view.scale * 100}%`, height: `${view.scale * 100}%`,
+        left: `calc(${(1 - view.scale) * 50}% + ${view.x}px)`,
+        top: `calc(${(1 - view.scale) * 50}% + ${view.y}px)`,
+      }}>
         {/* eslint-disable-next-line @next/next/no-img-element -- Isolated local SVG blob, no executable diagram DOM. */}
         <img src={src} alt={label} draggable={false} />
       </div>

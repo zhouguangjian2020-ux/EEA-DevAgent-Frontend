@@ -21,12 +21,16 @@ import { generatedOverviewAction, revealWorkspaceStep, revealFolderId, type Reve
 import { ObjectTabs } from "./object-tabs";
 import { WorkDialog } from "./work-dialog";
 import { ProjectConversation } from "./project-conversation";
+import { ObjectProposalWorkspace } from "./object-ai-preview";
+import { useObjectProposals } from "@/features/workbench/use-object-proposals";
+import { hasObjectProposalWrite, proposalScope, type ObjectProposal } from "@/features/workbench/object-proposals";
 import { createNavigationState, transitionNavigation, type NavigationState, type NavigationAction } from "../../features/navigation/model";
 import { collectObjects, filterWorkspaceTree, type WorkspaceObject, type WorkspaceFolder, type WorkspaceDeletion } from "../../features/workspace/tree";
 import { canGenerateUcBatch, hasGeneratedUcBatch, EMPTY_PROJECT, featureUcs, featureFrs, workStage, workCategory, isPanorama, findObjectWork, isWorkRunning, isWorkDirty, workLabel, workObject, projectWorkspaceTree, type ObjectWork, type PanoramaWork, type ProjectWorks } from "../../features/workbench/model";
 import { useWorkbenchStore } from "../../features/workbench/use-workbench-store";
 import type { ConversationAction, GenerationMode } from "../../features/conversation/model";
 import "./project-conversation.css";
+import { useObjectAssociationAnimation } from "./use-object-association-animation";
 import "./manual-work.css";
 import { FeatureOverview } from "./feature-overview";
 import { ManualCreateDialog, type CreateTarget } from "./manual-create-dialog";
@@ -54,6 +58,8 @@ function locateWork(b: BrowseState, w: ObjectWork, locate: boolean): BrowseState
 export function ObjectWorkbench({ project, projectLabel, deletedProjectIds = NO_DELETED_PROJECTS, databaseMode = false, onContextChange, onLocalDataChange }: Props) {
   const { t: tr } = useI18n();
   const threads = useRef<Record<string, string>>({});
+  const [activeThreads, setActiveThreads] = useState<Record<string, string>>({});
+  const [selectedProposals, setSelectedProposals] = useState<Record<string, string | undefined>>({});
   const requirementCache = useRef<RequirementDiagramCache>(new Map());
   function taskThread(key: string) {
     const id = threads.current[key];
@@ -61,6 +67,22 @@ export function ObjectWorkbench({ project, projectLabel, deletedProjectIds = NO_
     return id;
   }
   const bench = useWorkbenchStore(deletedProjectIds, taskThread), p = bench.store[project] ?? EMPTY_PROJECT;
+  const animateAssociation = useObjectAssociationAnimation(project + "/" + (activeThreads[project] ?? "") + "/" + Boolean(p.activeId));
+  const review = useObjectProposals({
+    getState: key => bench.store[key],
+    // AI saves are external to manual drafts: preserve reducer guards even if a
+    // draft appears while this read is in flight. Never use the manual savedId bypass.
+    refresh: key => bench.seedDatabase(key, key, { initial: false }),
+  });
+  const reviewSelectionKey = (key: string, artifactId: string) => JSON.stringify([key, activeThreads[key] ?? "", artifactId]);
+  function openProposal(key: string, proposal: ObjectProposal) {
+    if (proposal.status === "discarded") return;
+    const work = Object.values(bench.store[key]?.works ?? {}).find(item => item.database?.artifactId === proposal.artifact_id);
+    if (!work) { bench.act(key, { type: "notice", message: "该对象已不可访问，预览保留；请刷新工作空间核对。" }); return; }
+    setSelectedProposals(old => ({ ...old, [reviewSelectionKey(key, proposal.artifact_id)]: proposal.candidate_id }));
+    if (key === project) { bench.act(key, { type: "open", id: work.id }); }
+  }
+
   const workflowLoading = useWorkflowLoading();
   function visualGenerating(projectKey: string, featureId: string, kind: "UC" | "FR" | "FR_ALLOCATION") {
     return workflowLoading(projectKey, featureId, kind) || Object.values(bench.store[projectKey]?.works ?? {}).some(w =>
@@ -254,6 +276,7 @@ export function ObjectWorkbench({ project, projectLabel, deletedProjectIds = NO_
     const previous = threads.current[key];
     if (previous === id) return;
     threads.current[key] = id;
+    setActiveThreads(old => ({ ...old, [key]: id }));
     if (id) ensurePrdCreation(key);
     else setCreationSessionMap(old => ({ ...old, [key]: undefined }));
     if (currentProject.current === key && previous) contextEpoch.current++;
@@ -474,9 +497,18 @@ export function ObjectWorkbench({ project, projectLabel, deletedProjectIds = NO_
       onToggleFolder={id => patchBrowse({ folders: { ...browse.folders, [id]: !(browse.folders[id] ?? files.some(f => f.id === id)) } })}
       selectedIds={browse.checked} onToggleObject={id => patchBrowse({ checked: browse.checked.includes(id) ? browse.checked.filter(x => x !== id) : [...browse.checked, id] })}
       previewId={objectId} activeFolderId={activeFolderId} onOpenFolder={openFolder} onFolderMenu={openFolderDeletion} onPreview={preview} onObjectMenu={openDeletion}
-      attachmentTarget={tr("项目{0}对话", { "0": project })} attachmentBusy={Boolean(p.conversation.operation)}
+      attachmentTarget={tr("项目{0}对话", { "0": project })} attachmentBusy={Boolean(p.conversation.operation || p.conversation.contextLocked)}
       onNewPrd={() => selectMode("PRD")} readOnly={databaseMode}
-      onAddObjects={() => { if (p.conversation.operation) return; chat({ type: "attach", objects: objects.filter(o => browse.checked.includes(o.id)) }); patchBrowse({ checked: [] }); }} />
+      onAddObjects={source => {
+        if (p.conversation.operation || p.conversation.contextLocked) return;
+        const selected = objects.filter(o => browse.checked.includes(o.id));
+        if (new Set([...p.conversation.attachments, ...selected].map(o => o.id)).size > 20) {
+          chat({ type: "notice", message: "当前关联对象最多支持20个，请先移除部分对象。" }); return;
+        }
+        const addedCount = selected.filter(object => !p.conversation.attachments.some(existing => existing.id === object.id)).length;
+        chat({ type: "attach", objects: selected }); patchBrowse({ checked: [] });
+        animateAssociation(source, addedCount);
+      }} />
     <div className="object-stage">
       <ObjectTabs loadingIds={p.tabs.filter(id => {
           const w = p.works[id];
@@ -488,18 +520,18 @@ export function ObjectWorkbench({ project, projectLabel, deletedProjectIds = NO_
       <div className={`project-workspace-layout${active ? " has-object" : " is-home"}`}>
         <div className="project-document-deck" hidden={!active}>
           {Object.entries(bench.store).flatMap(([projectKey, ps]) => Object.values(ps.works).filter(w => !databaseMode || (w.kind !== "FR_OVERVIEW" && w.kind !== "FR_ALLOCATION_OVERVIEW")).map(w => <section key={`${projectKey}/${w.id}`} id={`panel-${projectKey}-${w.id}`} aria-labelledby={`tab-${projectKey}-${w.id}`} role="tabpanel" tabIndex={0} hidden={projectKey !== project || p.activeId !== w.id} className="object-panel">
-            {w.kind === "FEATURE_OVERVIEW" ? <FeatureOverview work={w} databaseMode={databaseMode} canEdit={!databaseMode || Boolean(ps.features[w.featureId]?.canUpdate)} onEdit={() => bench.act(projectKey, { type: "feature-edit", id: w.id })} onField={(field, value) => bench.act(projectKey, { type: "feature-field", id: w.id, field, value })} onCancel={() => bench.act(projectKey, { type: "feature-cancel", id: w.id })} onSave={() => void bench.saveFeature(projectKey, w.id)} onReload={() => void bench.reloadFeature(projectKey, w.id)} feature={projectFeatures(ps).find(f => f.id === w.featureId) ?? { id: w.featureId, name: w.featureName, description: "" }} hasPrd={Object.values(ps.works).some(v => v.featureId === w.featureId && v.kind === "PRD")} canCreate={!databaseMode || Boolean(ps.capabilities?.includes("PRD.create"))} onCreatePrd={() => startCreate(projectKey, "PRD", w.featureId)} />
+            <ObjectProposalWorkspace work={w} state={ps} proposals={(review.collection[proposalScope(projectKey, activeThreads[projectKey] ?? "")] ?? []).filter(item => item.artifact_id === w.database?.artifactId)} selectedId={selectedProposals[JSON.stringify([projectKey, activeThreads[projectKey] ?? "", w.database?.artifactId])]} onSelect={id => setSelectedProposals(old => ({ ...old, [JSON.stringify([projectKey, activeThreads[projectKey] ?? "", w.database?.artifactId])]: id }))} locked={hasObjectProposalWrite(review.collection, projectKey, w.database?.artifactId)} onConfirm={item => void review.confirm(projectKey, item)} onRecover={item => void review.recover(projectKey, item)} onRefresh={item => void review.refresh(projectKey, item)} onDiscard={item => review.discard(projectKey, item)}>{w.kind === "FEATURE_OVERVIEW" ? <FeatureOverview work={w} databaseMode={databaseMode} canEdit={!databaseMode || Boolean(ps.features[w.featureId]?.canUpdate)} onEdit={() => bench.act(projectKey, { type: "feature-edit", id: w.id })} onField={(field, value) => bench.act(projectKey, { type: "feature-field", id: w.id, field, value })} onCancel={() => bench.act(projectKey, { type: "feature-cancel", id: w.id })} onSave={() => void bench.saveFeature(projectKey, w.id)} onReload={() => void bench.reloadFeature(projectKey, w.id)} feature={projectFeatures(ps).find(f => f.id === w.featureId) ?? { id: w.featureId, name: w.featureName, description: "" }} hasPrd={Object.values(ps.works).some(v => v.featureId === w.featureId && v.kind === "PRD")} canCreate={!databaseMode || Boolean(ps.capabilities?.includes("PRD.create"))} onCreatePrd={() => startCreate(projectKey, "PRD", w.featureId)} />
             : w.kind === "PRD" ? <PrdWorkspace generation={databaseMode ? { state: w.prdGeneration, onStop: () => bench.cancel(projectKey, w.id) } : undefined} persistence={persistence(projectKey, w)} readOnly={Boolean(w.readOnly)} featureName={w.featureName} session={w.session} onAction={action => bench.objectAction(projectKey, w.id, action)} onGenerateUcs={() => bench.generateUcs(projectKey, w.id)} ucGenerating={Boolean(w.ucTask)} ucGenerated={hasGeneratedUcBatch(w)} canGenerateUcs={canGenerateUcBatch(w)} onStopUcs={() => bench.cancel(projectKey, w.id)} generatedUcs={w.database ? [] : featureUcs(ps, w.featureId).map(uc => ({ id: uc.id, label: workLabel(uc) }))} onOpenUc={id => open(id)} generatedCandidates={[]} />
             : w.kind === "UC" ? <UcWorkspace persistence={persistence(projectKey, w)} acceptedPrdRevisionId={acceptedPrd(ps, w.featureId)} readOnly={Boolean(w.readOnly)} referenceTargets={Object.fromEntries(featureUcs(ps, w.featureId).map(c => [c.number, c.id]))} onOpenReference={id => open(id)} featureName={w.featureName} number={w.number} sourceName={w.featureName} onSource={() => open(w.sourcePrdWorkId)} session={w.session} onAction={action => bench.objectAction(projectKey, w.id, action)} />
             : isPanorama(w) ? renderPanorama(projectKey, ps, w)
             : w.kind === "FR_OVERVIEW" ? renderFrOverview(projectKey, ps, w)
-            : <FrWorkspace persistence={persistence(projectKey, w)} candidates={acceptedUcs(ps, w.featureId)} readOnly={Boolean(w.readOnly)} featureName={w.featureName} number={w.number} session={w.session} onAction={action => bench.objectAction(projectKey, w.id, action)} onBack={() => open(w.sourceOverviewId)} />}
+            : <FrWorkspace persistence={persistence(projectKey, w)} candidates={acceptedUcs(ps, w.featureId)} readOnly={Boolean(w.readOnly)} featureName={w.featureName} number={w.number} session={w.session} onAction={action => bench.objectAction(projectKey, w.id, action)} onBack={() => open(w.sourceOverviewId)} />}</ObjectProposalWorkspace>
           </section>))}
           {databaseMode && Object.entries(bench.store).flatMap(([projectKey, ps]) => [...new Set(Object.values(ps.works)
             .filter(w => w.kind === "FR_OVERVIEW" || w.kind === "FR_ALLOCATION_OVERVIEW").map(w => w.featureId))]
             .map(featureId => renderAllocationWorkspaces(projectKey, ps, featureId)))}
         </div>
-        <div className="project-conversation-host">{Object.entries(projectStates).map(([key, ps]) => <ProjectConversation onCreateFunction={() => startCreate(key, "function")} createFunctionDisabled={key !== project || databaseLoading || Boolean(databaseError) || databaseMode && !ps.capabilities?.includes("function.create")} createFunctionDisabledReason={databaseMode && !ps.capabilities?.includes("function.create") ? "当前账号无功能创建权限或业务写入未启用" : undefined} onThreadChange={id => handleThreadChange(key, id)} onSaved={() => bench.seedDatabase(key, key, {})} key={key} project={key} state={ps} readOnly={databaseMode} visible={key === project} docked={Boolean(ps.activeId)} onAction={action => bench.act(key, { type: "conversation", action })} onMode={mode => selectMode(mode, undefined, key)} onPrdSubmit={(prompt, target, name) => submitPrdCreation(key, prompt, target, name)} onGenerateUcs={id => { void bench.generateUcs(key, id); bench.act(key, { type: "conversation", action: { type: "mode", mode: null } }); }} prdCreation={databaseMode ? creationSessionMap[key] : undefined} onPrdModeExit={() => exitPrdCreation(key)} onSend={(kind, retry, fail) => {
+        <div className="project-conversation-host">{Object.entries(projectStates).map(([key, ps]) => <ProjectConversation proposals={review.collection[proposalScope(key, activeThreads[key] ?? "")] ?? []} onProposals={(threadId, requestId, changes) => review.receive(key, threadId, requestId, changes)} onOpenProposal={item => { cancelReveal(); openProposal(key, item); }} onCreateFunction={() => startCreate(key, "function")} createFunctionDisabled={key !== project || databaseLoading || Boolean(databaseError) || databaseMode && !ps.capabilities?.includes("function.create")} createFunctionDisabledReason={databaseMode && !ps.capabilities?.includes("function.create") ? "当前账号无功能创建权限或业务写入未启用" : undefined} onThreadChange={id => handleThreadChange(key, id)} onSaved={() => bench.seedDatabase(key, key, {})} key={key} project={key} state={ps} readOnly={databaseMode} visible={key === project} docked={Boolean(ps.activeId)} onAction={action => bench.act(key, { type: "conversation", action })} onMode={mode => selectMode(mode, undefined, key)} onPrdSubmit={(prompt, target, name) => submitPrdCreation(key, prompt, target, name)} onGenerateUcs={id => { void bench.generateUcs(key, id); bench.act(key, { type: "conversation", action: { type: "mode", mode: null } }); }} prdCreation={databaseMode ? creationSessionMap[key] : undefined} onPrdModeExit={() => exitPrdCreation(key)} onSend={(kind, retry, fail) => {
           const request = retry ? ps.conversation.error?.request : { kind, mode: ps.conversation.mode };
           // Retrying must be checked against the failed request, not a new mode.
           if (databaseMode && request?.kind !== "expand") {

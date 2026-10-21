@@ -56,11 +56,10 @@
 .live-project-conversation .conversation-message.assistant,
 .live-chat .conversation-message.assistant { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 2px 3px; }
 
-/* Compact history: a single clock trigger, no permanent session selector row. */
-.project-conversation.live-project-conversation { position: relative; grid-template-rows: minmax(0, 1fr) auto; }
-.live-project-conversation > .conversation-thread-toolbar { position: absolute; top: 10px; right: 14px; z-index: 20; padding: 0; border: 0; background: transparent; grid-row: auto; }
-.live-project-conversation > .conversation-output { grid-row: 1; margin-top: 44px; padding-top: 10px; }
-.live-project-conversation > .conversation-composer-area { grid-row: 2; }
+/* History belongs to the conversation header; its layers stay below the object tabbar. */
+.project-conversation.live-project-conversation { position: relative; isolation: isolate; }
+.live-project-conversation > .conversation-thread-toolbar { position: relative; z-index: 1; justify-content: flex-end; padding: 10px 14px 0; border: 0; background: transparent; }
+.live-project-conversation > .conversation-output { padding-top: 10px; }
 .conversation-history-root { position: relative; }
 .conversation-history-trigger { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: var(--ee-muted); background: var(--ee-surface); border: 1px solid var(--ee-border); border-radius: 9px; transition: color .15s, border-color .15s; }
 .conversation-history-trigger:hover, .conversation-history-trigger[aria-expanded="true"] { color: var(--ee-primary); border-color: var(--ee-primary); }

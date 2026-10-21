@@ -1,11 +1,14 @@
 /** Backend-measured milliseconds only. Never reconstruct timing from UI clocks. */
 const terminalStatuses = new Set(["completed", "succeeded", "preview", "empty", "failed"]);
+export function isTaskDurationTerminal(status: string): boolean {
+  return terminalStatuses.has(status);
+}
 export function validDurationMs(value: unknown): number | null {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 export function taskDurationParts(value: unknown, status: string): { minutes: number; seconds: number } | null {
   const milliseconds = validDurationMs(value);
-  if (milliseconds === null || !terminalStatuses.has(status)) return null;
+  if (milliseconds === null || !isTaskDurationTerminal(status)) return null;
   const seconds = Math.floor(milliseconds / 1000);
   return { minutes: Math.floor(seconds / 60), seconds: seconds % 60 };
 }

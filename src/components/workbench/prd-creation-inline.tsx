@@ -1,5 +1,7 @@
 "use client";
-import { TaskProgress } from "@/components/feedback/task-progress";
+import { AgentMarkdown } from "./agent-markdown";
+import { ConversationTaskContextDetails } from "./conversation-context-usage";
+import { ConversationTaskActivity, type TaskActivityOutcome } from "./conversation-task-activity";
 import { useI18n } from "@/features/i18n/provider";
 import { useSyncExternalStore } from "react";
 import { PrdCreationSession, creationInFlight } from "@/features/prd/creation";
@@ -19,9 +21,17 @@ export function PrdCreationInline({ session }: { session: PrdCreationSession; on
   const { t: tr } = useI18n();
   const state = useSyncExternalStore(session.subscribe, session.snapshot, session.snapshot);
   if (!state.input && !state.error && !state.notice) return null;
+  const running = state.busy && !state.uncertain && !state.error;
+  const outcome: TaskActivityOutcome = state.uncertain ? "uncertain" : state.error ? "failed"
+    : state.intent?.status === "saved" ? "completed" : state.intent?.status === "planned" ? "choice" : "failed";
+  const message = creationStatus(state);
   return <div className="live-chat-turn">
     {state.input && <article className="conversation-message user"><p>{state.input.message}</p></article>}
-    <article className="conversation-message assistant"><p role="status"><TaskProgress text={creationStatus(state)} pending={state.busy && !state.uncertain && !state.error} /></p>
+    <article className="conversation-message assistant">
+      <ConversationTaskActivity message={message} running={running} outcome={outcome}>
+        <ConversationTaskContextDetails taskKind="PRD" functionName={state.input?.new_function_name ?? state.intent?.new_function_name} />
+      </ConversationTaskActivity>
+      {!running && <AgentMarkdown>{tr(message)}</AgentMarkdown>}
       {state.error && <p role="alert">{tr(state.error)}</p>}{state.notice && <p>{tr(state.notice)}</p>}
     </article>
   </div>;

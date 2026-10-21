@@ -2,7 +2,9 @@ import { ApiError } from '@/lib/api/client';
 import { createUuid } from '@/lib/uuid';
 import { prdCreationApi, type CreationChoice, type CreationInput, type PrdCreationIntent } from './creation-api';
 
-export const CREATION_WAIT_MS = 315_000;
+// Per Agent phase: 2000s execution plus completion/persistence headroom.
+export const CREATION_WAIT_MS = 2_100_000;
+const CREATION_READ_WAIT_MS = 315_000;
 export type CreationState = { prompt: string; candidateName: string | null; input: CreationInput | null; intent: PrdCreationIntent | null; busy: boolean; phase: 'plan' | 'generate' | 'read' | null; uncertain: boolean; notFound: boolean; error: string; notice: string };
 export type CreationAnchor = { project: string; thread: string; epoch: number };
 export function canNavigateCreationResult(project: string, current: CreationAnchor, dialogProject: string | null, origin: CreationAnchor | null, automatic: boolean, aborted: boolean) {
@@ -59,11 +61,11 @@ export class PrdCreationSession {
     let thread_id: string | undefined;
     try { thread_id = this.getThread?.(); } catch (e) { this.patch({ error: message(e) }); return; }
     this.patch({ input: { client_request_id: createUuid(), message: prompt, ...this.target, ...(thread_id ? { thread_id } : {}) } });
-    await this.run('plan', async signal => this.accept(await this.api.create(this.project, this.value.input!, signal), signal, true));
+    await this.run('plan', async (signal, restartWait) => this.accept(await this.api.create(this.project, this.value.input!, signal), signal, true, true, restartWait));
   }
   async resend() {
     if (this.value.busy || !this.value.notFound || !this.value.input) return;
-    await this.run('plan', async signal => this.accept(await this.api.create(this.project, this.value.input!, signal), signal, true));
+    await this.run('plan', async (signal, restartWait) => this.accept(await this.api.create(this.project, this.value.input!, signal), signal, true, true, restartWait));
   }
   async choose(choice: CreationChoice) {
     if (!canChooseCreation(this.value) || !this.value.intent) return;
@@ -71,7 +73,7 @@ export class PrdCreationSession {
   }
   async retry() {
     if (!canRetryCreation(this.value)) return;
-    await this.run(this.value.intent!.function_id ? 'generate' : 'plan', async signal => this.accept(await this.api.execute(this.project, this.value.intent!, { action: this.value.intent!.status === 'planned' ? 'auto' : 'continue' }, signal), signal, true));
+    await this.run(this.value.intent!.function_id ? 'generate' : 'plan', async (signal, restartWait) => this.accept(await this.api.execute(this.project, this.value.intent!, { action: this.value.intent!.status === 'planned' ? 'auto' : 'continue' }, signal), signal, true, true, restartWait));
   }
   async refresh() {
     if (this.value.busy || !this.value.input) return;
@@ -82,7 +84,7 @@ export class PrdCreationSession {
     const intent = artifactId ? { ...this.value.intent, artifact_id: artifactId } : this.value.intent;
     await this.run('read', async signal => { const notice = await this.onResult(intent, false, signal); if (!signal.aborted) this.patch({ notice }); }, false);
   }
-  private async accept(intent: PrdCreationIntent, signal: AbortSignal, auto: boolean, notify = true): Promise<void> {
+  private async accept(intent: PrdCreationIntent, signal: AbortSignal, auto: boolean, notify = true, restartWait?: () => void): Promise<void> {
     if (signal.aborted) return;
     if (intent.project_id !== this.project || intent.client_request_id !== this.value.input?.client_request_id) throw new Error('创建回执身份不匹配，已停止处理。');
     this.patch({ intent, uncertain: false, notFound: false, error: '', notice: '' });
@@ -95,16 +97,24 @@ export class PrdCreationSession {
       try { const notice = await this.onResult(intent, true, signal); if (!signal.aborted) this.patch({ notice }); }
       catch { if (!signal.aborted) this.patch({ notice: 'PRD已保存，但目录刷新失败。请在文档目录中查看；不要重新生成。' }); }
     } else if (auto && intent.status === 'planned') {
+      // Planning and drafting are separate bounded requests, not one shared timer.
+      restartWait?.();
       this.patch({ phase: 'generate' });
       await this.accept(await this.api.execute(this.project, intent, this.value.input?.target_function_id ? { action: 'reuse', function_id: this.value.input.target_function_id } : { action: 'auto' }, signal), signal, false);
     }
   }
-  private async run(phase: CreationState['phase'], task: (signal: AbortSignal) => Promise<void>, recover = true) {
+  private async run(phase: CreationState['phase'], task: (signal: AbortSignal, restartWait: () => void) => Promise<void>, recover = true) {
     if (this.value.busy) return;
     const epoch = ++this.epoch, ac = new AbortController(); this.abort = ac;
     this.patch({ busy: true, phase, error: '', notice: '', notFound: false });
-    const timer = setTimeout(() => { if (this.epoch === epoch) this.stop(); }, CREATION_WAIT_MS);
-    try { await task(ac.signal); }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const restartWait = () => {
+      if (this.epoch !== epoch || ac.signal.aborted) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => { if (this.epoch === epoch) this.stop(); }, phase === 'read' ? CREATION_READ_WAIT_MS : CREATION_WAIT_MS);
+    };
+    restartWait();
+    try { await task(ac.signal, restartWait); }
     catch (e) {
       if (epoch !== this.epoch || ac.signal.aborted) return;
       this.patch({ error: message(e), uncertain: true });

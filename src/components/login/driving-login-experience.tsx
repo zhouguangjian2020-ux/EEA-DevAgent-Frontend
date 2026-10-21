@@ -100,7 +100,7 @@ export default function DrivingLoginExperience(){
       </section>
     </div>
     <aside className={`chapter-indicator${!homeVisible?" is-away":""}`} aria-label={tr("章节导航")} inert={!homeVisible}><span className="chapter-number">0{active+1}<small>/ 03</small></span>{chapters.map((title,i)=><button key={title} className={active===i?"active":""} onClick={()=>go(i)} aria-label={tr("第{0}屏：{1}",{0:i+1,1:tr(title)})} aria-pressed={active===i}/>)}</aside>
-    <DrivingLoginPanel active={ready&&view==="login"&&settled==="login"} onBack={back}/>
+    <DrivingLoginPanel active={ready&&view==="login"&&settled==="login"}/>
     <footer className="bottom-bar"><span>{tr("让下一程，从这里开始")}</span><button className="scroll-cue" aria-label={active===2?tr("回到首屏"):tr("向下探索")} onClick={()=>go(active===2?0:active+1)} hidden={view==="login"}><span>{active===2?tr("回到开端"):tr("向下探索")}</span><svg viewBox="0 0 24 24" aria-hidden="true" style={{transform:active===2?"rotate(180deg)":undefined}}><path d="M12 3v17m-6-6 6 6 6-6"/></svg></button><span className="footer-caption">BUILT FOR WHAT&apos;S NEXT.</span></footer>
     {error&&<div className="scene-error" role="status">{tr(error)}<button onClick={()=>window.location.reload()}>{tr("重新加载")}</button></div>}
     <div className="scroll-track" aria-hidden="true"><div/><div/><div/></div>

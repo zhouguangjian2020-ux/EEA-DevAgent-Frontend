@@ -45,8 +45,8 @@ export function AllocationReviewTable({ rows, feature, capabilities, active, bus
   return <section className="workspace-card uc-review-card allocation-review-card" aria-label={tr("FR分配清单")} aria-busy={locked}>
     <header className="workspace-card-header uc-review-header"><div><h2 className="workspace-card-title">{tr("FR分配清单")}</h2><p>{tr("共 {total} 条 · 已确认 {accepted} 条 · 待确认 {pending} 条", { total: visible.length, accepted, pending: visible.length - accepted })}</p>{unallocated > 0 && <p>{tr("其中 {count} 条尚未生成分配", { count: unallocated })}</p>}</div>
       <div className="uc-review-actions"><button type="button" className="button-secondary" disabled={locked} onClick={onReload}>{tr("读取已保存分配")}</button>
-        <button type="button" role="switch" aria-checked={batchMode} className="button-secondary" disabled={locked} onClick={() => { setBatchMode(!batchMode); setSelected([]); setResult(undefined); }}>{tr("批量确认分配")}</button>
-        {batchMode && <button type="button" className="button-primary" disabled={locked || !selectedNow.length} onClick={() => void confirm(selectedNow)}>{submitting ? tr("正在确认…") : tr("确认所选（{count}）", { count: selectedNow.length })}</button>}
+        <button type="button" role="switch" aria-checked={batchMode} className="button-primary batch-review-action batch-review-toggle" disabled={locked} onClick={() => { setBatchMode(!batchMode); setSelected([]); setResult(undefined); }}>{tr("批量确认分配")}</button>
+        {batchMode && <button type="button" className="button-primary batch-review-action" disabled={locked || !selectedNow.length} onClick={() => void confirm(selectedNow)}>{submitting ? tr("正在确认…") : tr("确认所选（{count}）", { count: selectedNow.length })}</button>}
       </div>
     </header>
     <p className="uc-review-help">{tr("修改子系统后分配变为待确认；点击确认时先保存再确认，离开前请处理未保存修改。")}</p>

@@ -5,9 +5,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { login, USE_MOCKS } from "@/lib/api/client";
 
-type Props = { active: boolean; onBack: () => void };
+type Props = { active: boolean };
 
-export default function DrivingLoginPanel({ active, onBack }: Props) {
+export default function DrivingLoginPanel({ active }: Props) {
   const { t: tr } = useI18n();
   const router = useRouter();
   const [username, setUsername] = useState("engineer01");
@@ -16,12 +16,13 @@ export default function DrivingLoginPanel({ active, onBack }: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const panel = useRef<HTMLElement>(null);
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!active) return;
-    const focusTimer = window.setTimeout(() => input.current?.focus({ preventScroll: true }), 1450);
-    return () => window.clearTimeout(focusTimer);
+    if (!active || panel.current?.contains(document.activeElement)) return;
+    // Focus once when the settled panel opens, never after the user starts typing.
+    input.current?.focus({ preventScroll: true });
   }, [active]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -49,7 +50,7 @@ export default function DrivingLoginPanel({ active, onBack }: Props) {
   }
 
   return (
-    <section className={"login-panel" + (active ? " is-active" : "")} aria-label={tr("工作区登录")} aria-hidden={!active} inert={!active}>
+    <section ref={panel} className={"login-panel" + (active ? " is-active" : "")} aria-label={tr("工作区登录")} aria-hidden={!active} inert={!active}>
       <div className="panel-eyebrow"><span /> YOUR NEXT CHAPTER</div>
       <h1>{tr("欢迎，")}<br /><span>{tr("进入你的工作区。")}</span></h1>
       <p className="panel-description">{tr("让想法与工程，在这里相遇。")}</p>
@@ -69,7 +70,6 @@ export default function DrivingLoginPanel({ active, onBack }: Props) {
         {error && <div className="error-space" role="alert">{tr(error)}</div>}
         <button type="submit" className="primary-button login-submit" disabled={loading}>{loading ? tr("登录中…") : tr("登录工作区")}<span aria-hidden="true">→</span></button>
       </form>
-      <button type="button" className="back-button" onClick={onBack}>{tr("← 返回首页")}</button>
     </section>
   );
 }

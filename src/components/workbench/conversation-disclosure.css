@@ -1,0 +1,25 @@
+:is(.conversation-activity, .conversation-context-usage, .conversation-reply-disclosure) {
+  min-width: 0; margin: 0 0 12px; border: 1px solid var(--ee-border); border-radius: var(--ee-radius-sm);
+  background: var(--ee-canvas); color: var(--ee-muted); font-size: 12px; line-height: 1.6;
+}
+:is(.conversation-activity-toggle, .conversation-context-usage > summary, .conversation-reply-disclosure > summary) {
+  display: flex; width: 100%; align-items: center; gap: 8px; padding: 10px 12px; border: 0;
+  border-radius: inherit; background: transparent; color: var(--ee-muted); text-align: left;
+  cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 400; line-height: 1.6; list-style: none;
+}
+:is(.conversation-context-usage, .conversation-reply-disclosure) > summary::-webkit-details-marker { display: none; }
+:is(.conversation-activity-toggle, .conversation-context-usage > summary, .conversation-reply-disclosure > summary):focus-visible {
+  outline: 2px solid var(--ee-primary); outline-offset: 2px;
+}
+.conversation-activity-heading { flex-shrink: 0; color: var(--ee-text); font-weight: 500; }
+.conversation-disclosure-chevron { display: block; flex: 0 0 14px; width: 14px; height: 14px; }
+.conversation-disclosure-chevron[data-open="true"],
+:is(.conversation-context-usage, .conversation-reply-disclosure)[open] > summary > .conversation-disclosure-chevron { transform: rotate(90deg); }
+.conversation-reply-state { margin-left: auto; min-width: 0; overflow-wrap: anywhere; }
+.conversation-reply-content { border-top: 1px solid var(--ee-border); padding: 10px 12px; max-height: 320px; overflow: auto; scrollbar-width: none; }
+.conversation-reply-content::-webkit-scrollbar { display: none; }
+.conversation-reply-content > :first-child { margin-top: 0; }
+.conversation-reply-content > :last-child { margin-bottom: 0; }
+@media (max-width: 480px) {
+  :is(.conversation-activity-toggle, .conversation-context-usage > summary, .conversation-reply-disclosure > summary) { flex-wrap: wrap; }
+}

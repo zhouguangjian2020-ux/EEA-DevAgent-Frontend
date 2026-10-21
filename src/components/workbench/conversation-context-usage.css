@@ -1,0 +1,8 @@
+.conversation-context-usage > summary span { font-variant-numeric: tabular-nums; min-width: 0; overflow-wrap: anywhere; }
+.conversation-context-usage > summary small { color: var(--ee-danger); font-size: inherit; }
+.conversation-context-usage-body { border-top: 1px solid var(--ee-border); padding: 10px 12px; }
+.conversation-context-usage-body dl { margin: 0 0 8px; }
+.conversation-context-usage-body dl > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 2px 0; }
+.conversation-context-usage-body dt { min-width: 0; overflow-wrap: anywhere; }
+.conversation-context-usage-body dd { margin: 0; max-width: 65%; text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.conversation-context-usage-body p { margin: 5px 0 0; font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }

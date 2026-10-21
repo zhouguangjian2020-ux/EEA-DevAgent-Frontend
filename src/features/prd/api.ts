@@ -1,6 +1,7 @@
 // Browser → same-origin business API only. The Agent address/key stay on the server.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
-export const PRD_GENERATION_TIMEOUT_MS = 315_000;
+// Agent generation is capped at 2000s; allow receipt/persistence headroom.
+export const PRD_GENERATION_TIMEOUT_MS = 2_100_000;
 const MAX_OUTPUT = 200_000;
 const MAX_BUFFER = 2_000_000;
 const MAX_RESPONSE_BYTES = 8_000_000;

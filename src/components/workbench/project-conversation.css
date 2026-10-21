@@ -7,7 +7,10 @@
 .project-conversation { height: 100%; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; overflow: hidden; color: var(--ee-text); }
 .project-conversation.centered { width: min(100%, 820px); margin: 0 auto; padding: 16px 28px; }
 .project-conversation.docked { border-left: 1px solid var(--ee-border); background: var(--ee-surface); }
-.conversation-output { min-height: 0; min-width: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 12px 2px 20px; }
+.conversation-output { min-height: 0; min-width: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; padding: 12px 2px 20px; }
+/* Hide the message rail, not scrolling; outrank the app shell scrollbar defaults. */
+.project-conversation .conversation-output { scrollbar-width: none; }
+.project-conversation .conversation-output::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .docked .conversation-output { padding: 18px 16px; }
 .conversation-welcome { min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px 0 28px; }
 .conversation-eyebrow { font-size: 12px; letter-spacing: 2px; color: var(--ee-primary); margin-bottom: 16px; }

@@ -18,7 +18,8 @@ export type ConversationMessage = {
 };
 export type ConversationState = {
   prompt: string; mode: GenerationMode | null; featureId: string | null;
-  attachments: WorkspaceObject[]; messages: ConversationMessage[];
+  // Explicit, persistent operation targets for the current conversation, not one-shot uploads.
+  attachments: WorkspaceObject[]; messages: ConversationMessage[]; contextLocked?: boolean;
   operation: ConversationRequest | null;
   error: { request: ConversationRequest; message: string } | null;
   notice: string; expansionPreview: string | null;
@@ -32,6 +33,9 @@ export type ConversationAction =
   | { type: "feature"; featureId: string | null }
   | { type: "attach"; objects: WorkspaceObject[] }
   | { type: "remove-attachment"; objectId: string }
+  | { type: "clear-operation-objects" }
+  | { type: "restore-operation-objects"; objects: WorkspaceObject[] }
+  | { type: "context-lock"; locked: boolean }
   | { type: "start"; request: ConversationRequest; retry?: boolean }
   | { type: "expansion-progress"; id: string; text: string }
   | { type: "success"; id: string; response: ConversationResponse }
@@ -93,7 +97,7 @@ export function buildConversationRequest(projectId: string, p: ProjectWorks, id:
     id, projectId, kind, mode: c.mode,
     featureId: c.mode === "PRD" && kind === "send" && !feature ? `${projectId}-feature-${id}` : feature?.id ?? null,
     featureName: feature?.name ?? prdName,
-    prompt: c.prompt.trim(), references: c.attachments.map(o => ({ ...o })),
+    prompt: c.prompt.trim(), references: c.mode ? [] : c.attachments.map(o => ({ ...o })),
     sourcePrd: source?.session.document ? { workId: source.id, document: { ...source.session.document } } : null,
   };
 }
@@ -108,22 +112,26 @@ export function reduceProjectConversation(p: ProjectWorks, a: ConversationAction
     case "prompt": return c.operation?.kind === "expand" ? p : withConversation(p, { ...c, prompt: a.value, prdNameHint: a.value === c.prompt ? c.prdNameHint : null });
     case "mode":
       if (c.operation) return withConversation(p, { ...c, notice: "请等待当前回复完成，或先停止本次请求。" });
-      return withConversation(p, { ...c, mode: a.mode, featureId: a.mode === "UC" ? a.featureId ?? null : null, attachments: a.mode ? [] : c.attachments, error: null, notice: a.mode && c.attachments.length ? "已移除对话附件，切换为快捷生成。" : "" });
+      return withConversation(p, { ...c, mode: a.mode, featureId: a.mode === "UC" ? a.featureId ?? null : null, attachments: c.attachments, error: null, notice: a.mode && c.attachments.length ? "快捷生成暂不使用当前关联对象，返回普通对话后继续保留。" : "" });
     case "feature": return c.operation || !c.mode ? p : withConversation(p, { ...c, featureId: a.featureId, error: null, notice: "" });
     case "attach": {
-      if (c.operation || !a.objects.length) return p;
+      if (c.operation || c.contextLocked || !a.objects.length) return p;
       const attachments = new Map(c.attachments.map(o => [o.id, o]));
       for (const o of a.objects) attachments.set(o.id, { ...o });
+      if (attachments.size > 20) return withConversation(p, { ...c, notice: "当前关联对象最多支持20个，请先移除部分对象。" });
       return withConversation(p, { ...c, mode: null, featureId: null, attachments: [...attachments.values()], error: null, notice: "" });
     }
-    case "remove-attachment": return c.operation ? p : withConversation(p, { ...c, attachments: c.attachments.filter(o => o.id !== a.objectId) });
+    case "remove-attachment": return c.operation || c.contextLocked ? p : withConversation(p, { ...c, attachments: c.attachments.filter(o => o.id !== a.objectId) });
+    case "clear-operation-objects": return c.operation || c.contextLocked ? p : withConversation(p, { ...c, attachments: [] });
+    case "restore-operation-objects": return c.operation ? p : withConversation(p, { ...c, attachments: a.objects });
+    case "context-lock": return c.contextLocked === a.locked ? p : withConversation(p, { ...c, contextLocked: a.locked });
     case "notice": return withConversation(p, { ...c, notice: a.message });
     case "start": {
       if (c.operation) return p;
       const message = validateConversationRequest(p, a.request);
       if (message) return withConversation(p, { ...c, notice: message });
       const r = a.request;
-      return withConversation(p, { ...c, operation: r, expansionPreview: null, error: null, notice: "", attachments: r.kind === "send" && !a.retry ? c.attachments.filter(item => !r.references.some(ref => ref.id === item.id)) : c.attachments, prompt: r.kind === "expand" || a.retry && c.prompt.trim() !== r.prompt ? c.prompt : "", prdNameHint: r.kind === "expand" || a.retry && c.prompt.trim() !== r.prompt ? c.prdNameHint : null, messages: r.kind === "expand" || a.retry ? c.messages : [...c.messages, {
+      return withConversation(p, { ...c, operation: r, expansionPreview: null, error: null, notice: "", attachments: c.attachments, prompt: r.kind === "expand" || a.retry && c.prompt.trim() !== r.prompt ? c.prompt : "", prdNameHint: r.kind === "expand" || a.retry && c.prompt.trim() !== r.prompt ? c.prdNameHint : null, messages: r.kind === "expand" || a.retry ? c.messages : [...c.messages, {
         id: `${r.id}-user`, role: "user", content: r.prompt,
         references: r.references.map(o => ({ id: o.id, name: `${o.functionName} / ${o.name}` })),
       }] });

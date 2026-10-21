@@ -4,14 +4,17 @@ import { TaskProgress } from "@/components/feedback/task-progress";
 import { canSubmitComposer } from "@/features/conversation/composer-eligibility";
 import { useI18n } from "@/features/i18n/provider";
 import { AgentTaskDuration } from "./agent-task-duration";
+import { readConversationContextUsage, type ConversationContextUsage } from "@/features/conversation/context-usage";
+import { appendConversationActivity, startConversationActivity, type ConversationActivityRun } from "@/features/conversation/activity";
 import { validDurationMs } from "@/features/conversation/task-duration";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { AgentMarkdown } from "./agent-markdown";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { ConversationTurnResponse } from "./conversation-turn-response";
 import { ConversationAttachments } from "./conversation-attachments";
+import { CurrentOperationObjects } from "./current-operation-objects";
+import { encodeOperationObjects, operationObjectItems, operationObjectReferences, operationObjectsStorageKey, restoreOperationObjects } from "@/features/conversation/operation-objects";
 import { chatAttachmentItems } from "@/features/conversation/attachments";
 import { request } from '@/lib/api/client';
 import { createUuid } from '@/lib/uuid';
-import { saveManualRevision, type ManualContent } from '@/features/workbench/manual-api';
 import { workflowPost, projectPath, readChatStream, type Modification, type Thread, type Turn } from '@/features/workbench/workflow-api';
 import { ConversationHistoryMenu } from "./conversation-history-menu";
 import { ChatComposer } from '../workspace/chat-composer';
@@ -25,19 +28,14 @@ import { canResetCreation, canRetryCreation } from '@/features/prd/creation';
 import { parsePrdCommand } from '@/features/conversation/prd-command';
 import { restoreConversation, type ConversationHistory } from '@/features/conversation/restore-history';
 import { conversationFeatures, featureDisabledReason, prdForFeature } from '@/features/conversation/model';
-import { canGenerateUcBatch } from '@/features/workbench/model';
-type ChatInput = { client_request_id: string; message: string; auto_intent: true; attachments: { artifact_id: string; revision_id: string }[] };
+import { canGenerateUcBatch, workLabel } from '@/features/workbench/model';
+type ChatInput = { client_request_id: string; message: string; unified_conversation: true; attachments: { artifact_id: string; revision_id: string }[] };
 const emptyPrdCreationState = { prompt: '', candidateName: null, input: null, intent: null, busy: false, phase: null, uncertain: false, notFound: false, error: '', notice: '' } as const;
 const emptyPrdSnapshot = () => emptyPrdCreationState;
 const noopSubscribe = () => () => {};
-function ContentPreview({ content }: { content: ManualContent }) {
-  const { t: tr } = useI18n();
-  if (content.kind === 'PRD') return <AgentMarkdown>{content.markdown_body}</AgentMarkdown>;
-  return <dl>{Object.entries(content).filter(([k]) => !['kind', 'prd_revision_id', 'sources'].includes(k)).map(([k,v]) => <div key={k}><dt>{({name:tr("名称"),description:tr("描述"),main_flow:tr("主流程"),branches:tr("分支流程"),exceptions:tr("异常流程"),acceptance_criteria:tr("验收标准"),actors:tr("参与者"),preconditions:tr("前置条件"),postconditions:tr("后置条件"),extensions:tr("扩展"),hmi:tr("HMI逻辑"),regulations:tr("法规"),performance:tr("性能"),nonfunctional:tr("非功能要求")} as Record<string,string>)[k] ?? k}</dt><dd>{Array.isArray(v) ? v.join(String.fromCharCode(10)) : String(v ?? '')}</dd></div>)}</dl>;
-}
 export function LiveProjectConversation(props: ProjectConversationProps) {
   const { t: tr } = useI18n();
-  const {project,state,visible,docked,onAction,onOpenObject,onSaved,onThreadChange,onMode,onPrdSubmit,onPrdModeExit,prdCreation}=props;
+  const {project,state,visible,docked,onAction,onOpenObject,onThreadChange,onMode,onPrdSubmit,onPrdModeExit,prdCreation}=props;
   const c=state.conversation, path=projectPath(project)+'/conversations';
   const prdState = useSyncExternalStore(prdCreation?.subscribe ?? noopSubscribe, prdCreation?.snapshot ?? emptyPrdSnapshot, prdCreation?.snapshot ?? emptyPrdSnapshot);
   const prdMode = c.mode === 'PRD';
@@ -49,12 +47,20 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
   const [threads,setThreads]=useState<Thread[]>([]),[thread,setThread]=useState(''),[next,setNext]=useState<number|null>(null);
   const [turns,setTurns]=useState<Turn[]>([]),[busy,setBusy]=useState(false),[loading,setLoading]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [turnMessages, setTurnMessages] = useState<Record<string, string>>({});
+  const [turnActivities, setTurnActivities] = useState<Record<string, ConversationActivityRun>>({});
+  const [turnContextUsage, setTurnContextUsage] = useState<Record<string, ConversationContextUsage>>({});
   const taskHistory = useTaskRecords(project, thread, visible);
   const timeline = conversationTimeline(turns, taskHistory.tasks);
   const [recoveryRequest,setRecoveryRequest]=useState('');
-  const [changes,setChanges]=useState<Modification[]>([]);
+  const proposals = useMemo(() => (props.proposals ?? []).filter(item => item.threadId === thread), [props.proposals, thread]);
   const controller=useRef<AbortController|null>(null), running=useRef(false), epoch=useRef(0), createId=useRef(createUuid()), output=useRef<HTMLDivElement>(null), stick=useRef(true);
   const drafts=useRef(new Map<string,{prompt:string;attachments:typeof c.attachments}>());
+  const stateRef=useRef(state);
+  useEffect(()=>{stateRef.current=state;},[state]);
+  const readSelection=(id:string)=>{
+    try { return restoreOperationObjects(sessionStorage.getItem(operationObjectsStorageKey(project,id)),stateRef.current); }
+    catch { return []; }
+  };
   const initialThread=useRef<Promise<ConversationHistory>|null>(null),initialized=useRef(false);
   useEffect(() => {
     onThreadChange?.(thread);
@@ -74,43 +80,48 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
     initialThread.current.then(history=>{
       const t=history.thread;
       if(!alive)return;
+      if (!stateRef.current.conversation.attachments.length) {
+        let restored: ProjectConversationProps["state"]["conversation"]["attachments"] = [];
+        try { restored=restoreOperationObjects(sessionStorage.getItem(operationObjectsStorageKey(project,t.id)),stateRef.current); } catch { /* Optional identity-only UI hint. */ }
+        onAction({type:"restore-operation-objects",objects:restored});
+      }
       initialized.current=true;createId.current=createUuid();setThread(t.id);setTurns(history.turns);
       setThreads(old=>[t,...old.filter(x=>x.id!==t.id)]);setInitializing(false);
     }).catch(e=>{
       if(alive){initialThread.current=null;setInitializing(false);setError(e instanceof Error?e.message:'自动建立会话失败，请重试新建会话');}
     });
     return()=>{alive=false;};
-  },[path,project,visible]);
+  },[path,project,visible,onAction]);
+  useEffect(()=>{
+    if(!thread || initializing)return;
+    try { sessionStorage.setItem(operationObjectsStorageKey(project,thread),encodeOperationObjects(c.attachments)); } catch { /* In-memory selection remains available. */ }
+  },[project,thread,initializing,c.attachments]);
   useEffect(()=>{if(!visible)controller.current?.abort();},[visible]);
-  useEffect(()=>{if(visible&&stick.current&&output.current)output.current.scrollTop=output.current.scrollHeight;},[turns,changes,taskHistory.tasks,prdState,visible]);
+  useEffect(()=>{if(visible&&stick.current&&output.current)output.current.scrollTop=output.current.scrollHeight;},[turns,turnActivities,proposals,taskHistory.tasks,prdState,visible]);
   useEffect(()=>{if(visible&&prdMode)output.current?.parentElement?.querySelector<HTMLTextAreaElement>('textarea[aria-label="项目对话输入"]')?.focus();},[visible,prdMode]);
-  useEffect(()=>{if(!changes.length)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[changes]);
   async function select(id:string) {
     if(running.current||loading||initializing)return;
-    if(changes.length&&!window.confirm(tr('切换会话将丢弃未应用的AI修改建议，原对象不变。继续？')))return;
     const version=++epoch.current;setLoading(true);setError('');
     try {
       const r=await request<{thread:Thread;turns:Turn[]}>(path+'/'+id);
       if(version!==epoch.current)return;
       drafts.current.set(thread,{prompt:c.prompt,attachments:c.attachments});
       const draft=drafts.current.get(id);
-      c.attachments.forEach(a=>onAction({type:'remove-attachment',objectId:a.id}));
-      if(draft?.attachments.length)onAction({type:'attach',objects:draft.attachments});
+      onAction({type:'restore-operation-objects',objects:draft?.attachments??readSelection(id)});
       onAction({type:'prompt',value:draft?.prompt??''});
-      setRecoveryRequest('');onMode?.(null);onThreadChange?.(id);setThread(id);setTurns(r.turns);setChanges([]);setNotice('');
+      setRecoveryRequest('');onMode?.(null);onThreadChange?.(id);setThread(id);setTurns(r.turns);setNotice('');
     } catch(e){setError(e instanceof Error?e.message:'读取会话失败');}
     finally{if(version===epoch.current)setLoading(false);}
   }
   async function newThread(){
     if(running.current||loading||initializing)return;
-    if(changes.length&&!window.confirm(tr('新建会话将丢弃未应用的AI修改建议。继续？')))return;
     running.current=true;setLoading(true);setError('');
     try {
       const t=await workflowPost<Thread>(path,{client_request_id:createId.current,title:'新会话'});
       initialized.current=true;createId.current=createUuid();drafts.current.set(thread,{prompt:c.prompt,attachments:c.attachments});
-      setRecoveryRequest('');onMode?.(null);onThreadChange?.(t.id);setThread(t.id);setTurns([]);setChanges([]);setNotice('新会话已建立，历史按用户与项目隔离。');
+      setRecoveryRequest('');onMode?.(null);onThreadChange?.(t.id);setThread(t.id);setTurns([]);setNotice('新会话已建立，历史按用户与项目隔离。');
       // Preserve newly supplied workspace attachments for the first thread only.
-      if(thread){c.attachments.forEach(a=>onAction({type:'remove-attachment',objectId:a.id}));onAction({type:'prompt',value:''});}
+      if(thread){onAction({type:'restore-operation-objects',objects:[]});onAction({type:'prompt',value:''});}
       await list();
     }catch(e){setError(e instanceof Error?e.message:'新建失败');}finally{running.current=false;setLoading(false);}
   }
@@ -141,52 +152,59 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
     if(running.current||loading||initializing||!thread||c.operation||prdBusy)return;
     let input:ChatInput;
     try {
-      input=previous??{client_request_id:createUuid(),message:c.prompt.trim(),auto_intent:true,attachments:c.attachments.map(a=>{
-        const w=Object.values(state.works).find(w=>w.id===a.workId||w.database?.artifactId===a.id);
-        if(!w?.database?.revisionId)throw new Error('附件没有可读取的已保存版本，请刷新并重新添加。');
-        return {artifact_id:w.database.artifactId,revision_id:w.database.revisionId};
-      })};
+      input=previous??{client_request_id:createUuid(),message:c.prompt.trim(),unified_conversation:true,attachments:operationObjectReferences(state,c.attachments)};
       if(!input.message)throw new Error('请输入问题');
-      if(changes.length&&!window.confirm(tr('新请求将丢弃未应用修改建议。继续？')))return;
     }catch(e){setError(e instanceof Error?e.message:'附件无效');return;}
-    const version=++epoch.current, ac=new AbortController();controller.current=ac;running.current=true;setBusy(true);setError('');setNotice('');setChanges([]);
+    const version=++epoch.current, ac=new AbortController();controller.current=ac;running.current=true;setBusy(true);setError('');setNotice('');
+    const selectedObjects=operationObjectItems(state,c.attachments,true);
     const attachments = previous ? turns.find(t => t.client_request_id === input.client_request_id)?.attachments ?? input.attachments
-      : input.attachments.map((ref, i) => ({ ...ref, content: { kind: c.attachments[i].kind, name: c.attachments[i].name } }));
+      : input.attachments.map((ref, i) => ({ ...ref, content: { kind: selectedObjects[i].object.kind, name: selectedObjects[i].object.name } }));
     const row:Turn={attachments,duration_ms:null,client_request_id:input.client_request_id,prompt:input.message,body:'',status:'running',created_at:turns.find(t=>t.client_request_id===input.client_request_id)?.created_at??new Date().toISOString()};
     setTurns(old=>old.some(t=>t.client_request_id===input.client_request_id)?old.map(t=>t.client_request_id===input.client_request_id?row:t):[...old,row]);
     if(!previous) {
       onAction({type:'prompt',value:''});
-      c.attachments.forEach(a => onAction({type:'remove-attachment',objectId:a.id}));
     }
     const patch=(p:Partial<Turn>)=>setTurns(old=>old.map(t=>t.client_request_id===input.client_request_id?{...t,...p}:t));
     const setTurnMessage = (message: string) => setTurnMessages(old => ({ ...old, [input.client_request_id]: message }));
     setTurnMessage('');
+    const activityKey = thread + ':' + input.client_request_id;
+    const activityRun = startConversationActivity(Date.now());
+    setTurnContextUsage(old => Object.fromEntries(Object.entries(old).filter(([key]) => key !== activityKey).slice(-99)));
+    setTurnActivities(old => Object.fromEntries([...Object.entries(old).filter(([key]) => key !== activityKey).slice(-99), [activityKey, activityRun]]));
+    const recordActivity = (value: unknown) => setTurnActivities(old => ({ ...old, [activityKey]: appendConversationActivity(old[activityKey] ?? activityRun, value) }));
     let text='';
+    let receivedChanges: Modification[] = [];
+    let proposalNotice = "";
     try {
       await readChatStream(path+'/'+thread+'/messages/stream',{...input,retry:Boolean(previous)},ac.signal,event=>{
         if(epoch.current!==version)return;
-        if(event.type==='status')setTurnMessage(event.message??'正在处理…');
+        if(event.type==='context_usage'){
+          const usage = readConversationContextUsage(event.usage);
+          if(usage)setTurnContextUsage(old=>({...old,[activityKey]:usage}));
+        }
+        if(event.type==='status'){
+          const message = event.message ?? '正在处理…';
+          setTurnMessage(message);
+          recordActivity({ kind: 'status', title: message });
+        }
+        if(event.type==='stage')recordActivity({ kind: 'stage', stage: event.stage, title: event.title, body: event.body });
         if(event.type==='token'){setTurnMessage('');text+=event.content??'';patch({body:text});}
-        if(event.type==='replace'){setTurnMessage('');text=event.content??'';patch({body:text});}
-        if(event.type==='preview'){setTurnMessage('');if(!Array.isArray(event.changes))throw new Error('修改预览格式异常');setChanges(event.changes);text='AI修改建议已生成；后续应用状态以对象版本为准。';patch({body:text});}
-        if(event.type==='done'){setTurnMessage('');patch({status:'completed',duration_ms:validDurationMs(event.duration_ms)});}
+        if(event.type==='replace'){setTurnMessage('');text=event.content??'';if(proposalNotice && text.includes(proposalNotice))proposalNotice='';patch({body:text});}
+        if(event.type==='proposal_notice'){proposalNotice=event.message||'本次回复未形成可保存的对象建议；没有修改对象。';setTurnMessage(proposalNotice);}
+        if(event.type==='preview'){setTurnMessage('');if(!Array.isArray(event.changes))throw new Error('修改预览格式异常');receivedChanges=event.changes;if(!text){text='AI修改建议已生成，请在对象标签页审查后确认保存。';patch({body:text});}}
+        if(event.type==='done'){setTurnMessage(proposalNotice);if(receivedChanges.length)props.onProposals?.(thread,input.client_request_id,receivedChanges);patch({status:'completed',duration_ms:validDurationMs(event.duration_ms)});}
         if(event.type==='error')patch({duration_ms:validDurationMs(event.duration_ms)});
       });
       if(version===epoch.current){await list().catch(() => { if(version===epoch.current)setNotice("回复已完成；会话列表暂时未刷新，可稍后重读。"); });}
     }catch(e){
-      if(version===epoch.current){setNotice('');patch({status:ac.signal.aborted?'interrupted':'failed'});setChanges([]);setTurnMessage(ac.signal.aborted?'已停止，当前回复未完成。':e instanceof Error?e.message:'对话失败');}
+      if(version===epoch.current){setNotice('');patch({status:ac.signal.aborted?'interrupted':'failed'});setTurnMessage(ac.signal.aborted?'已停止，当前回复未完成。':e instanceof Error?e.message:'对话失败');}
     }finally{if(version===epoch.current){controller.current=null;running.current=false;setBusy(false);}}
-  }
-  async function apply(change:Modification){
-    if(running.current)return;running.current=true;setBusy(true);setError('');
-    try {
-      await saveManualRevision(project,change.artifact_id,{mutation_id:change.candidate_id,base_revision_id:change.base_revision_id,content:change.content});
-      setChanges(old=>old.filter(c=>c.candidate_id!==change.candidate_id));setNotice('已应用为新的待确认版本；历史确认版本保留，请到原对象页面确认。');
-      await onSaved?.();
-    }catch(e){setError(e instanceof Error?e.message:'应用失败，原对象未覆盖');}finally{running.current=false;setBusy(false);}
   }
   const locked=busy||loading||initializing||Boolean(c.operation);
   const contentLocked=locked||prdBusy;
+  useEffect(()=>{
+    if(Boolean(c.contextLocked)!==contentLocked)onAction({type:"context-lock",locked:contentLocked});
+  },[c.contextLocked,contentLocked,onAction]);
   const inlineMatchesThread = !prdState.input?.thread_id || prdState.input.thread_id === thread;
   const inlineTask = prdCreation && inlineMatchesThread ? <PrdCreationInline key={prdState.input?.client_request_id ?? "empty"} session={prdCreation} onExit={onPrdModeExit} onStart={()=>onMode?.("PRD")} /> : null;
   const recordedCreation = taskHistory.tasks.some(t => t.task_kind === "PRD" && t.client_request_id === prdState.input?.client_request_id);
@@ -209,19 +227,41 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
         </>}
         {taskHistory.error&&<button disabled={contentLocked} onClick={taskHistory.refresh}>{tr("重新读取任务记录")}</button>}
       </div></details>}</ConversationHistoryMenu>}</header>
-    <div className='conversation-output' role='log' aria-label={tr("项目对话记录")} aria-live='polite' ref={output} onScroll={e=>{const el=e.currentTarget;stick.current=el.scrollHeight-el.scrollTop-el.clientHeight<80;}}>
+    <div className='conversation-output' role='log' tabIndex={0} aria-label={tr("项目对话记录")} aria-live='polite' ref={output} onScroll={e=>{const el=e.currentTarget;stick.current=el.scrollHeight-el.scrollTop-el.clientHeight<80;}}>
       {!thread && (initializing ? <LoadingIllustration kind="orbit" label={tr("正在自动准备新会话…")} compact /> : <p>{tr("会话尚未建立，可点击新建会话重试。")}{tr("聊天历史按用户与项目隔离，刷新及重新登录后仍可读取。")}</p>)}
       {thread && !timeline.length && !prdState.input && <div className='conversation-welcome'><span className='conversation-eyebrow'>{tr("从一个问题开始")}</span><h1>{docked ? tr("对话始终在这里") : tr("今天，我们一起梳理什么？")}</h1><p>{tr("直接提问，或选择输入框下方的快捷任务。")}</p></div>}
       {taskHistory.error&&<p role='status'>{tr(taskHistory.error)}</p>}
       {timeline.map(entry=>{
         if(entry.task){const t=entry.task;return <ConversationTaskMessage key={entry.key} task={t} requestPrompt={taskRequestPrompt(t, state, tr)} failureMessage={taskFailureMessage(t, state)} current={t.task_kind==='PRD'&&inlineMatchesThread&&t.client_request_id===prdState.input?.client_request_id?prdState:undefined}/>;}
-        const t=entry.turn;return <div key={entry.key} className='live-chat-turn'><ConversationAttachments items={chatAttachmentItems(t.attachments)} /><article className='conversation-message user'><p>{t.prompt}</p></article><article className='conversation-message assistant'><AgentTaskDuration durationMs={t.duration_ms} status={t.status}/><AgentMarkdown>{t.body}</AgentMarkdown><small><TaskProgress text={t.status === "running" ? turnMessages[t.client_request_id] || "生成中…" : ({completed:"已完成",interrupted:"已中断",failed:"未完成"} as Record<string,string>)[t.status] ?? t.status} pending={t.status === "running"} /></small>{t.status !== "running" && turnMessages[t.client_request_id] && <p role="alert" className="chat-turn-error">{tr(turnMessages[t.client_request_id])}</p>}</article></div>;
+        const t = entry.turn;
+        const activity = turnActivities[thread + ':' + t.client_request_id];
+        const contextUsage = turnContextUsage[thread + ':' + t.client_request_id];
+        const turnProposals = proposals.filter(item => item.requestId === t.client_request_id);
+        return <div key={entry.key} className='live-chat-turn'>
+          <ConversationAttachments items={chatAttachmentItems(t.attachments)} />
+          <article className='conversation-message user'><p>{t.prompt}</p></article>
+          <article className='conversation-message assistant'>
+            <AgentTaskDuration durationMs={t.duration_ms} status={t.status} showUnavailable/>
+            <ConversationTurnResponse key={"response:" + (activity?.startedAt ?? t.client_request_id)} body={t.body} status={t.status}
+              proposalCount={turnProposals.length} activity={activity} contextUsage={contextUsage} />
+            {turnProposals.map(item => {
+              const work = Object.values(state.works).find(w => w.database?.artifactId === item.artifact_id);
+              const discarded = item.status === "discarded";
+              return <div key={item.candidate_id} className="chat-proposal-link" data-status={item.status}>
+                <span>{work ? workLabel(work, tr) : item.content.kind}</span>
+                <small>{tr(discarded ? "已丢弃" : item.status === "saved" ? "已确认并保存" : item.status === "uncertain" ? "结果待核实" : item.status === "saving" ? "正在保存" : "待审查 · 尚未写入对象")}</small>
+                <button type="button" className="button-primary chat-proposal-open" disabled={discarded || !work || !props.onOpenProposal} onClick={() => { if (!discarded) props.onOpenProposal?.(item); }}>{tr("打开对象预览")}</button>
+              </div>;
+            })}
+            {(!activity || t.status !== 'running') && <small><TaskProgress text={t.status === "running" ? turnMessages[t.client_request_id] || "生成中…" : ({completed:"已完成",interrupted:"已中断",failed:"未完成"} as Record<string,string>)[t.status] ?? t.status} pending={t.status === "running"} /></small>}
+            {t.status !== "running" && turnMessages[t.client_request_id] && <p role={t.status === "completed" ? "status" : "alert"} className={t.status === "completed" ? "chat-turn-notice" : "chat-turn-error"}>{tr(turnMessages[t.client_request_id])}</p>}
+          </article>
+        </div>;
       })}
       {!recordedCreation && inlineTask}
-      {changes.map(change=><article className='conversation-message assistant' key={change.candidate_id}><strong>{tr("修改建议 · ")}{change.content.kind}</strong><small>{tr("基于版本 ")}{change.base_revision_id}{tr("，尚未应用")}</small>{change.original_content&&<><p>{tr("原内容")}</p><ContentPreview content={change.original_content}/></>}<p>{tr("建议内容")}</p><ContentPreview content={change.content}/></article>)}
       {c.notice&&<p role='status'>{tr(c.notice)}</p>}{notice&&<p role='status'>{tr(notice)}</p>}{c.error&&<div role='alert'><p>{tr(c.error.message)}</p></div>}{error&&<div role='alert' className='conversation-error'><p>{tr(error)}</p></div>}
     </div>
-    <div className='conversation-composer-area'><ChatComposer label={tr("项目对话输入")} disabledReason={loading ? tr("正在切换会话，请稍候…") : undefined} placeholder={prdMode ? tr("输入新功能名称与需求，例如：AEB自动紧急制动…") : tr("输入问题，或从工作空间添加对象…")} value={c.expansionPreview??c.prompt} onChange={value=>onAction({type:'prompt',value})} onSend={()=>void submitComposer()} onExpand={()=>props.onSend('expand')} onCancel={()=>prdCreation?.snapshot().busy ? prdCreation.stop() : controller.current?controller.current.abort():props.onStop()} busy={composerBusy} compact={docked} attachments={c.attachments} attachmentsLocked={contentLocked} onRemoveAttachment={objectId=>onAction({type:'remove-attachment',objectId})} onOpenAttachment={onOpenObject} sendDisabledReason={sendDisabledReason}/><div className='conversation-shortcuts' aria-label={tr("快捷生成")}>
+    <div className='conversation-composer-area'><CurrentOperationObjects state={state} compact={docked} databaseMode disabled={contentLocked} suspended={Boolean(c.mode)} onOpen={onOpenObject} onRemove={objectId=>onAction({type:'remove-attachment',objectId})} onClear={()=>onAction({type:'clear-operation-objects'})}/><ChatComposer label={tr("项目对话输入")} disabledReason={loading ? tr("正在切换会话，请稍候…") : undefined} placeholder={prdMode ? tr("输入新功能名称与需求，例如：AEB自动紧急制动…") : tr("直接提问，或要求修改当前关联对象…")} value={c.expansionPreview??c.prompt} onChange={value=>onAction({type:'prompt',value})} onSend={()=>void submitComposer()} onExpand={()=>props.onSend('expand')} onCancel={()=>prdCreation?.snapshot().busy ? prdCreation.stop() : controller.current?controller.current.abort():props.onStop()} busy={composerBusy} compact={docked} sendDisabledReason={sendDisabledReason}/><div className='conversation-shortcuts' aria-label={tr("快捷生成")}>
         {(['PRD','UC'] as const).filter(mode=>!c.mode||c.mode===mode).map(mode=><button key={mode} type='button' aria-pressed={c.mode===mode} className={c.mode===mode?'selected':''} disabled={contentLocked} onClick={()=>onMode?.(c.mode===mode?null:mode)}><span aria-hidden='true'>{c.mode===mode?'✓':'+'}</span>{mode==='PRD'?tr("PRD生成"):tr("用例生成")}{c.mode===mode&&<span className='shortcut-cancel' aria-hidden='true'>×</span>}</button>)}
       {!c.mode && props.onCreateFunction && <><span className="conversation-shortcut-divider" role="separator" aria-orientation="vertical" /><button type="button" className="conversation-create-function" disabled={contentLocked || props.createFunctionDisabled} title={props.createFunctionDisabledReason ? tr(props.createFunctionDisabledReason) : undefined} onClick={props.onCreateFunction}><svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>{tr("新建功能")}</button></>}
       {prdMode && <div className='conversation-feature-inline'>
@@ -238,7 +278,6 @@ export function LiveProjectConversation(props: ProjectConversationProps) {
       </div>
       <div className='conversation-input-actions' aria-label={tr("输入区任务操作")}>
         {c.error&&<button disabled={contentLocked} onClick={()=>props.onSend('expand',true)}>{tr("重试自动扩写")}</button>}
-        {changes.map((change,index)=><div key={change.candidate_id}><span>{tr("修改建议 ")}{index+1} · {change.content.kind}</span><button disabled={contentLocked} onClick={()=>void apply(change)}>{tr("应用为待确认版本")}</button><button disabled={contentLocked} onClick={()=>setChanges(old=>old.filter(c=>c.candidate_id!==change.candidate_id))}>{tr("丢弃建议")}</button></div>)}
       </div>
     </div>
   </section>;

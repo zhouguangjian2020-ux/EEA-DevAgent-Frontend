@@ -13,7 +13,7 @@ export const projectPath = (id: string) => '/v1/projects/' + encodeURIComponent(
 export function workflowPost<T>(path: string, body: unknown, signal?: AbortSignal) {
   return request<T>(path, { method: 'POST', headers: { 'X-Project-Request': '1' }, body: JSON.stringify(body), signal });
 }
-export type ChatEvent = { duration_ms?: number | null; type: string; content?: string; changes?: Modification[]; message?: string; status?: string };
+export type ChatEvent = { usage?: unknown; duration_ms?: number | null; type: string; content?: string; changes?: Modification[]; message?: string; stage?: string; title?: string; body?: string; status?: string };
 export async function readChatStream(path: string, body: unknown, signal: AbortSignal, onEvent: (event: ChatEvent) => void) {
   const response = await fetch(API_BASE_URL + path, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'X-Project-Request': '1' }, body: JSON.stringify(body), signal });
   if (!response.ok) { const b = await response.json().catch(() => null); throw new Error(b?.detail?.message ?? '对话请求失败（' + response.status + '）'); }

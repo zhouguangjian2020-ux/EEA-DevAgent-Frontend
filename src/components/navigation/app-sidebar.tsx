@@ -13,7 +13,7 @@ type AppSidebarProps = WorkspaceTreeProps & {
   totalObjects: number;
   onNavigate: (action: NavigationAction) => void;
   onSearch: (query: string) => void;
-  onAddObjects: () => void;
+  onAddObjects: (source: HTMLButtonElement) => void;
   attachmentTarget?: string; attachmentBusy?: boolean; onNewPrd?: () => void; readOnly?: boolean;
 };
 
@@ -24,7 +24,7 @@ export function AppSidebar(props: AppSidebarProps) {
 
   return (
     <aside className="app-sidebar" aria-label={tr("侧边栏")} data-view={navigation.view}>
-      <div key={navigation.view} className="sidebar-view">
+      <div className="sidebar-view">
       {navigation.view === "navigation" ? (
         <>
           <div className="nav-label">{tr("研发工作空间")}</div>
@@ -94,7 +94,7 @@ export function AppSidebar(props: AppSidebarProps) {
                   {props.nodes.length ? <WorkspaceTree deletionMode={props.deletionMode} deletionSelectedIds={props.deletionSelectedIds} onToggleDeletion={props.onToggleDeletion} nodes={props.nodes} openFolders={props.openFolders} searching={props.searching} selectedIds={props.selectedIds} previewId={props.previewId} onToggleFolder={props.onToggleFolder} onToggleObject={props.onToggleObject} onPreview={props.onPreview} onOpenFolder={props.onOpenFolder} onFolderMenu={props.onFolderMenu} onObjectMenu={props.onObjectMenu} activeFolderId={props.activeFolderId} /> : <div className="empty-sidebar" role="status">{props.searching ? tr("没有找到匹配对象") : tr("还没有产物，先描述你想创建的功能。")}</div>}
                 </div>
                 <div className="workspace-actions" hidden={props.deletionMode}>
-                  <button type="button" className="add-agent" disabled={!props.selectedIds.length || !props.attachmentTarget || props.attachmentBusy} onClick={props.onAddObjects}>{tr("＋ 添加到 AI 对话 ")}{props.selectedIds.length > 0 && <span>{props.selectedIds.length}</span>}</button>
+                  <button type="button" className="add-agent" disabled={!props.selectedIds.length || !props.attachmentTarget || props.attachmentBusy} onClick={event => props.onAddObjects(event.currentTarget)}>{tr("＋ 添加对象文件到对话 ")}{props.selectedIds.length > 0 && <span>{props.selectedIds.length}</span>}</button>
                 </div>
               </div>
             )}
